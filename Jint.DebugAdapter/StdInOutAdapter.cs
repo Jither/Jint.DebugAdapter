@@ -1,6 +1,4 @@
-﻿using Jint.DebugAdapter.Protocol;
-
-namespace Jint.DebugAdapter
+﻿namespace Jint.DebugAdapter
 {
     public class StdInOutAdapter : Adapter
     {
@@ -8,12 +6,11 @@ namespace Jint.DebugAdapter
         {
         }
 
-        public override void Start()
+        protected override void StartListening()
         {
-            Stream input = Console.OpenStandardInput();
-            Stream output = Console.OpenStandardOutput();
-            var session = new DebugAdapterSession(input, output);
-            session.Start();
+            var input = Console.OpenStandardInput();
+            var output = Console.OpenStandardOutput();
+            InitializeStreams(input, output);
         }
     }
 }

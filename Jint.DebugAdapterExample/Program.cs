@@ -6,6 +6,7 @@ namespace Jint.DebugAdapterExample
     {
         public static void Main(string[] args)
         {
+            Logger.Log("Started");
             Adapter adapter;
             if (args.Length > 0)
             {
@@ -23,6 +24,7 @@ namespace Jint.DebugAdapterExample
                 adapter = new StdInOutAdapter();
             }
 
+            adapter.Initialize();
             adapter.Start();
         }
     }

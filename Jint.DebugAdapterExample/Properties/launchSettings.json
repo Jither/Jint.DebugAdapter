@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Jint.DebugAdapterExample": {
+      "commandName": "Project",
+      "commandLineArgs": "4711"
+    }
+  }
+}

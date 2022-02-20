@@ -1,29 +1,25 @@
 ﻿using System.Net;
 using System.Net.Sockets;
-using Jint.DebugAdapter.Protocol;
 
 namespace Jint.DebugAdapter
 {
     public class TcpAdapter : Adapter
     {
-        private readonly TcpListener listener;
+        private readonly int port;
 
-        public TcpAdapter(int port)
+        public TcpAdapter(int port = 4711)
         {
-            listener = new TcpListener(IPAddress.Loopback, port);
+            this.port = port;
         }
 
-        public override void Start()
+        protected override void StartListening()
         {
+            var listener = new TcpListener(IPAddress.Loopback, port);
             listener.Start();
-            while (true)
-            {
-                var client = listener.AcceptTcpClient();
-                var stream = client.GetStream();
-                var session = new DebugAdapterSession(stream, stream);
-                session.Start();
-                client.Close();
-            }
+            Logger.Log($"Listening on {listener.LocalEndpoint}");
+            var client = listener.AcceptTcpClient();
+            var stream = client.GetStream();
+            InitializeStreams(stream, stream);
         }
     }
 }
