@@ -19,51 +19,51 @@ namespace Jint.DebugAdapter.Protocol
         {
             return request.UntypedArguments switch
             {
-                AttachArguments args => HandleAttachRequest(args),
-                BreakpointLocationsArguments args => HandleBreakpointLocationsRequest(args),
-                CompletionsArguments args => HandleCompletionsRequest(args),
-                CancelArguments args => HandleCancelRequest(args),
-                ContinueArguments args => HandleContinueRequest(args),
-                DataBreakpointInfoArguments args => HandleDataBreakpointInfoRequest(args),
-                DisassembleArguments args => HandleDisassembleRequest(args),
-                DisconnectArguments args => HandleDisconnectRequest(args),
-                EvaluateArguments args => HandleEvaluateRequest(args),
-                ExceptionInfoArguments args => HandleExceptionInfoRequest(args),
-                GotoArguments args => HandleGotoRequest(args),
-                GotoTargetsArguments args => HandleGotoTargetsRequest(args),
-                InitializeArguments args => HandleInitializeRequest(args),
-                LaunchArguments args => HandleLaunchRequest(args),
-                ModulesArguments args => HandleModulesRequest(args),
-                NextArguments args => HandleNextRequest(args),
-                PauseArguments args => HandlePauseRequest(args),
-                ReadMemoryArguments args => HandleReadMemoryRequest(args),
-                RestartArguments args => HandleRestartRequest(args),
-                RestartFrameArguments args => HandleRestartFrameRequest(args),
-                ReverseContinueArguments args => HandleReverseContinueRequest(args),
-                RunInTerminalArguments args => HandleRunInTerminalRequest(args), // Note: Reverse request (DebugAdapter to host)
-                ScopesArguments args => HandleScopesRequest(args),
-                SetBreakpointsArguments args => HandleSetBreakpointsRequest(args),
-                SetDataBreakpointsArguments args => HandleSetDataBreakpointsRequest(args),
-                SetExceptionBreakpointsArguments args => HandleSetExceptionBreakpointsRequest(args),
-                SetExpressionArguments args => HandleSetExpressionRequest(args),
-                SetFunctionBreakpointsArguments args => HandleSetFunctionBreakpointsRequest(args),
-                SetInstructionBreakpointsArguments args => HandleSetInstructionBreakpointsRequest(args),
-                SetVariableArguments args => HandleSetVariableRequest(args),
-                SourceArguments args => HandleSourceRequest(args),
-                StackTraceArguments args => HandleStackTraceRequest(args),
-                StepBackArguments args => HandleStepBackRequest(args),
-                StepInArguments args => HandleStepInRequest(args),
-                StepInTargetsArguments args => HandleStepInTargetsRequest(args),
-                StepOutArguments args => HandleStepOutRequest(args),
-                TerminateArguments args => HandleTerminateRequest(args),
-                VariablesArguments args => HandleVariablesRequest(args),
-                WriteMemoryArguments args => HandleWriteMemoryRequest(args),
+                AttachArguments args => AttachRequest(args),
+                BreakpointLocationsArguments args => BreakpointLocationsRequest(args),
+                CompletionsArguments args => CompletionsRequest(args),
+                CancelArguments args => CancelRequest(args),
+                ContinueArguments args => ContinueRequest(args),
+                DataBreakpointInfoArguments args => DataBreakpointInfoRequest(args),
+                DisassembleArguments args => DisassembleRequest(args),
+                DisconnectArguments args => DisconnectRequest(args),
+                EvaluateArguments args => EvaluateRequest(args),
+                ExceptionInfoArguments args => ExceptionInfoRequest(args),
+                GotoArguments args => GotoRequest(args),
+                GotoTargetsArguments args => GotoTargetsRequest(args),
+                InitializeArguments args => InitializeRequest(args),
+                LaunchArguments args => LaunchRequest(args),
+                ModulesArguments args => ModulesRequest(args),
+                NextArguments args => NextRequest(args),
+                PauseArguments args => PauseRequest(args),
+                ReadMemoryArguments args => ReadMemoryRequest(args),
+                RestartArguments args => RestartRequest(args),
+                RestartFrameArguments args => RestartFrameRequest(args),
+                ReverseContinueArguments args => ReverseContinueRequest(args),
+                RunInTerminalArguments args => RunInTerminalRequest(args), // Note: Reverse Request (DebugAdapter to host)
+                ScopesArguments args => ScopesRequest(args),
+                SetBreakpointsArguments args => SetBreakpointsRequest(args),
+                SetDataBreakpointsArguments args => SetDataBreakpointsRequest(args),
+                SetExceptionBreakpointsArguments args => SetExceptionBreakpointsRequest(args),
+                SetExpressionArguments args => SetExpressionRequest(args),
+                SetFunctionBreakpointsArguments args => SetFunctionBreakpointsRequest(args),
+                SetInstructionBreakpointsArguments args => SetInstructionBreakpointsRequest(args),
+                SetVariableArguments args => SetVariableRequest(args),
+                SourceArguments args => SourceRequest(args),
+                StackTraceArguments args => StackTraceRequest(args),
+                StepBackArguments args => StepBackRequest(args),
+                StepInArguments args => StepInRequest(args),
+                StepInTargetsArguments args => StepInTargetsRequest(args),
+                StepOutArguments args => StepOutRequest(args),
+                TerminateArguments args => TerminateRequest(args),
+                VariablesArguments args => VariablesRequest(args),
+                WriteMemoryArguments args => WriteMemoryRequest(args),
 
                 null => request.Command switch
                 {
-                    CommandNames.ConfigurationDone => HandleConfigurationDoneRequest(),
-                    CommandNames.LoadedSources => HandleLoadedSourcesRequest(),
-                    CommandNames.Threads => HandleThreadsRequest(),
+                    CommandNames.ConfigurationDone => ConfigurationDoneRequest(),
+                    CommandNames.LoadedSources => LoadedSourcesRequest(),
+                    CommandNames.Threads => ThreadsRequest(),
                     _ => throw new NotImplementedException($"Request command '{request.Command}' not implemented.")
                 },
 
@@ -73,7 +73,7 @@ namespace Jint.DebugAdapter.Protocol
 
         public void SendStoppedEvent(StopReason reason, string description)
         {
-            SendEvent(new StoppedEventBody
+            SendEvent(new StoppedEvent
             {
                 Reason = reason,
                 Description = description,
@@ -81,140 +81,140 @@ namespace Jint.DebugAdapter.Protocol
             });
         }
 
-        protected AttachResponseBody HandleAttachRequest(AttachArguments arguments)
+        protected AttachResponse AttachRequest(AttachArguments arguments)
         {
-            return new AttachResponseBody();
+            return new AttachResponse();
         }
 
-        protected BreakpointLocationsResponseBody HandleBreakpointLocationsRequest(BreakpointLocationsArguments arguments)
+        protected BreakpointLocationsResponse BreakpointLocationsRequest(BreakpointLocationsArguments arguments)
         {
-            return new BreakpointLocationsResponseBody();
+            return new BreakpointLocationsResponse();
         }
 
-        protected CancelResponseBody HandleCancelRequest(CancelArguments arguments)
+        protected CancelResponse CancelRequest(CancelArguments arguments)
         {
-            return new CancelResponseBody();
+            return new CancelResponse();
         }
 
-        protected CompletionsResponseBody HandleCompletionsRequest(CompletionsArguments arguments)
+        protected CompletionsResponse CompletionsRequest(CompletionsArguments arguments)
         {
-            return new CompletionsResponseBody();
+            return new CompletionsResponse();
         }
 
-        protected ConfigurationDoneResponseBody HandleConfigurationDoneRequest()
+        protected ConfigurationDoneResponse ConfigurationDoneRequest()
         {
             SendStoppedEvent(StopReason.Entry, "Paused on entry");
-            return new ConfigurationDoneResponseBody();
+            return new ConfigurationDoneResponse();
         }
 
-        protected ContinueResponseBody HandleContinueRequest(ContinueArguments arguments)
+        protected ContinueResponse ContinueRequest(ContinueArguments arguments)
         {
             SendStoppedEvent(StopReason.Breakpoint, "Hit breakpoint");
-            return new ContinueResponseBody();
+            return new ContinueResponse();
         }
 
-        protected DataBreakpointInfoResponseBody HandleDataBreakpointInfoRequest(DataBreakpointInfoArguments arguments)
+        protected DataBreakpointInfoResponse DataBreakpointInfoRequest(DataBreakpointInfoArguments arguments)
         {
-            return new DataBreakpointInfoResponseBody();
+            return new DataBreakpointInfoResponse();
         }
 
-        protected DisassembleResponseBody HandleDisassembleRequest(DisassembleArguments arguments)
+        protected DisassembleResponse DisassembleRequest(DisassembleArguments arguments)
         {
-            return new DisassembleResponseBody();
+            return new DisassembleResponse();
         }
 
-        protected DisconnectResponseBody HandleDisconnectRequest(DisconnectArguments arguments)
+        protected DisconnectResponse DisconnectRequest(DisconnectArguments arguments)
         {
-            return new DisconnectResponseBody();
+            return new DisconnectResponse();
         }
 
-        protected EvaluateResponseBody HandleEvaluateRequest(EvaluateArguments arguments)
+        protected EvaluateResponse EvaluateRequest(EvaluateArguments arguments)
         {
-            return new EvaluateResponseBody
+            return new EvaluateResponse
             {
                 Result = "evaluated"
             };
         }
 
-        protected ExceptionInfoResponseBody HandleExceptionInfoRequest(ExceptionInfoArguments arguments)
+        protected ExceptionInfoResponse ExceptionInfoRequest(ExceptionInfoArguments arguments)
         {
-            return new ExceptionInfoResponseBody();
+            return new ExceptionInfoResponse();
         }
 
-        protected GotoResponseBody HandleGotoRequest(GotoArguments arguments)
+        protected GotoResponse GotoRequest(GotoArguments arguments)
         {
-            return new GotoResponseBody();
+            return new GotoResponse();
         }
 
-        protected GotoTargetsResponseBody HandleGotoTargetsRequest(GotoTargetsArguments arguments)
+        protected GotoTargetsResponse GotoTargetsRequest(GotoTargetsArguments arguments)
         {
-            return new GotoTargetsResponseBody();
+            return new GotoTargetsResponse();
         }
 
-        protected InitializeResponseBody HandleInitializeRequest(InitializeArguments arguments)
+        protected InitializeResponse InitializeRequest(InitializeArguments arguments)
         {
-            SendEvent(new InitializedEventBody());
-            return new InitializeResponseBody
+            SendEvent(new InitializedEvent());
+            return new InitializeResponse
             {
                 SupportsConditionalBreakpoints = true,
                 SupportsConfigurationDoneRequest = true
             };
         }
 
-        protected LaunchResponseBody HandleLaunchRequest(LaunchArguments arguments)
+        protected LaunchResponse LaunchRequest(LaunchArguments arguments)
         {
-            return new LaunchResponseBody();
+            return new LaunchResponse();
         }
 
-        protected LoadedSourcesResponseBody HandleLoadedSourcesRequest()
+        protected LoadedSourcesResponse LoadedSourcesRequest()
         {
-            return new LoadedSourcesResponseBody();
+            return new LoadedSourcesResponse();
         }
 
-        protected ModulesResponseBody HandleModulesRequest(ModulesArguments arguments)
+        protected ModulesResponse ModulesRequest(ModulesArguments arguments)
         {
-            return new ModulesResponseBody();
+            return new ModulesResponse();
         }
 
-        protected NextResponseBody HandleNextRequest(NextArguments arguments)
+        protected NextResponse NextRequest(NextArguments arguments)
         {
             SendStoppedEvent(StopReason.Step, "Paused after step");
-            return new NextResponseBody();
+            return new NextResponse();
         }
 
-        protected PauseResponseBody HandlePauseRequest(PauseArguments arguments)
+        protected PauseResponse PauseRequest(PauseArguments arguments)
         {
-            return new PauseResponseBody();
+            return new PauseResponse();
         }
 
-        protected ReadMemoryResponseBody HandleReadMemoryRequest(ReadMemoryArguments arguments)
+        protected ReadMemoryResponse ReadMemoryRequest(ReadMemoryArguments arguments)
         {
-            return new ReadMemoryResponseBody();
+            return new ReadMemoryResponse();
         }
 
-        protected RestartResponseBody HandleRestartRequest(RestartArguments arguments)
+        protected RestartResponse RestartRequest(RestartArguments arguments)
         {
-            return new RestartResponseBody();
+            return new RestartResponse();
         }
 
-        protected RestartFrameResponseBody HandleRestartFrameRequest(RestartFrameArguments arguments)
+        protected RestartFrameResponse RestartFrameRequest(RestartFrameArguments arguments)
         {
-            return new RestartFrameResponseBody();
+            return new RestartFrameResponse();
         }
 
-        protected ReverseContinueResponseBody HandleReverseContinueRequest(ReverseContinueArguments arguments)
+        protected ReverseContinueResponse ReverseContinueRequest(ReverseContinueArguments arguments)
         {
-            return new ReverseContinueResponseBody();
+            return new ReverseContinueResponse();
         }
 
-        protected RunInTerminalResponseBody HandleRunInTerminalRequest(RunInTerminalArguments arguments)
+        protected RunInTerminalResponse RunInTerminalRequest(RunInTerminalArguments arguments)
         {
-            return new RunInTerminalResponseBody();
+            return new RunInTerminalResponse();
         }
 
-        protected ScopesResponseBody HandleScopesRequest(ScopesArguments arguments)
+        protected ScopesResponse ScopesRequest(ScopesArguments arguments)
         {
-            return new ScopesResponseBody
+            return new ScopesResponse
             {
                 Scopes = new List<Scope>
                 {
@@ -227,52 +227,52 @@ namespace Jint.DebugAdapter.Protocol
             };
         }
 
-        protected SetBreakpointsResponseBody HandleSetBreakpointsRequest(SetBreakpointsArguments arguments)
+        protected SetBreakpointsResponse SetBreakpointsRequest(SetBreakpointsArguments arguments)
         {
-            return new SetBreakpointsResponseBody()
+            return new SetBreakpointsResponse()
             {
                 Breakpoints = arguments.Breakpoints.Select(b => new Breakpoint { Line = b.Line, Verified = true }).ToList()
             };
         }
 
-        protected SetDataBreakpointsResponseBody HandleSetDataBreakpointsRequest(SetDataBreakpointsArguments arguments)
+        protected SetDataBreakpointsResponse SetDataBreakpointsRequest(SetDataBreakpointsArguments arguments)
         {
-            return new SetDataBreakpointsResponseBody();
+            return new SetDataBreakpointsResponse();
         }
 
-        protected SetExceptionBreakpointsResponseBody HandleSetExceptionBreakpointsRequest(SetExceptionBreakpointsArguments arguments)
+        protected SetExceptionBreakpointsResponse SetExceptionBreakpointsRequest(SetExceptionBreakpointsArguments arguments)
         {
-            return new SetExceptionBreakpointsResponseBody();
+            return new SetExceptionBreakpointsResponse();
         }
 
-        protected SetExpressionResponseBody HandleSetExpressionRequest(SetExpressionArguments arguments)
+        protected SetExpressionResponse SetExpressionRequest(SetExpressionArguments arguments)
         {
-            return new SetExpressionResponseBody();
+            return new SetExpressionResponse();
         }
 
-        protected SetFunctionBreakpointsResponseBody HandleSetFunctionBreakpointsRequest(SetFunctionBreakpointsArguments arguments)
+        protected SetFunctionBreakpointsResponse SetFunctionBreakpointsRequest(SetFunctionBreakpointsArguments arguments)
         {
-            return new SetFunctionBreakpointsResponseBody();
+            return new SetFunctionBreakpointsResponse();
         }
 
-        protected SetInstructionBreakpointsResponseBody HandleSetInstructionBreakpointsRequest(SetInstructionBreakpointsArguments arguments)
+        protected SetInstructionBreakpointsResponse SetInstructionBreakpointsRequest(SetInstructionBreakpointsArguments arguments)
         {
-            return new SetInstructionBreakpointsResponseBody();
+            return new SetInstructionBreakpointsResponse();
         }
 
-        protected SetVariableResponseBody HandleSetVariableRequest(SetVariableArguments arguments)
+        protected SetVariableResponse SetVariableRequest(SetVariableArguments arguments)
         {
-            return new SetVariableResponseBody();
+            return new SetVariableResponse();
         }
 
-        protected SourceResponseBody HandleSourceRequest(SourceArguments arguments)
+        protected SourceResponse SourceRequest(SourceArguments arguments)
         {
-            return new SourceResponseBody();
+            return new SourceResponse();
         }
 
-        protected StackTraceResponseBody HandleStackTraceRequest(StackTraceArguments arguments)
+        protected StackTraceResponse StackTraceRequest(StackTraceArguments arguments)
         {
-            return new StackTraceResponseBody()
+            return new StackTraceResponse()
             {
                 StackFrames = new List<StackFrame>
                 {
@@ -285,52 +285,52 @@ namespace Jint.DebugAdapter.Protocol
             };
         }
 
-        protected StepBackResponseBody HandleStepBackRequest(StepBackArguments arguments)
+        protected StepBackResponse StepBackRequest(StepBackArguments arguments)
         {
             SendStoppedEvent(StopReason.Step, "Paused after step");
-            return new StepBackResponseBody();
+            return new StepBackResponse();
         }
 
-        protected StepInResponseBody HandleStepInRequest(StepInArguments arguments)
+        protected StepInResponse StepInRequest(StepInArguments arguments)
         {
             SendStoppedEvent(StopReason.Step, "Paused after step");
-            return new StepInResponseBody();
+            return new StepInResponse();
         }
 
-        protected StepInTargetsResponseBody HandleStepInTargetsRequest(StepInTargetsArguments arguments)
+        protected StepInTargetsResponse StepInTargetsRequest(StepInTargetsArguments arguments)
         {
             SendStoppedEvent(StopReason.Step, "Paused after step");
-            return new StepInTargetsResponseBody();
+            return new StepInTargetsResponse();
         }
 
-        protected StepOutResponseBody HandleStepOutRequest(StepOutArguments arguments)
+        protected StepOutResponse StepOutRequest(StepOutArguments arguments)
         {
             SendStoppedEvent(StopReason.Step, "Paused after step");
-            return new StepOutResponseBody();
+            return new StepOutResponse();
         }
 
-        protected TerminateResponseBody HandleTerminateRequest(TerminateArguments arguments)
+        protected TerminateResponse TerminateRequest(TerminateArguments arguments)
         {
-            return new TerminateResponseBody();
+            return new TerminateResponse();
         }
 
-        protected TerminateThreadsResponseBody HandleTerminateThreadsRequest(TerminateThreadsArguments arguments)
+        protected TerminateThreadsResponse TerminateThreadsRequest(TerminateThreadsArguments arguments)
         {
-            return new TerminateThreadsResponseBody();
+            return new TerminateThreadsResponse();
         }
 
-        protected ThreadsResponseBody HandleThreadsRequest()
+        protected ThreadsResponse ThreadsRequest()
         {
             // "Even if a debug adapter does not support multiple threads, it must implement the threads request and return a single (dummy) thread."
-            return new ThreadsResponseBody
+            return new ThreadsResponse
             {
                 Threads = new List<Types.Thread> { new Types.Thread { Id = 1, Name = "Main Thread" } }
             };
         }
 
-        protected VariablesResponseBody HandleVariablesRequest(VariablesArguments arguments)
+        protected VariablesResponse VariablesRequest(VariablesArguments arguments)
         {
-            return new VariablesResponseBody
+            return new VariablesResponse
             {
                 Variables = new List<Variable>
                 {
@@ -348,36 +348,14 @@ namespace Jint.DebugAdapter.Protocol
             };
         }
 
-        protected WriteMemoryResponseBody HandleWriteMemoryRequest(WriteMemoryArguments arguments)
+        protected WriteMemoryResponse WriteMemoryRequest(WriteMemoryArguments arguments)
         {
-            return new WriteMemoryResponseBody();
+            return new WriteMemoryResponse();
         }
 
         protected void SendEvent(ProtocolEventBody body)
         {
-            var name = body switch
-            {
-                BreakpointEventBody => EventNames.Breakpoint,
-                CapabilitiesEventBody => EventNames.Capabilities,
-                ContinuedEventBody => EventNames.Continued,
-                ExitedEventBody => EventNames.Exited,
-                InitializedEventBody => EventNames.Initialized,
-                InvalidatedEventBody => EventNames.Invalidated,
-                LoadedSourceEventBody => EventNames.LoadedSource,
-                MemoryEventBody => EventNames.Memory,
-                ModuleEventBody => EventNames.Module,
-                OutputEventBody => EventNames.Output,
-                ProcessEventBody => EventNames.Process,
-                ProgressEndEventBody => EventNames.ProgressEnd,
-                ProgressStartEventBody => EventNames.ProgressStart,
-                ProgressUpdateEventBody => EventNames.ProgressUpdate,
-                StoppedEventBody => EventNames.Stopped,
-                TerminatedEventBody => EventNames.Terminated,
-                ThreadEventBody => EventNames.Thread,
-                _ => throw new NotImplementedException($"Event for body {body.GetType()} not implemented.")
-            };
-
-            var evt = new ProtocolEvent(name, body);
+            var evt = new ProtocolEvent(body.EventName, body);
             Protocol.SendEvent(evt);
         }
     }

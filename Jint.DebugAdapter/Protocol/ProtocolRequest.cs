@@ -6,6 +6,7 @@ namespace Jint.DebugAdapter.Protocol
     internal abstract class BaseProtocolRequest : ProtocolMessage
     {
         public const string TypeName = "request";
+        
         [JsonPropertyOrder(-10)]
         public string Command { get; set; }
 
@@ -21,8 +22,10 @@ namespace Jint.DebugAdapter.Protocol
     {
         [JsonIgnore]
         public ProtocolArguments Arguments { get; private set; }
+        
         [JsonIgnore]
         public override ProtocolArguments UntypedArguments => Arguments;
+
         [JsonPropertyName("arguments"), JsonPropertyOrder(100)]
         public object SerializedArguments => Arguments;
 

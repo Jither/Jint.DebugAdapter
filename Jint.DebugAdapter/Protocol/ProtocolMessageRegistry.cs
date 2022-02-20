@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Reflection;
 using Jint.DebugAdapter.Protocol.Events;
 using Jint.DebugAdapter.Protocol.Requests;
 using Jint.DebugAdapter.Protocol.Responses;
@@ -50,7 +45,7 @@ namespace Jint.DebugAdapter.Protocol
         private static void RegisterResponse(Type type)
         {
             // Using convention for response body command name: Camel-cased type name with ResponseBody suffix removed.
-            string command = type.Name.Replace("ResponseBody", String.Empty);
+            string command = type.Name.Replace("Response", String.Empty);
             command = Char.ToLowerInvariant(command[0]) + command[1..];
             var responseType = typeof(IncomingProtocolResponse<>).MakeGenericType(type);
             responses.Add(command, responseType);
@@ -59,7 +54,7 @@ namespace Jint.DebugAdapter.Protocol
         private static void RegisterEvent(Type type)
         {
             // Using convention for event body event name: Camel-cased type name with EventBody suffix removed.
-            string command = type.Name.Replace("EventBody", String.Empty);
+            string command = type.Name.Replace("Event", String.Empty);
             command = Char.ToLowerInvariant(command[0]) + command[1..];
             var eventType = typeof(IncomingProtocolEvent<>).MakeGenericType(type);
             events.Add(command, eventType);

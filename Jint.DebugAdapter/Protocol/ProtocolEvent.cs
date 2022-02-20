@@ -10,6 +10,7 @@ namespace Jint.DebugAdapter.Protocol
 
         [JsonPropertyOrder(-10)]
         public string Event { get; set; }
+
         public abstract ProtocolEventBody UntypedBody { get; }
 
         protected BaseProtocolEvent()

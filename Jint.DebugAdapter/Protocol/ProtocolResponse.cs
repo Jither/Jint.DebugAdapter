@@ -16,7 +16,6 @@ namespace Jint.DebugAdapter.Protocol
         [JsonPropertyName("request_seq")]
         public int RequestSeq { get; set; }
         
-        
         public string Message { get; set; }
         
         public abstract ProtocolResponseBody UntypedBody { get; }
@@ -31,12 +30,14 @@ namespace Jint.DebugAdapter.Protocol
     {
         [JsonIgnore]
         public ProtocolResponseBody Body { get; private set; }
+
         [JsonIgnore]
         public override ProtocolResponseBody UntypedBody => Body;
+
         [JsonPropertyName("body"), JsonPropertyOrder(100)]
         public object SerializedBody => Body;
 
-        public ProtocolResponse(string command, int requestSeq, bool success, ProtocolResponseBody body, string message = null)
+        public ProtocolResponse(string command, int requestSeq, bool success, Responses.ProtocolResponseBody body, string message = null)
         {
             Command = command;
             RequestSeq = requestSeq;
@@ -46,7 +47,7 @@ namespace Jint.DebugAdapter.Protocol
         }
     }
 
-    internal class IncomingProtocolResponse<T> : BaseProtocolResponse where T: ProtocolResponseBody
+    internal class IncomingProtocolResponse<T> : BaseProtocolResponse where T: Responses.ProtocolResponseBody
     {
         [JsonPropertyOrder(100)]
         public T Body { get; set; }

@@ -4,6 +4,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Jint.DebugAdapter.Helpers;
+using Jint.DebugAdapter.Protocol.Events;
+using Jint.DebugAdapter.Protocol.Requests;
 using Jint.DebugAdapter.Protocol.Responses;
 
 namespace Jint.DebugAdapter.Protocol
@@ -204,7 +206,7 @@ namespace Jint.DebugAdapter.Protocol
             try
             {
                 Logger.Log(JsonHelper.SerializeForOutput(request));
-                bool disconnecting = request.Command == CommandNames.Disconnect;
+                bool disconnecting = request.Command == "disconnect";
                 if (disconnecting)
                 {
                     IsQueueingEvents = false;
@@ -220,7 +222,7 @@ namespace Jint.DebugAdapter.Protocol
             }
             catch (ProtocolException ex)
             {
-                var error = new ErrorResponseBody(ex);
+                var error = new ErrorResponse(ex);
                 BuildAndSendResponse(request, error, false, ex.Message);
             }
             finally
@@ -229,7 +231,7 @@ namespace Jint.DebugAdapter.Protocol
             }
         }
 
-        private void BuildAndSendResponse(BaseProtocolRequest request, ProtocolResponseBody body, bool success, string message = null)
+        private void BuildAndSendResponse(BaseProtocolRequest request, Responses.ProtocolResponseBody body, bool success, string message = null)
         {
             var response = new ProtocolResponse(request.Command, request.Seq, success, body, message);
             SendMessage(response);
@@ -328,7 +330,7 @@ namespace Jint.DebugAdapter.Protocol
 
         internal void SendEvent(ProtocolEvent evt)
         {
-            if (IsQueueingEvents && evt.Type != EventNames.Output)
+            if (IsQueueingEvents && evt.Body is not OutputEvent)
             {
                 this.eventQueue.Enqueue(evt);
             }
