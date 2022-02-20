@@ -13,12 +13,4 @@
         public string InstructionReference { get; set; }
         public int? Offset { get; set; }
     }
-
-    internal enum EvaluationContext
-    {
-        Watch,
-        Repl,
-        Hover,
-        Clipboard
-    }
 }

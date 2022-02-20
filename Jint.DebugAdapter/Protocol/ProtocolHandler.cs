@@ -20,23 +20,49 @@ namespace Jint.DebugAdapter.Protocol
             return request.UntypedArguments switch
             {
                 AttachArguments args => HandleAttachRequest(args),
+                BreakpointLocationsArguments args => HandleBreakpointLocationsRequest(args),
+                CompletionsArguments args => HandleCompletionsRequest(args),
                 CancelArguments args => HandleCancelRequest(args),
                 ContinueArguments args => HandleContinueRequest(args),
+                DataBreakpointInfoArguments args => HandleDataBreakpointInfoRequest(args),
+                DisassembleArguments args => HandleDisassembleRequest(args),
                 DisconnectArguments args => HandleDisconnectRequest(args),
                 EvaluateArguments args => HandleEvaluateRequest(args),
+                ExceptionInfoArguments args => HandleExceptionInfoRequest(args),
+                GotoArguments args => HandleGotoRequest(args),
+                GotoTargetsArguments args => HandleGotoTargetsRequest(args),
                 InitializeArguments args => HandleInitializeRequest(args),
                 LaunchArguments args => HandleLaunchRequest(args),
+                ModulesArguments args => HandleModulesRequest(args),
                 NextArguments args => HandleNextRequest(args),
+                PauseArguments args => HandlePauseRequest(args),
+                ReadMemoryArguments args => HandleReadMemoryRequest(args),
+                RestartArguments args => HandleRestartRequest(args),
+                RestartFrameArguments args => HandleRestartFrameRequest(args),
+                ReverseContinueArguments args => HandleReverseContinueRequest(args),
+                RunInTerminalArguments args => HandleRunInTerminalRequest(args), // Note: Reverse request (DebugAdapter to host)
                 ScopesArguments args => HandleScopesRequest(args),
                 SetBreakpointsArguments args => HandleSetBreakpointsRequest(args),
+                SetDataBreakpointsArguments args => HandleSetDataBreakpointsRequest(args),
+                SetExceptionBreakpointsArguments args => HandleSetExceptionBreakpointsRequest(args),
+                SetExpressionArguments args => HandleSetExpressionRequest(args),
+                SetFunctionBreakpointsArguments args => HandleSetFunctionBreakpointsRequest(args),
+                SetInstructionBreakpointsArguments args => HandleSetInstructionBreakpointsRequest(args),
+                SetVariableArguments args => HandleSetVariableRequest(args),
+                SourceArguments args => HandleSourceRequest(args),
                 StackTraceArguments args => HandleStackTraceRequest(args),
+                StepBackArguments args => HandleStepBackRequest(args),
                 StepInArguments args => HandleStepInRequest(args),
+                StepInTargetsArguments args => HandleStepInTargetsRequest(args),
                 StepOutArguments args => HandleStepOutRequest(args),
+                TerminateArguments args => HandleTerminateRequest(args),
                 VariablesArguments args => HandleVariablesRequest(args),
+                WriteMemoryArguments args => HandleWriteMemoryRequest(args),
 
                 null => request.Command switch
                 {
                     CommandNames.ConfigurationDone => HandleConfigurationDoneRequest(),
+                    CommandNames.LoadedSources => HandleLoadedSourcesRequest(),
                     CommandNames.Threads => HandleThreadsRequest(),
                     _ => throw new NotImplementedException($"Request command '{request.Command}' not implemented.")
                 },
@@ -60,9 +86,19 @@ namespace Jint.DebugAdapter.Protocol
             return new AttachResponseBody();
         }
 
+        protected BreakpointLocationsResponseBody HandleBreakpointLocationsRequest(BreakpointLocationsArguments arguments)
+        {
+            return new BreakpointLocationsResponseBody();
+        }
+
         protected CancelResponseBody HandleCancelRequest(CancelArguments arguments)
         {
             return new CancelResponseBody();
+        }
+
+        protected CompletionsResponseBody HandleCompletionsRequest(CompletionsArguments arguments)
+        {
+            return new CompletionsResponseBody();
         }
 
         protected ConfigurationDoneResponseBody HandleConfigurationDoneRequest()
@@ -77,6 +113,16 @@ namespace Jint.DebugAdapter.Protocol
             return new ContinueResponseBody();
         }
 
+        protected DataBreakpointInfoResponseBody HandleDataBreakpointInfoRequest(DataBreakpointInfoArguments arguments)
+        {
+            return new DataBreakpointInfoResponseBody();
+        }
+
+        protected DisassembleResponseBody HandleDisassembleRequest(DisassembleArguments arguments)
+        {
+            return new DisassembleResponseBody();
+        }
+
         protected DisconnectResponseBody HandleDisconnectRequest(DisconnectArguments arguments)
         {
             return new DisconnectResponseBody();
@@ -88,6 +134,21 @@ namespace Jint.DebugAdapter.Protocol
             {
                 Result = "evaluated"
             };
+        }
+
+        protected ExceptionInfoResponseBody HandleExceptionInfoRequest(ExceptionInfoArguments arguments)
+        {
+            return new ExceptionInfoResponseBody();
+        }
+
+        protected GotoResponseBody HandleGotoRequest(GotoArguments arguments)
+        {
+            return new GotoResponseBody();
+        }
+
+        protected GotoTargetsResponseBody HandleGotoTargetsRequest(GotoTargetsArguments arguments)
+        {
+            return new GotoTargetsResponseBody();
         }
 
         protected InitializeResponseBody HandleInitializeRequest(InitializeArguments arguments)
@@ -105,10 +166,50 @@ namespace Jint.DebugAdapter.Protocol
             return new LaunchResponseBody();
         }
 
+        protected LoadedSourcesResponseBody HandleLoadedSourcesRequest()
+        {
+            return new LoadedSourcesResponseBody();
+        }
+
+        protected ModulesResponseBody HandleModulesRequest(ModulesArguments arguments)
+        {
+            return new ModulesResponseBody();
+        }
+
         protected NextResponseBody HandleNextRequest(NextArguments arguments)
         {
             SendStoppedEvent(StopReason.Step, "Paused after step");
             return new NextResponseBody();
+        }
+
+        protected PauseResponseBody HandlePauseRequest(PauseArguments arguments)
+        {
+            return new PauseResponseBody();
+        }
+
+        protected ReadMemoryResponseBody HandleReadMemoryRequest(ReadMemoryArguments arguments)
+        {
+            return new ReadMemoryResponseBody();
+        }
+
+        protected RestartResponseBody HandleRestartRequest(RestartArguments arguments)
+        {
+            return new RestartResponseBody();
+        }
+
+        protected RestartFrameResponseBody HandleRestartFrameRequest(RestartFrameArguments arguments)
+        {
+            return new RestartFrameResponseBody();
+        }
+
+        protected ReverseContinueResponseBody HandleReverseContinueRequest(ReverseContinueArguments arguments)
+        {
+            return new ReverseContinueResponseBody();
+        }
+
+        protected RunInTerminalResponseBody HandleRunInTerminalRequest(RunInTerminalArguments arguments)
+        {
+            return new RunInTerminalResponseBody();
         }
 
         protected ScopesResponseBody HandleScopesRequest(ScopesArguments arguments)
@@ -134,6 +235,41 @@ namespace Jint.DebugAdapter.Protocol
             };
         }
 
+        protected SetDataBreakpointsResponseBody HandleSetDataBreakpointsRequest(SetDataBreakpointsArguments arguments)
+        {
+            return new SetDataBreakpointsResponseBody();
+        }
+
+        protected SetExceptionBreakpointsResponseBody HandleSetExceptionBreakpointsRequest(SetExceptionBreakpointsArguments arguments)
+        {
+            return new SetExceptionBreakpointsResponseBody();
+        }
+
+        protected SetExpressionResponseBody HandleSetExpressionRequest(SetExpressionArguments arguments)
+        {
+            return new SetExpressionResponseBody();
+        }
+
+        protected SetFunctionBreakpointsResponseBody HandleSetFunctionBreakpointsRequest(SetFunctionBreakpointsArguments arguments)
+        {
+            return new SetFunctionBreakpointsResponseBody();
+        }
+
+        protected SetInstructionBreakpointsResponseBody HandleSetInstructionBreakpointsRequest(SetInstructionBreakpointsArguments arguments)
+        {
+            return new SetInstructionBreakpointsResponseBody();
+        }
+
+        protected SetVariableResponseBody HandleSetVariableRequest(SetVariableArguments arguments)
+        {
+            return new SetVariableResponseBody();
+        }
+
+        protected SourceResponseBody HandleSourceRequest(SourceArguments arguments)
+        {
+            return new SourceResponseBody();
+        }
+
         protected StackTraceResponseBody HandleStackTraceRequest(StackTraceArguments arguments)
         {
             return new StackTraceResponseBody()
@@ -149,16 +285,38 @@ namespace Jint.DebugAdapter.Protocol
             };
         }
 
+        protected StepBackResponseBody HandleStepBackRequest(StepBackArguments arguments)
+        {
+            SendStoppedEvent(StopReason.Step, "Paused after step");
+            return new StepBackResponseBody();
+        }
+
         protected StepInResponseBody HandleStepInRequest(StepInArguments arguments)
         {
             SendStoppedEvent(StopReason.Step, "Paused after step");
             return new StepInResponseBody();
         }
 
+        protected StepInTargetsResponseBody HandleStepInTargetsRequest(StepInTargetsArguments arguments)
+        {
+            SendStoppedEvent(StopReason.Step, "Paused after step");
+            return new StepInTargetsResponseBody();
+        }
+
         protected StepOutResponseBody HandleStepOutRequest(StepOutArguments arguments)
         {
             SendStoppedEvent(StopReason.Step, "Paused after step");
             return new StepOutResponseBody();
+        }
+
+        protected TerminateResponseBody HandleTerminateRequest(TerminateArguments arguments)
+        {
+            return new TerminateResponseBody();
+        }
+
+        protected TerminateThreadsResponseBody HandleTerminateThreadsRequest(TerminateThreadsArguments arguments)
+        {
+            return new TerminateThreadsResponseBody();
         }
 
         protected ThreadsResponseBody HandleThreadsRequest()
@@ -188,6 +346,11 @@ namespace Jint.DebugAdapter.Protocol
                     }
                 }
             };
+        }
+
+        protected WriteMemoryResponseBody HandleWriteMemoryRequest(WriteMemoryArguments arguments)
+        {
+            return new WriteMemoryResponseBody();
         }
 
         protected void SendEvent(ProtocolEventBody body)

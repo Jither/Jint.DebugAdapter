@@ -29,12 +29,9 @@ namespace Jint.DebugAdapter.Protocol
 
     public static class CommandNames
     {
-        public const string Attach = "attach";
-        public const string Cancel = "cancel";
         public const string Disconnect = "disconnect";
         public const string ConfigurationDone = "configurationDone";
-        public const string Initialize = "initialize";
-        public const string Launch = "launch";
+        public const string LoadedSources = "loadedSources";
         public const string Threads = "threads";
     }
 }

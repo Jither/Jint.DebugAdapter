@@ -11,11 +11,4 @@ namespace Jint.DebugAdapter.Protocol.Responses
     {
         public List<Breakpoint> Breakpoints { get; set; }
     }
-
-    internal class ThreadsResponseBody : ProtocolResponseBody
-    {
-        public List<Types.Thread> Threads { get; set; }
-    }
-
-
 }

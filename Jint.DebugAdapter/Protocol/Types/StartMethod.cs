@@ -13,11 +13,4 @@ namespace Jint.DebugAdapter.Protocol.Types
         Attach,
         AttachForSuspendedLaunch
     }
-
-    internal enum ThreadChangeReason
-    {
-        Other,
-        Started,
-        Exited
-    }
 }

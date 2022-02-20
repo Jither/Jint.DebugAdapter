@@ -52,7 +52,7 @@ namespace Jint.DebugAdapter.Helpers
             {
                 BaseProtocolRequest.TypeName => ProtocolMessageRegistry.GetRequestType(command),
                 BaseProtocolResponse.TypeName => ProtocolMessageRegistry.GetResponseType(command),
-                BaseProtocolEvent.TypeName => ProtocolMessageRegistry.GetEventType(command),
+                BaseProtocolEvent.TypeName => ProtocolMessageRegistry.GetEventType(evt),
                 _ => throw new NotSupportedException($"Unsupported protocol message type: {typeName}"),
             };
         }

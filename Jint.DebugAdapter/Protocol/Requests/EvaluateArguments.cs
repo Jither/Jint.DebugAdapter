@@ -12,6 +12,6 @@ namespace Jint.DebugAdapter.Protocol.Requests
         public string Expression { get; set; }
         public int? FrameId { get; set; }
         public EvaluationContext? Context { get; set; }
-        public ValueFormat? Format { get; set; }
+        public ValueFormat Format { get; set; }
     }
 }

@@ -18,11 +18,4 @@ namespace Jint.DebugAdapter.Protocol.Types
         public int? IndexedVariables { get; set; }
         public string MemoryReference { get; set; }
     }
-
-    internal class VariablePresentationHint
-    {
-        public string Kind { get; set; }
-        public List<string> Attributes { get; set; }
-        public string Visibility { get; set; }
-    }
 }
