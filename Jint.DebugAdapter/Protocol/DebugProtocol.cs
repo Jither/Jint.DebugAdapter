@@ -231,7 +231,7 @@ namespace Jint.DebugAdapter.Protocol
             }
         }
 
-        private void BuildAndSendResponse(BaseProtocolRequest request, Responses.ProtocolResponseBody body, bool success, string message = null)
+        private void BuildAndSendResponse(BaseProtocolRequest request, ProtocolResponseBody body, bool success, string message = null)
         {
             var response = new ProtocolResponse(request.Command, request.Seq, success, body, message);
             SendMessage(response);
