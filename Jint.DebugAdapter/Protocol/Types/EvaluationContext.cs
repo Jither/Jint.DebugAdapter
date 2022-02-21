@@ -2,6 +2,7 @@
 {
     internal enum EvaluationContext
     {
+        Other,
         Watch,
         Repl,
         Hover,

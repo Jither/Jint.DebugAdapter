@@ -2,6 +2,7 @@
 {
     internal enum SteppingGranularity
     {
+        Other,
         Statement,
         Line,
         Instruction

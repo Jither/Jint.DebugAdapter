@@ -2,6 +2,7 @@
 {
     internal enum ExceptionBreakMode
     {
+        Other,
         Never,
         Always,
         Unhandled,
