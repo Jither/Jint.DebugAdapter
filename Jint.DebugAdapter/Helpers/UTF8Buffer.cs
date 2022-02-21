@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 
 namespace Jint.DebugAdapter.Helpers
 {
@@ -21,6 +17,7 @@ namespace Jint.DebugAdapter.Helpers
 
         public void Append(byte[] newData, int length)
         {
+            // TODO: Try to get rid of allocations, here and in Remove
             byte[] newBuffer = new byte[ByteLength + length];
             Array.Copy(buffer, 0, newBuffer, 0, ByteLength);
             Array.Copy(newData, 0, newBuffer, ByteLength, length);

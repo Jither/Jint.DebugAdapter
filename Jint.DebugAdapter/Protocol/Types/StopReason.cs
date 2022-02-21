@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
 namespace Jint.DebugAdapter.Protocol.Types
 {
@@ -17,12 +11,11 @@ namespace Jint.DebugAdapter.Protocol.Types
         Pause,
         Entry,
         Goto,
-        // TODO: Need custom serialization of these
-        [EnumMember(Value = "function breakpoint")]
+        [JsonPropertyName("function breakpoint")]
         FunctionBreakpoint,
-        [EnumMember(Value = "data breakpoint")]
+        [JsonPropertyName("data breakpoint")]
         DataBreakpoint,
-        [EnumMember(Value = "instruction breakpoint")]
+        [JsonPropertyName("instruction breakpoint")]
         InstructionBreakpoint,
     }
 }

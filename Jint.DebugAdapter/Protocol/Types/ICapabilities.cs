@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Jint.DebugAdapter.Protocol.Types
+﻿namespace Jint.DebugAdapter.Protocol.Types
 {
-    // Because InitializeResponseBody is of the Capabilities type, the interface enforces the same
+    // Because InitializeResponseBody is == the Capabilities type, the interface enforces the same
     // properties on that ProtocolResponseBody and the actual Capabilities type.
     internal interface ICapabilities
     {

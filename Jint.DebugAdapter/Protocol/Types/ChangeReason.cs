@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Jint.DebugAdapter.Protocol.Types
+﻿namespace Jint.DebugAdapter.Protocol.Types
 {
     // Breakpoint event: reason: 'changed' | 'new' | 'removed' | string;
     // LoadedSource event: reason: 'new' | 'changed' | 'removed';

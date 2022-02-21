@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using Jint.DebugAdapter.Helpers;
 
 namespace Jint.DebugAdapter.Protocol
 {
@@ -20,8 +21,8 @@ namespace Jint.DebugAdapter.Protocol
 
         static JsonHelper()
         {
-            options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
-            outputOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+            options.Converters.Add(new CustomJsonStringEnumConverter());
+            outputOptions.Converters.Add(new CustomJsonStringEnumConverter());
         }
 
         public static T Deserialize<T>(string json)
