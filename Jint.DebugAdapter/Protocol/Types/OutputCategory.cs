@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Types
 {
-    internal enum OutputCategory
+    public enum OutputCategory
     {
         Other,
         Console,

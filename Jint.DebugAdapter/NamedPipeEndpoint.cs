@@ -2,10 +2,11 @@
 
 namespace Jint.DebugAdapter
 {
-    public class NamedPipeAdapter : Adapter
+    public class NamedPipeEndpoint : Endpoint
     {
         private readonly string name;
-        public NamedPipeAdapter(string name)
+
+        public NamedPipeEndpoint(Adapter adapter, string name) : base(adapter)
         {
             this.name = name;
         }

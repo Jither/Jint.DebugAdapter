@@ -19,12 +19,12 @@ namespace Jint.DebugAdapter.Protocol
         public ProtocolRequest Request { get; }
     }
 
-    internal class DebugProtocol
+    public class DebugProtocol
     {
         private const int bufferSize = 4096;
         private static readonly Regex rxContentLength = new(@"^.*?Content-Length: (?<length>\d+)\r\n\r\n", RegexOptions.Compiled | RegexOptions.Singleline);
 
-        private readonly ProtocolHandler handler;
+        private readonly Adapter adapter;
         private readonly Stream inputStream;
         private readonly Stream outputStream;
 
@@ -66,10 +66,9 @@ namespace Jint.DebugAdapter.Protocol
             }
         }
 
-        public DebugProtocol(ProtocolHandler handler, Stream inputStream, Stream outputStream)
+        public DebugProtocol(Adapter adapter, Stream inputStream, Stream outputStream)
         {
-            this.handler = handler;
-            handler.Protocol = this;
+            this.adapter = adapter;
             this.inputStream = inputStream;
             this.outputStream = Stream.Synchronized(outputStream); // Make sure only one thread is writing to output at once
         }
@@ -216,7 +215,7 @@ namespace Jint.DebugAdapter.Protocol
                 {
                     IsQueueingEvents = false;
                 }
-                var responseBody = handler.HandleRequest(request);
+                var responseBody = adapter.HandleRequest(request);
 
                 BuildAndSendResponse(request, responseBody, true);
 

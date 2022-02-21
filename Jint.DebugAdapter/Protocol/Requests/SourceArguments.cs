@@ -2,7 +2,7 @@
 
 namespace Jint.DebugAdapter.Protocol.Requests
 {
-    internal class SourceArguments : ProtocolArguments
+    public class SourceArguments : ProtocolArguments
     {
         public Source Source { get; set; }
         public int SourceReference { get; set; } // backwards compatibility

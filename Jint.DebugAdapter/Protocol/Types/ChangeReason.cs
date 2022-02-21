@@ -3,7 +3,7 @@
     // Breakpoint event: reason: 'changed' | 'new' | 'removed' | string;
     // LoadedSource event: reason: 'new' | 'changed' | 'removed';
     // Module event: reason: 'new' | 'changed' | 'removed';
-    internal enum ChangeReason
+    public enum ChangeReason
     {
         Other,
         New,

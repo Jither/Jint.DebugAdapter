@@ -5,7 +5,7 @@ using Jint.DebugAdapter.Helpers;
 namespace Jint.DebugAdapter.Protocol
 {
     [JsonConverter(typeof(ProtocolMessageConverter))]
-    internal abstract class ProtocolMessage
+    public abstract class ProtocolMessage
     {
         [JsonPropertyOrder(-100)]
         public string Type { get; set; }

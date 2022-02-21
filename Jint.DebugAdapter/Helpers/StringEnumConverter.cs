@@ -93,15 +93,12 @@ namespace Jint.DebugAdapter.Helpers
 
             public override StringEnum<TEnum>? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
             {
-                switch (reader.TokenType)
+                return reader.TokenType switch
                 {
-                    case JsonTokenType.String:
-                        return new StringEnum<TEnum>(reader.GetString());
-                    case JsonTokenType.Null:
-                        return null;
-                    default:
-                        throw new JsonException("Expected string or null value");
-                }
+                    JsonTokenType.String => new StringEnum<TEnum>(reader.GetString()),
+                    JsonTokenType.Null => null,
+                    _ => throw new JsonException("Expected string or null value"),
+                };
             }
 
             public override void Write(Utf8JsonWriter writer, StringEnum<TEnum>? value, JsonSerializerOptions options)

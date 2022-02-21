@@ -4,7 +4,7 @@ using Jint.DebugAdapter.Protocol.Events;
 
 namespace Jint.DebugAdapter.Protocol
 {
-    internal abstract class BaseProtocolEvent : ProtocolMessage
+    public abstract class BaseProtocolEvent : ProtocolMessage
     {
         public const string TypeName = "event";
 
@@ -19,7 +19,7 @@ namespace Jint.DebugAdapter.Protocol
         }
     }
 
-    internal class ProtocolEvent : BaseProtocolEvent
+    public class ProtocolEvent : BaseProtocolEvent
     {
         [JsonIgnore]
         public ProtocolEventBody Body { get; private set; }
@@ -37,7 +37,7 @@ namespace Jint.DebugAdapter.Protocol
         }
     }
 
-    internal class IncomingProtocolEvent<TBody> : BaseProtocolEvent where TBody: ProtocolEventBody
+    public class IncomingProtocolEvent<TBody> : BaseProtocolEvent where TBody: ProtocolEventBody
     {
         [JsonPropertyOrder(100)]
         public TBody Body { get; set; }

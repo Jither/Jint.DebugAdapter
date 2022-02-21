@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Types
 {
-    internal class DataBreakpoint
+    public class DataBreakpoint
     {
         public string DataId { get; set; }
         // This isn't a StringEnum - it has the members it's likely to ever have, and is also used in a List in DataBreakpointInfoResponse

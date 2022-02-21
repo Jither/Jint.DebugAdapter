@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Types
 {
-    internal class GotoTarget
+    public class GotoTarget
     {
         public int Id { get; set; }
         public string Label { get; set; }

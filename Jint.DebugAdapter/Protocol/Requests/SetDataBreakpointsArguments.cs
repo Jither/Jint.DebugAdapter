@@ -2,7 +2,7 @@
 
 namespace Jint.DebugAdapter.Protocol.Requests
 {
-    internal class SetDataBreakpointsArguments : ProtocolArguments
+    public class SetDataBreakpointsArguments : ProtocolArguments
     {
         public List<DataBreakpoint> Breakpoints { get; set; }
     }

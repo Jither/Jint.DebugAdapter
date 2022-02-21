@@ -2,7 +2,7 @@
 
 namespace Jint.DebugAdapter.Protocol.Types
 {
-    internal enum ChecksumAlgorithm
+    public enum ChecksumAlgorithm
     {
         Other,
         [JsonPropertyName("MD5")]

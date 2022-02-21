@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Events
 {
-    internal class InvalidatedEvent : ProtocolEventBody
+    public class InvalidatedEvent : ProtocolEventBody
     {
         // export type InvalidatedAreas = 'all' | 'stacks' | 'threads' | 'variables' | string
         public List<string> InvalidatedAreas { get; set; }

@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Events
 {
-    internal class TerminatedEvent : ProtocolEventBody
+    public class TerminatedEvent : ProtocolEventBody
     {
         public object Restart { get; set; }
 

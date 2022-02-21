@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Types
 {
-    internal class ExceptionDetails
+    public class ExceptionDetails
     {
         public string Message { get; set; }
         public string TypeName { get; set; }

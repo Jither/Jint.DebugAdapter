@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Requests
 {
-    internal class DisconnectArguments : ProtocolArguments
+    public class DisconnectArguments : ProtocolArguments
     {
         public bool? Restart { get; set; }
         public bool? TerminateDebuggee { get; set; }

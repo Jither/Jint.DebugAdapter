@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Requests
 {
-    internal class CompletionsArguments : ProtocolArguments
+    public class CompletionsArguments : ProtocolArguments
     {
         public int? FrameId { get; set; }
         public string Text { get; set; }

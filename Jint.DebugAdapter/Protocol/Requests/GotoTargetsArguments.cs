@@ -2,7 +2,7 @@
 
 namespace Jint.DebugAdapter.Protocol.Requests
 {
-    internal class GotoTargetsArguments : ProtocolArguments
+    public class GotoTargetsArguments : ProtocolArguments
     {
         public Source Source { get; set; }
         public int Line { get; set; }

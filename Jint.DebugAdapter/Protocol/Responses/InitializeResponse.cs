@@ -2,7 +2,7 @@
 
 namespace Jint.DebugAdapter.Protocol.Responses
 {
-    internal class InitializeResponse : ProtocolResponseBody, ICapabilities
+    public class InitializeResponse : ProtocolResponseBody, ICapabilities
     {
         public bool? SupportsConfigurationDoneRequest { get; set; }
         public bool? SupportsFunctionBreakpoints { get; set; }

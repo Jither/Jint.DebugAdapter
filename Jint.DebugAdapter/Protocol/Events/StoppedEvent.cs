@@ -3,7 +3,7 @@ using Jint.DebugAdapter.Protocol.Types;
 
 namespace Jint.DebugAdapter.Protocol.Events
 {
-    internal class StoppedEvent : ProtocolEventBody
+    public class StoppedEvent : ProtocolEventBody
     {
         public StringEnum<StopReason> Reason { get; set; }
         public string Description { get; set; }

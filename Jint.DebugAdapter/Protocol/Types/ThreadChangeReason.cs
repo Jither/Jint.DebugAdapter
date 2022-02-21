@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Types
 {
-    internal enum ThreadChangeReason
+    public enum ThreadChangeReason
     {
         Other,
         Started,

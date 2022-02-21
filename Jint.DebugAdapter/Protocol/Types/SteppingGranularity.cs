@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Types
 {
-    internal enum SteppingGranularity
+    public enum SteppingGranularity
     {
         Other,
         Statement,

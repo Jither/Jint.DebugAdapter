@@ -2,7 +2,7 @@
 
 namespace Jint.DebugAdapter.Protocol.Requests
 {
-    internal class SetExpressionArguments : ProtocolArguments
+    public class SetExpressionArguments : ProtocolArguments
     {
         public string Expression { get; set; }
         public string Value { get; set; }

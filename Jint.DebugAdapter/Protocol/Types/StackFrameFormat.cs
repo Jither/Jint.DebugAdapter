@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Types
 {
-    internal class StackFrameFormat
+    public class StackFrameFormat
     {
         public bool? Parameters { get; set; }
         public bool? ParameterTypes { get; set; }

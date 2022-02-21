@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Types
 {
-    internal class DisassembledInstruction
+    public class DisassembledInstruction
     {
         public string Address { get; set; }
         public string InstructionBytes { get; set; }

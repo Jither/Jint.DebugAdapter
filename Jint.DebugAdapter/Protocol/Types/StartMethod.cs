@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Types
 {
-    internal enum StartMethod
+    public enum StartMethod
     {
         Other,
         Launch,

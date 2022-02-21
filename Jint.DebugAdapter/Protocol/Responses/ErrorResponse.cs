@@ -2,7 +2,7 @@
 
 namespace Jint.DebugAdapter.Protocol.Responses
 {
-    internal class ErrorResponse : ProtocolResponseBody
+    public class ErrorResponse : ProtocolResponseBody
     {
         public Message Error { get; set; }
 

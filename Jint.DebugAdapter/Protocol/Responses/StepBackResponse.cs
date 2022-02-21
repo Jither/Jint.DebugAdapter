@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Responses
 {
-    internal class StepBackResponse : ProtocolResponseBody
+    public class StepBackResponse : ProtocolResponseBody
     {
     }
 }

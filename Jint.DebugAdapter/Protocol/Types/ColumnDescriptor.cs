@@ -2,7 +2,7 @@
 
 namespace Jint.DebugAdapter.Protocol.Types
 {
-    internal class ColumnDescriptor
+    public class ColumnDescriptor
     {
         public string AttributeName { get; set; }
         public string Label { get; set; }

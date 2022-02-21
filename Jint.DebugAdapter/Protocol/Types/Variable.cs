@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Types
 {
-    internal class Variable
+    public class Variable
     {
         public string Name { get; set; }
         public string Value { get; set; }

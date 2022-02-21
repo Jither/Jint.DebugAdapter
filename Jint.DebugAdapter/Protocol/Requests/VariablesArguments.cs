@@ -2,7 +2,7 @@
 
 namespace Jint.DebugAdapter.Protocol.Requests
 {
-    internal class VariablesArguments : ProtocolArguments
+    public class VariablesArguments : ProtocolArguments
     {
         public int VariablesReference { get; set; }
         public string Filter { get; set; }

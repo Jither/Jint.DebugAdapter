@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Types
 {
-    internal class Module
+    public class Module
     {
         public string Id { get; set; }
         public string Name { get; set; }

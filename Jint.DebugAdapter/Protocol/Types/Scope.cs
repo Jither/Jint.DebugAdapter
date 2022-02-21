@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Types
 {
-    internal class Scope
+    public class Scope
     {
         public string Name { get; set; }
         public string PresentationHint { get; set; }

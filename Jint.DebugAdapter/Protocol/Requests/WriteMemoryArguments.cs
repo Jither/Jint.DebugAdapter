@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Requests
 {
-    internal class WriteMemoryArguments : ProtocolArguments
+    public class WriteMemoryArguments : ProtocolArguments
     {
         public string MemoryReference { get; set; }
         public long? Offset { get; set; }

@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Types
 {
-    internal class FunctionBreakpoint
+    public class FunctionBreakpoint
     {
         public string Name { get; set; }
         public string Condition { get; set; }

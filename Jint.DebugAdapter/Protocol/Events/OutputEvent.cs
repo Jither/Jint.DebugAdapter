@@ -3,7 +3,7 @@ using Jint.DebugAdapter.Protocol.Types;
 
 namespace Jint.DebugAdapter.Protocol.Events
 {
-    internal class OutputEvent : ProtocolEventBody
+    public class OutputEvent : ProtocolEventBody
     {
         public StringEnum<OutputCategory>? Category { get; set; }
         public string Output { get; set; }

@@ -3,7 +3,7 @@ using Jint.DebugAdapter.Protocol.Types;
 
 namespace Jint.DebugAdapter.Protocol.Events
 {
-    internal class ThreadEvent : ProtocolEventBody
+    public class ThreadEvent : ProtocolEventBody
     {
         public StringEnum<ThreadChangeReason> Reason { get; set; }
         public int ThreadId { get; set; }

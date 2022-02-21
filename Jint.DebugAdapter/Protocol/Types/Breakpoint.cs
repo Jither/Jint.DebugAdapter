@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Types
 {
-    internal class Breakpoint
+    public class Breakpoint
     {
         public int? Id { get; set; }
         public bool Verified { get; set; }

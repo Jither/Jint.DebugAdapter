@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Types
 {
-    internal enum ExceptionBreakMode
+    public enum ExceptionBreakMode
     {
         Other,
         Never,

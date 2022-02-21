@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Types
 {
-    internal class BreakpointLocation
+    public class BreakpointLocation
     {
         public int Line { get; set; }
         public int? Column { get; set; }

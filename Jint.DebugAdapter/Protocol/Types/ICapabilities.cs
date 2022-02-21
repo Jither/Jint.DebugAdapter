@@ -2,7 +2,7 @@
 {
     // Because InitializeResponseBody is == the Capabilities type, the interface enforces the same
     // properties on that ProtocolResponseBody and the actual Capabilities type.
-    internal interface ICapabilities
+    public interface ICapabilities
     {
         public bool? SupportsConfigurationDoneRequest { get; set; }
         public bool? SupportsFunctionBreakpoints { get; set; }

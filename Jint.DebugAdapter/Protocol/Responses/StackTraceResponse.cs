@@ -2,7 +2,7 @@
 
 namespace Jint.DebugAdapter.Protocol.Responses
 {
-    internal class StackTraceResponse : ProtocolResponseBody
+    public class StackTraceResponse : ProtocolResponseBody
     {
         public List<StackFrame> StackFrames { get; set; }
         public int? TotalFrames { get; set; }

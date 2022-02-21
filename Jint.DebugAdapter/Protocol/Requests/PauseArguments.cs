@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Requests
 {
-    internal class PauseArguments : ProtocolArguments
+    public class PauseArguments : ProtocolArguments
     {
         public int ThreadId { get; set; }
     }

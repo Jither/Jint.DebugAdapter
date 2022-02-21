@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Types
 {
-    internal class Capabilities : ICapabilities
+    public class Capabilities : ICapabilities
     {
         public bool? SupportsConfigurationDoneRequest { get; set; }
         public bool? SupportsFunctionBreakpoints { get; set; }

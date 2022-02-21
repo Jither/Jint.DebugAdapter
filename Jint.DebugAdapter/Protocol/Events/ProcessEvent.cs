@@ -3,7 +3,7 @@ using Jint.DebugAdapter.Protocol.Types;
 
 namespace Jint.DebugAdapter.Protocol.Events
 {
-    internal class ProcessEvent : ProtocolEventBody
+    public class ProcessEvent : ProtocolEventBody
     {
         public string Name { get; set; }
         public int? SystemProcessId { get; set; }

@@ -2,7 +2,7 @@
 
 namespace Jint.DebugAdapter.Protocol.Responses
 {
-    internal class DataBreakpointInfoResponse : ProtocolResponseBody
+    public class DataBreakpointInfoResponse : ProtocolResponseBody
     {
         public string DataId { get; set; }
         public string Description { get; set; }

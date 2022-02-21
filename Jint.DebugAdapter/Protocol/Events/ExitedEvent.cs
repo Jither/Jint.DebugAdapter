@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Events
 {
-    internal class ExitedEvent : ProtocolEventBody
+    public class ExitedEvent : ProtocolEventBody
     {
         public int ExitCode { get; set; }
 

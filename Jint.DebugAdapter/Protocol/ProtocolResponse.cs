@@ -3,7 +3,7 @@ using Jint.DebugAdapter.Protocol.Responses;
 
 namespace Jint.DebugAdapter.Protocol
 {
-    internal abstract class BaseProtocolResponse : ProtocolMessage
+    public abstract class BaseProtocolResponse : ProtocolMessage
     {
         public const string TypeName = "response";
 
@@ -26,7 +26,7 @@ namespace Jint.DebugAdapter.Protocol
         }
     }
 
-    internal class ProtocolResponse : BaseProtocolResponse
+    public class ProtocolResponse : BaseProtocolResponse
     {
         [JsonIgnore]
         public ProtocolResponseBody Body { get; private set; }
@@ -47,7 +47,7 @@ namespace Jint.DebugAdapter.Protocol
         }
     }
 
-    internal class IncomingProtocolResponse<T> : BaseProtocolResponse where T: Responses.ProtocolResponseBody
+    public class IncomingProtocolResponse<T> : BaseProtocolResponse where T: Responses.ProtocolResponseBody
     {
         [JsonPropertyOrder(100)]
         public T Body { get; set; }

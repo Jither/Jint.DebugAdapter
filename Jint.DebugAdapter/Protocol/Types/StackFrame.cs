@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Types
 {
-    internal class StackFrame
+    public class StackFrame
     {
         public int Id { get; set; }
         public string Name { get; set; }

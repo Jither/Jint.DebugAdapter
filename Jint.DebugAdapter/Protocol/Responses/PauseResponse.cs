@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Responses
 {
-    internal class PauseResponse : ProtocolResponseBody
+    public class PauseResponse : ProtocolResponseBody
     {
     }
 }

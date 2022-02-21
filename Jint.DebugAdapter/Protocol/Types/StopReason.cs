@@ -2,7 +2,7 @@
 
 namespace Jint.DebugAdapter.Protocol.Types
 {
-    internal enum StopReason
+    public enum StopReason
     {
         Other,
         Step,

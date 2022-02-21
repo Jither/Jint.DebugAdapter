@@ -2,7 +2,7 @@
 
 namespace Jint.DebugAdapter.Protocol.Requests
 {
-    internal class InitializeArguments : ProtocolArguments
+    public class InitializeArguments : ProtocolArguments
     {
         [JsonPropertyName("clientID")]
         public string ClientId { get; set; }

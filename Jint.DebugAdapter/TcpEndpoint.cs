@@ -3,11 +3,11 @@ using System.Net.Sockets;
 
 namespace Jint.DebugAdapter
 {
-    public class TcpAdapter : Adapter
+    public class TcpEndpoint : Endpoint
     {
         private readonly int port;
 
-        public TcpAdapter(int port = 4711)
+        public TcpEndpoint(Adapter adapter, int port = 4711) : base(adapter)
         {
             this.port = port;
         }

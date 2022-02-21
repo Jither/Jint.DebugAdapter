@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Jint.DebugAdapter.Protocol.Events
 {
-    internal abstract class ProtocolEventBody
+    public abstract class ProtocolEventBody
     {
         // This indirection is in order to get around JsonIgnore not being inherited if EventName was declared abstract
         [JsonIgnore]

@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Types
 {
-    internal class Message
+    public class Message
     {
         public int Id { get; set; }
         public string Format { get; set; }

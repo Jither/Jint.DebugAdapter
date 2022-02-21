@@ -2,7 +2,7 @@
 
 namespace Jint.DebugAdapter.Protocol.Requests
 {
-    internal class LaunchArguments : ProtocolArguments
+    public class LaunchArguments : ProtocolArguments
     {
         public bool? NoDebug { get; set; }
         [JsonPropertyName("__restart")]

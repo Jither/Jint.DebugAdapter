@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Types
 {
-    internal class InstructionBreakpoint
+    public class InstructionBreakpoint
     {
         public string InstructionReference { get; set; }
         public long? Offset { get; set; }

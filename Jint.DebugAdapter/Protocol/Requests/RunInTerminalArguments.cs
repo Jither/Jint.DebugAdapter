@@ -3,7 +3,7 @@ using Jint.DebugAdapter.Protocol.Types;
 
 namespace Jint.DebugAdapter.Protocol.Requests
 {
-    internal class RunInTerminalArguments : ProtocolArguments
+    public class RunInTerminalArguments : ProtocolArguments
     {
         public StringEnum<TerminalKind>? Kind { get; set; }
         public string Title { get; set; }

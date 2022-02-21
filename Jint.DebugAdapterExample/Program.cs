@@ -1,4 +1,5 @@
 ﻿using Jint.DebugAdapter;
+using Jint.DebugAdapter.Protocol;
 
 namespace Jint.DebugAdapterExample
 {
@@ -7,25 +8,27 @@ namespace Jint.DebugAdapterExample
         public static void Main(string[] args)
         {
             Logger.Log("Started");
-            Adapter adapter;
+            Endpoint endpoint;
+            var adapter = new Adapter();
+
             if (args.Length > 0)
             {
                 if (Int32.TryParse(args[0], out int port))
                 {
-                    adapter = new TcpAdapter(port);
+                    endpoint = new TcpEndpoint(adapter, port);
                 }
                 else
                 {
-                    adapter = new NamedPipeAdapter(args[0]);
+                    endpoint = new NamedPipeEndpoint(adapter, args[0]);
                 }
             }
             else
             {
-                adapter = new StdInOutAdapter();
+                endpoint = new StdInOutEndpoint(adapter);
             }
 
-            adapter.Initialize();
-            adapter.Start();
+            endpoint.Initialize();
+            endpoint.Start();
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Responses
 {
-    internal class SetVariableResponse : ProtocolResponseBody
+    public class SetVariableResponse : ProtocolResponseBody
     {
         public string Value { get; set; }
         public string Type { get; set; }

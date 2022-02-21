@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Events
 {
-    internal class ProgressUpdateEvent : ProtocolEventBody
+    public class ProgressUpdateEvent : ProtocolEventBody
     {
         public string ProgressId { get; set; }
         public string Message { get; set; }

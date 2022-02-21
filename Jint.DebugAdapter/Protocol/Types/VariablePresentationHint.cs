@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Types
 {
-    internal class VariablePresentationHint
+    public class VariablePresentationHint
     {
         public string Kind { get; set; }
         public List<string> Attributes { get; set; }

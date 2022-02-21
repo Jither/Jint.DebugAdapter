@@ -3,7 +3,7 @@ using Jint.DebugAdapter.Helpers;
 
 namespace Jint.DebugAdapter.Protocol.Types
 {
-    internal class Checksum
+    public class Checksum
     {
         public StringEnum<ChecksumAlgorithm> Algorithm { get; set; }
         [JsonPropertyName("checksum")]

@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Requests
 {
-    internal class DisassembleArguments : ProtocolArguments
+    public class DisassembleArguments : ProtocolArguments
     {
         public string MemoryReference { get; set; }
         public long? Offset { get; set; }

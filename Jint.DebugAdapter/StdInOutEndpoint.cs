@@ -1,8 +1,8 @@
 ﻿namespace Jint.DebugAdapter
 {
-    public class StdInOutAdapter : Adapter
+    public class StdInOutEndpoint : Endpoint
     {
-        public StdInOutAdapter()
+        public StdInOutEndpoint(Adapter adapter) : base(adapter)
         {
         }
 

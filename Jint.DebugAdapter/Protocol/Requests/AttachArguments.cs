@@ -2,7 +2,7 @@
 
 namespace Jint.DebugAdapter.Protocol.Requests
 {
-    internal class AttachArguments : ProtocolArguments
+    public class AttachArguments : ProtocolArguments
     {
         [JsonPropertyName("__restart")]
         public object Restart { get; set; }

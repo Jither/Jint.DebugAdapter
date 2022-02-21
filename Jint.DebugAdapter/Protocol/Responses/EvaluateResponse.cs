@@ -2,7 +2,7 @@
 
 namespace Jint.DebugAdapter.Protocol.Responses
 {
-    internal class EvaluateResponse : ProtocolResponseBody
+    public class EvaluateResponse : ProtocolResponseBody
     {
         public string Result { get; set; }
         public string Type { get; set; }

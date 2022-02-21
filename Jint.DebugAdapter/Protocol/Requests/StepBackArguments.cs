@@ -3,7 +3,7 @@ using Jint.DebugAdapter.Protocol.Types;
 
 namespace Jint.DebugAdapter.Protocol.Requests
 {
-    internal class StepBackArguments : ProtocolArguments
+    public class StepBackArguments : ProtocolArguments
     {
         public int ThreadId { get; set; }
         public bool? SingleThread { get; set; }

@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Events
 {
-    internal class MemoryEvent : ProtocolEventBody
+    public class MemoryEvent : ProtocolEventBody
     {
         public string MemoryReference { get; set; }
         public long Offset { get; set; }

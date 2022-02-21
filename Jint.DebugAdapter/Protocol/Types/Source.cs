@@ -1,6 +1,6 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Types
 {
-    internal class Source
+    public class Source
     {
         public string Name { get; set; }
         public int? SourceReference { get; set; }
