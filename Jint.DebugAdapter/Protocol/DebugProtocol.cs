@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -123,6 +124,10 @@ namespace Jint.DebugAdapter.Protocol
             {
                 isRunning = false;
                 HandleFatalError(ex);
+                if (System.Diagnostics.Debugger.IsAttached)
+                {
+                    throw;
+                }
             }
             isRunning = false;
         }
@@ -405,6 +410,10 @@ namespace Jint.DebugAdapter.Protocol
                         waitForMessages.Set();
                     }
                     HandleFatalError(ex);
+                    if (Debugger.IsAttached)
+                    {
+                        throw;
+                    }
                     return;
                 }
             }

@@ -19,6 +19,7 @@
         public List<string> CompletionTriggerCharacters { get; set; }
         public bool? SupportsModulesRequest { get; set; }
         public List<ColumnDescriptor> AdditionalModuleColumns { get; set; }
+        // TODO: List<StringEnum<>>?
         public List<ChecksumAlgorithm> SupportedChecksumAlgorithms { get; set; }
         public bool? SupportsRestartRequest { get; set; }
         public bool? SupportsExceptionOptions { get; set; }

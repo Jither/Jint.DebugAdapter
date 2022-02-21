@@ -1,10 +1,11 @@
-﻿using Jint.DebugAdapter.Protocol.Types;
+﻿using Jint.DebugAdapter.Helpers;
+using Jint.DebugAdapter.Protocol.Types;
 
 namespace Jint.DebugAdapter.Protocol.Events
 {
     internal class StoppedEvent : ProtocolEventBody
     {
-        public StopReason Reason { get; set; }
+        public StringEnum<StopReason> Reason { get; set; }
         public string Description { get; set; }
         public int ThreadId { get; set; }
         public bool? PreserveFocusHint { get; set; }

@@ -21,8 +21,8 @@ namespace Jint.DebugAdapter.Protocol
 
         static JsonHelper()
         {
-            options.Converters.Add(new CustomJsonStringEnumConverter());
-            outputOptions.Converters.Add(new CustomJsonStringEnumConverter());
+            options.Converters.Add(new StringEnumConverter());
+            outputOptions.Converters.Add(new StringEnumConverter());
         }
 
         public static T Deserialize<T>(string json)

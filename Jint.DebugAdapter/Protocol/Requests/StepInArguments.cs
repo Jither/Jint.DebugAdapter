@@ -1,4 +1,5 @@
-﻿using Jint.DebugAdapter.Protocol.Types;
+﻿using Jint.DebugAdapter.Helpers;
+using Jint.DebugAdapter.Protocol.Types;
 
 namespace Jint.DebugAdapter.Protocol.Requests
 {
@@ -7,6 +8,6 @@ namespace Jint.DebugAdapter.Protocol.Requests
         public int ThreadId { get; set; }
         public bool? SingleThread { get; set; }
         public int? TargetId { get; set; }
-        public SteppingGranularity? Granularity { get; set; }
+        public StringEnum<SteppingGranularity>? Granularity { get; set; }
     }
 }

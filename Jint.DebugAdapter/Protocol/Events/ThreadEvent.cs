@@ -1,10 +1,11 @@
-﻿using Jint.DebugAdapter.Protocol.Types;
+﻿using Jint.DebugAdapter.Helpers;
+using Jint.DebugAdapter.Protocol.Types;
 
 namespace Jint.DebugAdapter.Protocol.Events
 {
     internal class ThreadEvent : ProtocolEventBody
     {
-        public ThreadChangeReason Reason { get; set; }
+        public StringEnum<ThreadChangeReason> Reason { get; set; }
         public int ThreadId { get; set; }
 
         protected override string EventNameInternal => "thread";

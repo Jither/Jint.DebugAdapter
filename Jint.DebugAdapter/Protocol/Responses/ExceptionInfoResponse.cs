@@ -1,4 +1,5 @@
-﻿using Jint.DebugAdapter.Protocol.Types;
+﻿using Jint.DebugAdapter.Helpers;
+using Jint.DebugAdapter.Protocol.Types;
 
 namespace Jint.DebugAdapter.Protocol.Responses
 {
@@ -6,7 +7,7 @@ namespace Jint.DebugAdapter.Protocol.Responses
     {
         public string ExceptionId { get; set; }
         public string Description { get; set; }
-        public ExceptionBreakMode BreakMode { get; set; }
+        public StringEnum<ExceptionBreakMode> BreakMode { get; set; }
         public ExceptionDetails ExceptionDetails { get; set; }
     }
 }

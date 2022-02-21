@@ -1,4 +1,5 @@
-﻿using Jint.DebugAdapter.Protocol.Types;
+﻿using Jint.DebugAdapter.Helpers;
+using Jint.DebugAdapter.Protocol.Types;
 
 namespace Jint.DebugAdapter.Protocol.Events
 {
@@ -7,7 +8,7 @@ namespace Jint.DebugAdapter.Protocol.Events
         public string Name { get; set; }
         public int? SystemProcessId { get; set; }
         public bool? IsLocalProcess { get; set; }
-        public StartMethod? StartMethod { get; set; }
+        public StringEnum<StartMethod>? StartMethod { get; set; }
         public int? PointerSize { get; set; }
 
         protected override string EventNameInternal => "process";
