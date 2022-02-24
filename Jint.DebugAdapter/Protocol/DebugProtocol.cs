@@ -1,6 +1,8 @@
-﻿using System.Collections.Concurrent;
+﻿using System.Buffers;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO.Pipelines;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -11,7 +13,6 @@ using Jint.DebugAdapter.Protocol.Responses;
 
 namespace Jint.DebugAdapter.Protocol
 {
-
     internal interface IPendingRequest
     {
         public bool Cancelled { get; }
@@ -21,14 +22,12 @@ namespace Jint.DebugAdapter.Protocol
 
     public class DebugProtocol
     {
-        private const int bufferSize = 4096;
         private static readonly Regex rxContentLength = new(@"^.*?Content-Length: (?<length>\d+)\r\n\r\n", RegexOptions.Compiled | RegexOptions.Singleline);
 
         private readonly Adapter adapter;
         private readonly Stream inputStream;
         private readonly Stream outputStream;
 
-        private Thread inputThread;
         private bool isRunning;
         private bool isHandlingError;
         private bool isSending;
@@ -37,12 +36,9 @@ namespace Jint.DebugAdapter.Protocol
         private readonly CancellationTokenSource cts = new();
         private CancellationToken CancellationToken => cts.Token;
         private readonly List<IPendingRequest> pendingRequests = new();
-        private int dispatcherThreadId;
         private readonly object syncDispatcher = new();
         private readonly object syncOutput = new();
 
-        private readonly UTF8Buffer data = new();
-        private int nextMessageBodyLength = -1;
         private readonly Queue<byte[]> messageQueueOut = new();
         private readonly ConcurrentQueue<ProtocolEvent> eventQueue = new();
 
@@ -73,92 +69,148 @@ namespace Jint.DebugAdapter.Protocol
             this.outputStream = Stream.Synchronized(outputStream); // Make sure only one thread is writing to output at once
         }
 
-        public void Start()
+        public async Task StartAsync()
         {
-            inputThread ??= new Thread(new ThreadStart(ReadInputThread)) { Name = "DebugAdapter Input" };
+            var pipe = new Pipe();
             isRunning = true;
-            inputThread.Start();
-        }
+            Task writing = FillPipeAsync(pipe.Writer);
+            Task reading = ReadPipeAsync(pipe.Reader);
 
-        private void ReadInputThread()
-        {
-            dispatcherThreadId = Environment.CurrentManagedThreadId;
-            byte[] buffer = new byte[bufferSize];
-            try
-            {
-                lock (syncDispatcher)
-                {
-                    while (!CancellationToken.IsCancellationRequested)
-                    {
-                        int bytesRead = inputStream.ReadAsync(buffer, 0, buffer.Length, CancellationToken).Result;
-                        if (bytesRead == 0)
-                        {
-                            Stop();
-                            return;
-                        }
-
-                        data.Append(buffer, bytesRead);
-
-                        while (true)
-                        {
-                            if (nextMessageBodyLength < 0)
-                            {
-                                if (!ProcessMessageHeader())
-                                {
-                                    break;
-                                }
-                            }
-                            else
-                            {
-                                if (!ProcessMessageBody())
-                                {
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                isRunning = false;
-                HandleFatalError(ex);
-                if (System.Diagnostics.Debugger.IsAttached)
-                {
-                    throw;
-                }
-            }
+            await Task.WhenAll(reading, writing);
             isRunning = false;
         }
 
-        private bool ProcessMessageHeader()
+        private async Task FillPipeAsync(PipeWriter writer)
         {
-            string input = data.Peek();
-            if (input == String.Empty)
+            const int minimumBufferSize = 512;
+
+            while (true)
             {
+                Memory<byte> buffer = writer.GetMemory(minimumBufferSize);
+                try
+                {
+                    int bytesRead = await inputStream.ReadAsync(buffer, CancellationToken);
+                    if (bytesRead == 0)
+                    {
+                        break;
+                    }
+                    writer.Advance(bytesRead);
+                }
+                catch (Exception ex)
+                {
+                    HandleFatalError(ex);
+                    if (Debugger.IsAttached)
+                    {
+                        throw;
+                    }
+                    break;
+                }
+
+                var result = await writer.FlushAsync(CancellationToken);
+                if (result.IsCompleted)
+                {
+                    break;
+                }
+            }
+
+            await writer.CompleteAsync();
+        }
+
+        private async Task ReadPipeAsync(PipeReader reader)
+        {
+            int nextMessageBodyLength = -1;
+            while (true)
+            {
+                var result = await reader.ReadAsync(CancellationToken);
+                var buffer = result.Buffer;
+                while (true)
+                {
+                    if (nextMessageBodyLength < 0)
+                    {
+                        if (!TryReadHeader(ref buffer, out var header))
+                        {
+                            break;
+                        }
+                        nextMessageBodyLength = ProcessHeader(header);
+                    }
+                    else
+                    {
+                        if (!TryReadBody(ref buffer, nextMessageBodyLength, out var body))
+                        {
+                            break;
+                        }
+                        ProcessBody(body);
+                        nextMessageBodyLength = -1;
+                    }
+                }
+                reader.AdvanceTo(buffer.Start, buffer.End);
+
+                if (result.IsCompleted)
+                {
+                    break;
+                }
+            }
+            await reader.CompleteAsync();
+        }
+
+        private bool TryReadHeader(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> header)
+        {
+            var newlinePosition = buffer.PositionOf((byte)'\r');
+            if (newlinePosition == null)
+            {
+                header = default;
                 return false;
             }
 
-            Match match = rxContentLength.Match(input);
-            if (!match.Success)
+            var newlinesBuffer = buffer.Slice(newlinePosition.Value);
+            if (newlinesBuffer.Length < 4)
             {
+                header = default;
                 return false;
             }
 
-            nextMessageBodyLength = Convert.ToInt32(match.Groups["length"].Value, CultureInfo.InvariantCulture);
-            data.Remove(match.Length);
+            newlinesBuffer = newlinesBuffer.Slice(0, 4);
+            var newlinesSpan = newlinesBuffer.ToSpan();
+            if (newlinesSpan[0] != (byte)'\r' || newlinesSpan[1] != (byte)'\n' || newlinesSpan[2] != (byte)'\r' || newlinesSpan[3] != (byte)'\n')
+            {
+                header = default;
+                return false;
+            }
 
+            var headerEndPosition = buffer.GetPosition(4, newlinePosition.Value);
+            header = buffer.Slice(0, headerEndPosition);
+            buffer = buffer.Slice(headerEndPosition);
             return true;
         }
 
-        private bool ProcessMessageBody()
+        private bool TryReadBody(ref ReadOnlySequence<byte> buffer, int length, out ReadOnlySequence<byte> header)
         {
-            if (data.ByteLength < nextMessageBodyLength)
+            if (buffer.Length < length)
             {
+                header = default;
                 return false;
             }
-            string json = data.Pop(nextMessageBodyLength);
-            nextMessageBodyLength = -1;
+
+            header = buffer.Slice(0, length);
+            buffer = buffer.Slice(length);
+            return true;
+        }
+
+        private int ProcessHeader(ReadOnlySequence<byte> buffer)
+        {
+            string value = Encoding.UTF8.GetString(buffer);
+            Match match = rxContentLength.Match(value);
+            if (!match.Success)
+            {
+                throw new ProtocolException($"Expected content-length header, but found: {value}");
+            }
+
+            return Convert.ToInt32(match.Groups["length"].Value, CultureInfo.InvariantCulture);
+        }
+
+        private bool ProcessBody(ReadOnlySequence<byte> buffer)
+        {
+            string json = Encoding.UTF8.GetString(buffer);
             try
             {
                 // Don't send events until message handling is done
@@ -269,26 +321,6 @@ namespace Jint.DebugAdapter.Protocol
                 {
 
                 }
-            }
-        }
-
-        public bool WaitForReader(int timeout = -1)
-        {
-            CheckThread();
-            if (timeout > 0)
-            {
-                return inputThread.Join(timeout);
-            }
-            inputThread.Join();
-            return true;
-        }
-
-        
-        private void CheckThread([CallerMemberName]string caller = null)
-        {
-            if (Environment.CurrentManagedThreadId == dispatcherThreadId)
-            {
-                throw new InvalidOperationException($"{caller} not allowed on on dispatcher thread");
             }
         }
 

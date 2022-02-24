@@ -5,7 +5,7 @@ namespace Jint.DebugAdapterExample
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             Logger.Log("Started");
             Endpoint endpoint;
@@ -28,7 +28,7 @@ namespace Jint.DebugAdapterExample
             }
 
             endpoint.Initialize();
-            endpoint.Start();
+            await endpoint.StartAsync();
         }
     }
 }

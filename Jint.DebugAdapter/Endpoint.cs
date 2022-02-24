@@ -37,9 +37,9 @@ namespace Jint.DebugAdapter
             adapter.Protocol = protocol;
         }
 
-        public void Start()
+        public async Task StartAsync()
         {
-            protocol.Start();
+            await protocol.StartAsync();
         }
 
         protected abstract void StartListening();
