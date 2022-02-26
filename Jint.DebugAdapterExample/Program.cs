@@ -9,7 +9,7 @@ namespace Jint.DebugAdapterExample
         {
             Logger.Log("Started");
             Endpoint endpoint;
-            var adapter = new Adapter();
+            var adapter = new JintAdapter();
 
             if (args.Length > 0)
             {

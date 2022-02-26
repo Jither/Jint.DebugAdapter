@@ -11,36 +11,46 @@ using Jint.DebugAdapter.Protocol.Types;
 
 namespace Jint.DebugAdapter
 {
-    public class Adapter
+    public abstract class Adapter
     {
         public DebugProtocol Protocol { get; set; }
 
         public ProtocolResponseBody HandleRequest(BaseProtocolRequest request)
         {
+            switch (request.UntypedArguments)
+            {
+                case AttachArguments args: AttachRequest(args); return null;
+                case CancelArguments args: CancelRequest(args); return null;
+                case ConfigurationDoneArguments: ConfigurationDoneRequest(); return null;
+                case DisconnectArguments args: DisconnectRequest(args); return null;
+                case GotoArguments args: GotoRequest(args); return null;
+                case LaunchArguments args: LaunchRequest(args); return null;
+                case NextArguments args: NextRequest(args); return null;
+                case PauseArguments args: PauseRequest(args); return null;
+                case RestartArguments args: RestartRequest(args); return null;
+                case RestartFrameArguments args: RestartFrameRequest(args); return null;
+                case ReverseContinueArguments args: ReverseContinueRequest(args); return null;
+                case StepBackArguments args: StepBackRequest(args); return null;
+                case StepInArguments args: StepInRequest(args); return null;
+                case StepOutArguments args: StepOutRequest(args); return null;
+                case TerminateArguments args: TerminateRequest(args); return null;
+            }
+
             return request.UntypedArguments switch
             {
-                AttachArguments args => AttachRequest(args),
                 BreakpointLocationsArguments args => BreakpointLocationsRequest(args),
                 CompletionsArguments args => CompletionsRequest(args),
-                CancelArguments args => CancelRequest(args),
                 ContinueArguments args => ContinueRequest(args),
                 DataBreakpointInfoArguments args => DataBreakpointInfoRequest(args),
                 DisassembleArguments args => DisassembleRequest(args),
-                DisconnectArguments args => DisconnectRequest(args),
                 EvaluateArguments args => EvaluateRequest(args),
                 ExceptionInfoArguments args => ExceptionInfoRequest(args),
-                GotoArguments args => GotoRequest(args),
                 GotoTargetsArguments args => GotoTargetsRequest(args),
                 InitializeArguments args => InitializeRequest(args),
-                LaunchArguments args => LaunchRequest(args),
+                LoadedSourcesArguments => LoadedSourcesRequest(),
                 ModulesArguments args => ModulesRequest(args),
-                NextArguments args => NextRequest(args),
-                PauseArguments args => PauseRequest(args),
                 ReadMemoryArguments args => ReadMemoryRequest(args),
-                RestartArguments args => RestartRequest(args),
-                RestartFrameArguments args => RestartFrameRequest(args),
-                ReverseContinueArguments args => ReverseContinueRequest(args),
-                RunInTerminalArguments args => RunInTerminalRequest(args), // Note: Reverse Request (DebugAdapter to host)
+                //RunInTerminalArguments args => RunInTerminalRequest(args), // Note: Reverse Request (DebugAdapter to host)
                 ScopesArguments args => ScopesRequest(args),
                 SetBreakpointsArguments args => SetBreakpointsRequest(args),
                 SetDataBreakpointsArguments args => SetDataBreakpointsRequest(args),
@@ -51,306 +61,13 @@ namespace Jint.DebugAdapter
                 SetVariableArguments args => SetVariableRequest(args),
                 SourceArguments args => SourceRequest(args),
                 StackTraceArguments args => StackTraceRequest(args),
-                StepBackArguments args => StepBackRequest(args),
-                StepInArguments args => StepInRequest(args),
                 StepInTargetsArguments args => StepInTargetsRequest(args),
-                StepOutArguments args => StepOutRequest(args),
-                TerminateArguments args => TerminateRequest(args),
+                ThreadsArguments => ThreadsRequest(),
                 VariablesArguments args => VariablesRequest(args),
                 WriteMemoryArguments args => WriteMemoryRequest(args),
 
-                null => request.Command switch
-                {
-                    CommandNames.ConfigurationDone => ConfigurationDoneRequest(),
-                    CommandNames.LoadedSources => LoadedSourcesRequest(),
-                    CommandNames.Threads => ThreadsRequest(),
-                    _ => throw new NotImplementedException($"Request command '{request.Command}' not implemented.")
-                },
-
                 _ => throw new NotImplementedException($"Request command '{request.Command}' not implemented.")
             };
-        }
-
-        public void SendStoppedEvent(StopReason reason, string description)
-        {
-            SendEvent(new StoppedEvent
-            {
-                Reason = reason,
-                Description = description,
-                ThreadId = 1,
-            });
-        }
-
-        protected AttachResponse AttachRequest(AttachArguments arguments)
-        {
-            return new AttachResponse();
-        }
-
-        protected BreakpointLocationsResponse BreakpointLocationsRequest(BreakpointLocationsArguments arguments)
-        {
-            return new BreakpointLocationsResponse();
-        }
-
-        protected CancelResponse CancelRequest(CancelArguments arguments)
-        {
-            return new CancelResponse();
-        }
-
-        protected CompletionsResponse CompletionsRequest(CompletionsArguments arguments)
-        {
-            return new CompletionsResponse();
-        }
-
-        protected ConfigurationDoneResponse ConfigurationDoneRequest()
-        {
-            SendStoppedEvent(StopReason.Entry, "Paused on entry");
-            return new ConfigurationDoneResponse();
-        }
-
-        protected ContinueResponse ContinueRequest(ContinueArguments arguments)
-        {
-            SendStoppedEvent(StopReason.Breakpoint, "Hit breakpoint");
-            return new ContinueResponse();
-        }
-
-        protected DataBreakpointInfoResponse DataBreakpointInfoRequest(DataBreakpointInfoArguments arguments)
-        {
-            return new DataBreakpointInfoResponse();
-        }
-
-        protected DisassembleResponse DisassembleRequest(DisassembleArguments arguments)
-        {
-            return new DisassembleResponse();
-        }
-
-        protected DisconnectResponse DisconnectRequest(DisconnectArguments arguments)
-        {
-            return new DisconnectResponse();
-        }
-
-        protected EvaluateResponse EvaluateRequest(EvaluateArguments arguments)
-        {
-            return new EvaluateResponse
-            {
-                Result = "evaluated"
-            };
-        }
-
-        protected ExceptionInfoResponse ExceptionInfoRequest(ExceptionInfoArguments arguments)
-        {
-            return new ExceptionInfoResponse();
-        }
-
-        protected GotoResponse GotoRequest(GotoArguments arguments)
-        {
-            return new GotoResponse();
-        }
-
-        protected GotoTargetsResponse GotoTargetsRequest(GotoTargetsArguments arguments)
-        {
-            return new GotoTargetsResponse();
-        }
-
-        protected InitializeResponse InitializeRequest(InitializeArguments arguments)
-        {
-            SendEvent(new InitializedEvent());
-            return new InitializeResponse
-            {
-                SupportsConditionalBreakpoints = true,
-                SupportsConfigurationDoneRequest = true
-            };
-        }
-
-        protected LaunchResponse LaunchRequest(LaunchArguments arguments)
-        {
-            return new LaunchResponse();
-        }
-
-        protected LoadedSourcesResponse LoadedSourcesRequest()
-        {
-            return new LoadedSourcesResponse();
-        }
-
-        protected ModulesResponse ModulesRequest(ModulesArguments arguments)
-        {
-            return new ModulesResponse();
-        }
-
-        protected NextResponse NextRequest(NextArguments arguments)
-        {
-            SendStoppedEvent(StopReason.Step, "Paused after step");
-            return new NextResponse();
-        }
-
-        protected PauseResponse PauseRequest(PauseArguments arguments)
-        {
-            return new PauseResponse();
-        }
-
-        protected ReadMemoryResponse ReadMemoryRequest(ReadMemoryArguments arguments)
-        {
-            return new ReadMemoryResponse();
-        }
-
-        protected RestartResponse RestartRequest(RestartArguments arguments)
-        {
-            return new RestartResponse();
-        }
-
-        protected RestartFrameResponse RestartFrameRequest(RestartFrameArguments arguments)
-        {
-            return new RestartFrameResponse();
-        }
-
-        protected ReverseContinueResponse ReverseContinueRequest(ReverseContinueArguments arguments)
-        {
-            return new ReverseContinueResponse();
-        }
-
-        protected RunInTerminalResponse RunInTerminalRequest(RunInTerminalArguments arguments)
-        {
-            return new RunInTerminalResponse();
-        }
-
-        protected ScopesResponse ScopesRequest(ScopesArguments arguments)
-        {
-            return new ScopesResponse
-            {
-                Scopes = new List<Scope>
-                {
-                    new Scope
-                    {
-                        Name = "Global",
-                        VariablesReference = 1
-                    }
-                }
-            };
-        }
-
-        protected SetBreakpointsResponse SetBreakpointsRequest(SetBreakpointsArguments arguments)
-        {
-            return new SetBreakpointsResponse()
-            {
-                Breakpoints = arguments.Breakpoints.Select(b => new Breakpoint { Line = b.Line, Verified = true }).ToList()
-            };
-        }
-
-        protected SetDataBreakpointsResponse SetDataBreakpointsRequest(SetDataBreakpointsArguments arguments)
-        {
-            return new SetDataBreakpointsResponse();
-        }
-
-        protected SetExceptionBreakpointsResponse SetExceptionBreakpointsRequest(SetExceptionBreakpointsArguments arguments)
-        {
-            return new SetExceptionBreakpointsResponse();
-        }
-
-        protected SetExpressionResponse SetExpressionRequest(SetExpressionArguments arguments)
-        {
-            return new SetExpressionResponse();
-        }
-
-        protected SetFunctionBreakpointsResponse SetFunctionBreakpointsRequest(SetFunctionBreakpointsArguments arguments)
-        {
-            return new SetFunctionBreakpointsResponse();
-        }
-
-        protected SetInstructionBreakpointsResponse SetInstructionBreakpointsRequest(SetInstructionBreakpointsArguments arguments)
-        {
-            return new SetInstructionBreakpointsResponse();
-        }
-
-        protected SetVariableResponse SetVariableRequest(SetVariableArguments arguments)
-        {
-            return new SetVariableResponse();
-        }
-
-        protected SourceResponse SourceRequest(SourceArguments arguments)
-        {
-            return new SourceResponse();
-        }
-
-        protected StackTraceResponse StackTraceRequest(StackTraceArguments arguments)
-        {
-            return new StackTraceResponse()
-            {
-                StackFrames = new List<StackFrame>
-                {
-                    new StackFrame
-                    {
-                        Id = 1,
-                        Name = "global"
-                    }
-                }
-            };
-        }
-
-        protected StepBackResponse StepBackRequest(StepBackArguments arguments)
-        {
-            SendStoppedEvent(StopReason.Step, "Paused after step");
-            return new StepBackResponse();
-        }
-
-        protected StepInResponse StepInRequest(StepInArguments arguments)
-        {
-            SendStoppedEvent(StopReason.Step, "Paused after step");
-            return new StepInResponse();
-        }
-
-        protected StepInTargetsResponse StepInTargetsRequest(StepInTargetsArguments arguments)
-        {
-            SendStoppedEvent(StopReason.Step, "Paused after step");
-            return new StepInTargetsResponse();
-        }
-
-        protected StepOutResponse StepOutRequest(StepOutArguments arguments)
-        {
-            SendStoppedEvent(StopReason.Step, "Paused after step");
-            return new StepOutResponse();
-        }
-
-        protected TerminateResponse TerminateRequest(TerminateArguments arguments)
-        {
-            return new TerminateResponse();
-        }
-
-        protected TerminateThreadsResponse TerminateThreadsRequest(TerminateThreadsArguments arguments)
-        {
-            return new TerminateThreadsResponse();
-        }
-
-        protected ThreadsResponse ThreadsRequest()
-        {
-            // "Even if a debug adapter does not support multiple threads, it must implement the threads request and return a single (dummy) thread."
-            return new ThreadsResponse
-            {
-                Threads = new List<Protocol.Types.Thread> { new Protocol.Types.Thread { Id = 1, Name = "Main Thread" } }
-            };
-        }
-
-        protected VariablesResponse VariablesRequest(VariablesArguments arguments)
-        {
-            return new VariablesResponse
-            {
-                Variables = new List<Variable>
-                {
-                    new Variable
-                    {
-                        Name = "x",
-                        Value = "3"
-                    },
-                    new Variable
-                    {
-                        Name = "test",
-                        Value = "Hello World"
-                    }
-                }
-            };
-        }
-
-        protected WriteMemoryResponse WriteMemoryRequest(WriteMemoryArguments arguments)
-        {
-            return new WriteMemoryResponse();
         }
 
         protected void SendEvent(ProtocolEventBody body)
@@ -358,5 +75,48 @@ namespace Jint.DebugAdapter
             var evt = new ProtocolEvent(body.EventName, body);
             Protocol.SendEvent(evt);
         }
+
+        protected abstract void AttachRequest(AttachArguments arguments);
+        protected abstract BreakpointLocationsResponse BreakpointLocationsRequest(BreakpointLocationsArguments arguments);
+        protected abstract void CancelRequest(CancelArguments arguments);
+        protected abstract CompletionsResponse CompletionsRequest(CompletionsArguments arguments);
+        protected abstract void ConfigurationDoneRequest();
+        protected abstract ContinueResponse ContinueRequest(ContinueArguments arguments);
+        protected abstract DataBreakpointInfoResponse DataBreakpointInfoRequest(DataBreakpointInfoArguments arguments);
+        protected abstract DisassembleResponse DisassembleRequest(DisassembleArguments arguments);
+        protected abstract void DisconnectRequest(DisconnectArguments arguments);
+        protected abstract EvaluateResponse EvaluateRequest(EvaluateArguments arguments);
+        protected abstract ExceptionInfoResponse ExceptionInfoRequest(ExceptionInfoArguments arguments);
+        protected abstract void GotoRequest(GotoArguments arguments);
+        protected abstract GotoTargetsResponse GotoTargetsRequest(GotoTargetsArguments arguments);
+        protected abstract InitializeResponse InitializeRequest(InitializeArguments arguments);
+        protected abstract void LaunchRequest(LaunchArguments arguments);
+        protected abstract LoadedSourcesResponse LoadedSourcesRequest();
+        protected abstract ModulesResponse ModulesRequest(ModulesArguments arguments);
+        protected abstract void NextRequest(NextArguments arguments);
+        protected abstract void PauseRequest(PauseArguments arguments);
+        protected abstract ReadMemoryResponse ReadMemoryRequest(ReadMemoryArguments arguments);
+        protected abstract void RestartRequest(RestartArguments arguments);
+        protected abstract void RestartFrameRequest(RestartFrameArguments arguments);
+        protected abstract void ReverseContinueRequest(ReverseContinueArguments arguments);
+        protected abstract ScopesResponse ScopesRequest(ScopesArguments arguments);
+        protected abstract SetBreakpointsResponse SetBreakpointsRequest(SetBreakpointsArguments arguments);
+        protected abstract SetDataBreakpointsResponse SetDataBreakpointsRequest(SetDataBreakpointsArguments arguments);
+        protected abstract SetExceptionBreakpointsResponse SetExceptionBreakpointsRequest(SetExceptionBreakpointsArguments arguments);
+        protected abstract SetExpressionResponse SetExpressionRequest(SetExpressionArguments arguments);
+        protected abstract SetFunctionBreakpointsResponse SetFunctionBreakpointsRequest(SetFunctionBreakpointsArguments arguments);
+        protected abstract SetInstructionBreakpointsResponse SetInstructionBreakpointsRequest(SetInstructionBreakpointsArguments arguments);
+        protected abstract SetVariableResponse SetVariableRequest(SetVariableArguments arguments);
+        protected abstract SourceResponse SourceRequest(SourceArguments arguments);
+        protected abstract StackTraceResponse StackTraceRequest(StackTraceArguments arguments);
+        protected abstract void StepBackRequest(StepBackArguments arguments);
+        protected abstract void StepInRequest(StepInArguments arguments);
+        protected abstract StepInTargetsResponse StepInTargetsRequest(StepInTargetsArguments arguments);
+        protected abstract void StepOutRequest(StepOutArguments arguments);
+        protected abstract void TerminateRequest(TerminateArguments arguments);
+        protected abstract void TerminateThreadsRequest(TerminateThreadsArguments arguments);
+        protected abstract ThreadsResponse ThreadsRequest();
+        protected abstract VariablesResponse VariablesRequest(VariablesArguments arguments);
+        protected abstract WriteMemoryResponse WriteMemoryRequest(WriteMemoryArguments arguments);
     }
 }

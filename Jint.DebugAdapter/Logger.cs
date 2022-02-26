@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Jint.DebugAdapter
 {
+    // TODO: This is a temporary quick logger.
     public static class Logger
     {
         static Logger()

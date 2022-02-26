@@ -2,6 +2,9 @@
 
 namespace Jint.DebugAdapter.Protocol.Responses
 {
+    /// <summary>
+    /// The capabilities of this debug adapter.
+    /// </summary>
     public class InitializeResponse : ProtocolResponseBody, ICapabilities
     {
         public bool? SupportsConfigurationDoneRequest { get; set; }

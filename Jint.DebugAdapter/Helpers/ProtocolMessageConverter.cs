@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using Jint.DebugAdapter.Protocol;
+using Jint.DebugAdapter.Protocol.Requests;
 
 namespace Jint.DebugAdapter.Helpers
 {
@@ -35,6 +36,13 @@ namespace Jint.DebugAdapter.Helpers
 
                 var jsonObject = doc.RootElement.GetRawText();
                 var result = JsonSerializer.Deserialize(jsonObject, type, options) as ProtocolMessage;
+
+                // For equal treatment when dealing with argument-less requests, instantiantiate empty arguments object 
+                if (result is IncomingProtocolRequest req && req.UntypedArguments == null)
+                {
+                    var argumentsType = ProtocolMessageRegistry.GetArgumentsType(command);
+                    req.Sanitize(Activator.CreateInstance(argumentsType) as ProtocolArguments);
+                }
 
                 return result;
             }

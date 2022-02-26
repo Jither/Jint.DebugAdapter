@@ -36,12 +36,22 @@ namespace Jint.DebugAdapter.Protocol
         }
     }
 
-    public class IncomingProtocolRequest<TArguments> : BaseProtocolRequest where TArguments: ProtocolArguments
+    public abstract class IncomingProtocolRequest : BaseProtocolRequest
+    {
+        internal abstract void Sanitize(ProtocolArguments arguments);
+    }
+
+    public class IncomingProtocolRequest<TArguments> : IncomingProtocolRequest where TArguments: ProtocolArguments
     {
         [JsonPropertyOrder(100)]
         public TArguments Arguments { get; set; }
 
         [JsonIgnore]
         public override ProtocolArguments UntypedArguments => Arguments;
+
+        internal override void Sanitize(ProtocolArguments arguments)
+        {
+            Arguments = arguments as TArguments;
+        }
     }
 }

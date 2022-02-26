@@ -3,11 +3,27 @@ using Jint.DebugAdapter.Protocol.Types;
 
 namespace Jint.DebugAdapter.Protocol.Events
 {
+    /// <summary>
+    /// The event indicates that a thread has started or exited.
+    /// </summary>
     public class ThreadEvent : ProtocolEventBody
     {
-        public StringEnum<ThreadChangeReason> Reason { get; set; }
-        public int ThreadId { get; set; }
-
         protected override string EventNameInternal => "thread";
+
+        public ThreadEvent(StringEnum<ThreadChangeReason> reason, int threadId)
+        {
+            Reason = reason;
+            ThreadId = threadId;
+        }
+
+        /// <summary>
+        /// The reason for the event.
+        /// </summary>
+        public StringEnum<ThreadChangeReason> Reason { get; set; }
+
+        /// <summary>
+        /// The identifier of the thread.
+        /// </summary>
+        public int ThreadId { get; set; }
     }
 }

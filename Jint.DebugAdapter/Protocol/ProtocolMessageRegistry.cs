@@ -8,6 +8,7 @@ namespace Jint.DebugAdapter.Protocol
     internal static class ProtocolMessageRegistry
     {
         private static readonly Dictionary<string, Type> requests = new();
+        private static readonly Dictionary<string, Type> arguments = new();
         private static readonly Dictionary<string, Type> responses = new();
         private static readonly Dictionary<string, Type> events = new();
 
@@ -40,6 +41,7 @@ namespace Jint.DebugAdapter.Protocol
             command = Char.ToLowerInvariant(command[0]) + command[1..];
             var requestType = typeof(IncomingProtocolRequest<>).MakeGenericType(type);
             requests.Add(command, requestType);
+            arguments.Add(command, type);
         }
 
         private static void RegisterResponse(Type type)
@@ -63,6 +65,11 @@ namespace Jint.DebugAdapter.Protocol
         public static Type GetRequestType(string command)
         {
             return requests.GetValueOrDefault(command) ?? throw new NotSupportedException($"Unsupported request command: {command}");
+        }
+
+        public static Type GetArgumentsType(string command)
+        {
+            return arguments.GetValueOrDefault(command) ?? throw new NotSupportedException($"Unsupported request arguments command: {command}");
         }
 
         public static Type GetResponseType(string command)

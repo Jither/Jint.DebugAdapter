@@ -3,12 +3,10 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO.Pipelines;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Jint.DebugAdapter.Helpers;
 using Jint.DebugAdapter.Protocol.Events;
-using Jint.DebugAdapter.Protocol.Requests;
 using Jint.DebugAdapter.Protocol.Responses;
 
 namespace Jint.DebugAdapter.Protocol
@@ -30,7 +28,7 @@ namespace Jint.DebugAdapter.Protocol
 
         private bool isRunning;
         private bool isHandlingError;
-        private bool isSending;
+        private bool _isSending;
         private bool _isQueueingEvents;
         private readonly ManualResetEvent waitForMessages = new(true);
         private readonly CancellationTokenSource cts = new();
@@ -44,7 +42,25 @@ namespace Jint.DebugAdapter.Protocol
 
         private int _nextSeq = 0;
 
-        public bool IsQueueingEvents
+        // syncOutput should be locked when accessing IsSending
+        private bool IsSending
+        {
+            get => _isSending;
+            set
+            {
+                _isSending = value;
+                if (_isSending)
+                {
+                    waitForMessages.Reset();
+                }
+                else
+                {
+                    waitForMessages.Set();
+                }
+            }
+        }
+
+        private bool IsQueueingEvents
         {
             get
             {
@@ -118,11 +134,14 @@ namespace Jint.DebugAdapter.Protocol
 
         private async Task ReadPipeAsync(PipeReader reader)
         {
+            // In addition to body length, nextMessageBodyLength functions as state (reading header = -1, reading body = > -1)
             int nextMessageBodyLength = -1;
             while (true)
             {
                 var result = await reader.ReadAsync(CancellationToken);
                 var buffer = result.Buffer;
+
+                // Keep reading until we cannot parse a header or body from the current buffer
                 while (true)
                 {
                     if (nextMessageBodyLength < 0)
@@ -145,6 +164,8 @@ namespace Jint.DebugAdapter.Protocol
                 }
                 reader.AdvanceTo(buffer.Start, buffer.End);
 
+                // Checking ReadResult.IsCompleted and exiting the reading logic before processing the buffer results in data loss.
+                // Hence, we check it after reading logic
                 if (result.IsCompleted)
                 {
                     break;
@@ -155,6 +176,8 @@ namespace Jint.DebugAdapter.Protocol
 
         private bool TryReadHeader(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> header)
         {
+            // We're assuming that the header is actually ASCII - no UTF-8 sequences (which might include a byte 0x0d that's not a CR)
+            // Find next occurrence of CR
             var newlinePosition = buffer.PositionOf((byte)'\r');
             if (newlinePosition == null)
             {
@@ -162,6 +185,7 @@ namespace Jint.DebugAdapter.Protocol
                 return false;
             }
 
+            // Check that we have 4 bytes available starting from the CR
             var newlinesBuffer = buffer.Slice(newlinePosition.Value);
             if (newlinesBuffer.Length < 4)
             {
@@ -171,6 +195,8 @@ namespace Jint.DebugAdapter.Protocol
 
             newlinesBuffer = newlinesBuffer.Slice(0, 4);
             var newlinesSpan = newlinesBuffer.ToSpan();
+
+            // Check that those 4 bytes are two CR+LF = end of header
             if (newlinesSpan[0] != (byte)'\r' || newlinesSpan[1] != (byte)'\n' || newlinesSpan[2] != (byte)'\r' || newlinesSpan[3] != (byte)'\n')
             {
                 header = default;
@@ -185,6 +211,7 @@ namespace Jint.DebugAdapter.Protocol
 
         private bool TryReadBody(ref ReadOnlySequence<byte> buffer, int length, out ReadOnlySequence<byte> header)
         {
+            // For body, we simply need at least content-length bytes in the buffer
             if (buffer.Length < length)
             {
                 header = default;
@@ -315,7 +342,7 @@ namespace Jint.DebugAdapter.Protocol
                 cts.Cancel();
                 try
                 {
-                    CancelAll();
+                    CancelAllPendingRequests();
                 }
                 catch (ProtocolException ex)
                 {
@@ -324,7 +351,7 @@ namespace Jint.DebugAdapter.Protocol
             }
         }
 
-        private void CancelAll()
+        private void CancelAllPendingRequests()
         {
             lock (pendingRequests)
             {
@@ -396,12 +423,11 @@ namespace Jint.DebugAdapter.Protocol
             lock (syncOutput)
             {
                 messageQueueOut.Enqueue(buffer);
-                if (isSending)
+                if (IsSending)
                 {
                     return;
                 }
-                isSending = true;
-                waitForMessages.Reset();
+                IsSending = true;
                 Task.Run(() => SendQueuedMessages());
             }
         }
@@ -422,8 +448,7 @@ namespace Jint.DebugAdapter.Protocol
                 {
                     if (messageQueueOut.Count == 0)
                     {
-                        isSending = false;
-                        waitForMessages.Set();
+                        IsSending = false;
                         return;
                     }
                     buffer = messageQueueOut.Dequeue();
@@ -437,8 +462,7 @@ namespace Jint.DebugAdapter.Protocol
                 {
                     lock (syncOutput)
                     {
-                        isSending = false;
-                        waitForMessages.Set();
+                        IsSending = false;
                     }
                     HandleFatalError(ex);
                     if (Debugger.IsAttached)
@@ -450,8 +474,7 @@ namespace Jint.DebugAdapter.Protocol
             }
             lock (syncOutput)
             {
-                isSending = false;
-                waitForMessages.Set();
+                IsSending = false;
             }
         }
 
