@@ -28,7 +28,8 @@ namespace Jint.DebugAdapter.Protocol.Requests
         public List<int> Lines { get; set; }
 
         /// <summary>
-        /// A value of true indicates that the underlying source has been modified which results in new breakpoint locations.
+        /// A value of true indicates that the underlying source has been modified which results in
+        /// new breakpoint locations.
         /// </summary>
         public bool? SourceModified { get; set; }
     }

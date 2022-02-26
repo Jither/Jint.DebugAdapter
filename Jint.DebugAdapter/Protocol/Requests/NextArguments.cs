@@ -4,12 +4,14 @@ using Jint.DebugAdapter.Protocol.Types;
 namespace Jint.DebugAdapter.Protocol.Requests
 {
     /// <summary>
-    /// The request executes one step (in the given granularity) for the specified thread and allows all other threads to run freely by resuming them.
+    /// The request executes one step (in the given granularity) for the specified thread and allows all
+    /// other threads to run freely by resuming them.
     /// </summary>
     /// <remarks>
     /// If the debug adapter supports single thread execution(see capability ‘supportsSingleThreadExecutionRequests’)
     /// setting the ‘singleThread’ argument to true prevents other suspended threads from resuming.
-    /// The debug adapter first sends the response and then a ‘stopped’ event (with reason ‘step’) after the step has completed.
+    /// The debug adapter first sends the response and then a ‘stopped’ event (with reason ‘step’)
+    /// after the step has completed.
     /// </remarks>
     public class NextArguments : ProtocolArguments
     {

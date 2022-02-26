@@ -3,7 +3,7 @@
 namespace Jint.DebugAdapter.Protocol.Events
 {
     /// <summary>
-    /// The event indicates that one or more capabilities have changed. This event has a hint characteristic
+    /// The event indicates that one or more capabilities have changed. This event has a hint characteristic.
     /// </summary>
     public class CapabilitiesEvent : ProtocolEventBody
     {

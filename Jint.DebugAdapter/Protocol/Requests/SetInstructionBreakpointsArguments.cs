@@ -3,7 +3,8 @@
 namespace Jint.DebugAdapter.Protocol.Requests
 {
     /// <summary>
-    /// Replaces all existing instruction breakpoints. Typically, instruction breakpoints would be set from a diassembly window.
+    /// Replaces all existing instruction breakpoints. Typically, instruction breakpoints would be set
+    /// from a diassembly window.
     /// </summary>
     /// <remarks>
     /// To clear all instruction breakpoints, specify an empty array.

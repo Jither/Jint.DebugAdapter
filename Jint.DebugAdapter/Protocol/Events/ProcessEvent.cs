@@ -4,7 +4,8 @@ using Jint.DebugAdapter.Protocol.Types;
 namespace Jint.DebugAdapter.Protocol.Events
 {
     /// <summary>
-    /// The event indicates that the debugger has begun debugging a new process. Either one that it has launched, or one that it has attached to.
+    /// The event indicates that the debugger has begun debugging a new process. Either one that it has launched,
+    /// or one that it has attached to.
     /// </summary>
     public class ProcessEvent : ProtocolEventBody
     {
@@ -16,7 +17,8 @@ namespace Jint.DebugAdapter.Protocol.Events
         }
 
         /// <summary>
-        /// The logical name of the process. This is usually the full path to process's executable file. Example: /home/example/myproj/program.js.
+        /// The logical name of the process. This is usually the full path to process's executable file.
+        /// Example: /home/example/myproj/program.js.
         /// </summary>
         public string Name { get; set; }
 

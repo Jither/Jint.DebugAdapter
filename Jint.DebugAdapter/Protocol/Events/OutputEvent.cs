@@ -16,7 +16,8 @@ namespace Jint.DebugAdapter.Protocol.Events
         }
 
         /// <summary>
-        /// The output category. If not specified or if the category is not understood by the client, 'console' is assumed.
+        /// The output category. If not specified or if the category is not understood by the client,
+        /// 'console' is assumed.
         /// </summary>
         public StringEnum<OutputCategory>? Category { get; set; }
 
@@ -31,8 +32,8 @@ namespace Jint.DebugAdapter.Protocol.Events
         public StringEnum<OutputGroup>? Group { get; set; }
 
         /// <summary>
-        /// If an attribute 'variablesReference' exists and its value is > 0, the output contains objects which can be retrieved by passing
-        /// 'variablesReference' to the 'variables' request.
+        /// If an attribute 'variablesReference' exists and its value is > 0, the output contains objects which
+        /// can be retrieved by passing 'variablesReference' to the 'variables' request.
         /// </summary>
         public int? VariablesReference { get; set; }
 

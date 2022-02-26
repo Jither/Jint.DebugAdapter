@@ -20,7 +20,8 @@
         }
 
         /// <summary>
-        /// An ID that must be used in subsequent 'progressUpdate' and 'progressEnd' events to make them refer to the same progress reporting.
+        /// An ID that must be used in subsequent 'progressUpdate' and 'progressEnd' events to make them refer to
+        /// the same progress reporting.
         /// </summary>
         /// <remarks>
         /// IDs must be unique within a debug session.

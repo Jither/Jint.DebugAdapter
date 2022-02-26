@@ -22,7 +22,8 @@ namespace Jint.DebugAdapter.Protocol.Events
         public StringEnum<ChangeReason> Reason { get; set; }
 
         /// <summary>
-        /// The 'id' attribute is used to find the target breakpoint and the other attributes are used as the new values.
+        /// The 'id' attribute is used to find the target breakpoint
+        /// and the other attributes are used as the new values.
         /// </summary>
         public Breakpoint Breakpoint { get; set; }
     }

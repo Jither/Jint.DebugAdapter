@@ -7,7 +7,8 @@ namespace Jint.DebugAdapter.Protocol.Requests
     /// </summary>
     /// <remarks>
     /// If an exception is configured to break, a ‘stopped’ event is fired (with reason ‘exception’).
-    /// Clients should only call this request if the capability ‘exceptionBreakpointFilters’ returns one or more filters.
+    /// Clients should only call this request if the capability ‘exceptionBreakpointFilters’ returns
+    /// one or more filters.
     /// </remarks>
     public class SetExceptionBreakpointsArguments : ProtocolArguments
     {

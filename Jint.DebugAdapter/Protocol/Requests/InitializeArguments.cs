@@ -9,17 +9,13 @@ namespace Jint.DebugAdapter.Protocol.Requests
     /// in order to configure it with client capabilities and to retrieve capabilities from the debug adapter.
     /// </summary>
     /// <remarks>
-    ///     <para>
-    ///     Until the debug adapter has responded to with an ‘initialize’ response, the client must not
-    ///     send any additional requests or events to the debug adapter.
-    ///     </para>
-    ///     <para>
-    ///     In addition the debug adapter is not allowed to send any requests or events to the client until
-    ///     it has responded with an ‘initialize’ response.
-    ///     </para>
-    ///     <para>
-    ///     The ‘initialize’ request may only be sent once.
-    ///     </para>
+    /// Until the debug adapter has responded to with an ‘initialize’ response, the client must not
+    /// send any additional requests or events to the debug adapter.
+    ///     
+    /// In addition the debug adapter is not allowed to send any requests or events to the client until
+    /// it has responded with an ‘initialize’ response.
+    ///     
+    /// The ‘initialize’ request may only be sent once.
     /// </remarks>
     public class InitializeArguments : ProtocolArguments
     {

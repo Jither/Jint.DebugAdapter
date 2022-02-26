@@ -5,7 +5,8 @@ namespace Jint.DebugAdapter.Protocol.Events
 {
     /// <summary>
     /// The event indicates that the execution of the debuggee has stopped due to some condition.
-    /// This can be caused by a break point previously set, a stepping request has completed, by executing a debugger statement etc.
+    /// This can be caused by a break point previously set, a stepping request has completed,
+    /// by executing a debugger statement etc.
     /// </summary>
     public class StoppedEvent : ProtocolEventBody
     {
@@ -20,11 +21,13 @@ namespace Jint.DebugAdapter.Protocol.Events
         /// <summary>
         /// The reason for the event.
         /// </summary>
-        /// <remarks>For backward compatibility this string is shown in the UI if the 'description' attribute is missing (but it must not be translated).</remarks>
+        /// <remarks>For backward compatibility this string is shown in the UI if the 'description' attribute is
+        /// missing (but it must not be translated).</remarks>
         public StringEnum<StopReason> Reason { get; set; }
 
         /// <summary>
-        /// The full reason for the event, e.g. 'Paused on exception'. This string is shown in the UI as is and must be translated.
+        /// The full reason for the event, e.g. 'Paused on exception'. This string is shown in the UI as is and
+        /// must be translated.
         /// </summary>
         public string Description { get; set; }
 
@@ -48,7 +51,9 @@ namespace Jint.DebugAdapter.Protocol.Events
         /// If 'allThreadsStopped' is true, a debug adapter can announce that all threads have stopped.
         /// </summary>
         /// <remarks>
-        /// The client should use this information to enable that all threads can be expanded to access their stacktraces.
+        /// The client should use this information to enable that all threads can be expanded to access
+        /// their stacktraces.
+        /// 
         /// If the attribute is missing or false, only the thread with the given threadId can be expanded.
         /// </remarks>
         public bool? AllThreadsStopped { get; set; }

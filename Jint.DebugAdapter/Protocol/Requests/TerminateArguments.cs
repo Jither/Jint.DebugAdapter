@@ -1,7 +1,8 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Requests
 {
     /// <summary>
-    /// The ‘terminate’ request is sent from the client to the debug adapter in order to give the debuggee a chance for terminating itself.
+    /// The ‘terminate’ request is sent from the client to the debug adapter in order to give the debuggee a
+    /// chance for terminating itself.
     /// </summary>
     /// <remarks>
     /// Clients should only call this request if the capability ‘supportsTerminateRequest’ is true.

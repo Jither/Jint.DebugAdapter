@@ -1,5 +1,4 @@
 ﻿using Jint.DebugAdapter;
-using Jint.DebugAdapter.Protocol;
 
 namespace Jint.DebugAdapterExample
 {
