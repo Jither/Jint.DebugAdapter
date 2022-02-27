@@ -12,7 +12,6 @@ namespace Jint.DebugAdapter
 {
     public class JintAdapter : Adapter
     {
-
         public void SendStoppedEvent(StopReason reason, string description)
         {
             SendEvent(new StoppedEvent(reason) { Description = description });
@@ -31,11 +30,6 @@ namespace Jint.DebugAdapter
         {
         }
 
-        protected override CompletionsResponse CompletionsRequest(CompletionsArguments arguments)
-        {
-            throw new NotImplementedException();
-        }
-
         protected override void ConfigurationDoneRequest()
         {
             SendStoppedEvent(StopReason.Entry, "Paused on entry");
@@ -45,16 +39,6 @@ namespace Jint.DebugAdapter
         {
             SendStoppedEvent(StopReason.Breakpoint, "Hit breakpoint");
             return new ContinueResponse();
-        }
-
-        protected override DataBreakpointInfoResponse DataBreakpointInfoRequest(DataBreakpointInfoArguments arguments)
-        {
-            return new DataBreakpointInfoResponse(null, "Description");
-        }
-
-        protected override DisassembleResponse DisassembleRequest(DisassembleArguments arguments)
-        {
-            throw new NotImplementedException();
         }
 
         protected override void DisconnectRequest(DisconnectArguments arguments)
@@ -67,16 +51,6 @@ namespace Jint.DebugAdapter
         }
 
         protected override ExceptionInfoResponse ExceptionInfoRequest(ExceptionInfoArguments arguments)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override void GotoRequest(GotoArguments arguments)
-        {
-
-        }
-
-        protected override GotoTargetsResponse GotoTargetsRequest(GotoTargetsArguments arguments)
         {
             throw new NotImplementedException();
         }
@@ -100,11 +74,6 @@ namespace Jint.DebugAdapter
             return new LoadedSourcesResponse(new List<Source>());
         }
 
-        protected override ModulesResponse ModulesRequest(ModulesArguments arguments)
-        {
-            throw new NotImplementedException();
-        }
-
         protected override void NextRequest(NextArguments arguments)
         {
             SendStoppedEvent(StopReason.Step, "Paused after step");
@@ -115,22 +84,7 @@ namespace Jint.DebugAdapter
         
         }
 
-        protected override ReadMemoryResponse ReadMemoryRequest(ReadMemoryArguments arguments)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override void RestartFrameRequest(RestartFrameArguments arguments)
-        {
-            
-        }
-
         protected override void RestartRequest(RestartArguments arguments)
-        {
-            
-        }
-
-        protected override void ReverseContinueRequest(ReverseContinueArguments arguments)
         {
             
         }
@@ -148,59 +102,14 @@ namespace Jint.DebugAdapter
             return new SetBreakpointsResponse(new List<Breakpoint>());
         }
 
-        protected override SetDataBreakpointsResponse SetDataBreakpointsRequest(SetDataBreakpointsArguments arguments)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override SetExceptionBreakpointsResponse SetExceptionBreakpointsRequest(SetExceptionBreakpointsArguments arguments)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override SetExpressionResponse SetExpressionRequest(SetExpressionArguments arguments)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override SetFunctionBreakpointsResponse SetFunctionBreakpointsRequest(SetFunctionBreakpointsArguments arguments)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override SetInstructionBreakpointsResponse SetInstructionBreakpointsRequest(SetInstructionBreakpointsArguments arguments)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override SetVariableResponse SetVariableRequest(SetVariableArguments arguments)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override SourceResponse SourceRequest(SourceArguments arguments)
-        {
-            throw new NotImplementedException();
-        }
-
         protected override StackTraceResponse StackTraceRequest(StackTraceArguments arguments)
         {
             return new StackTraceResponse(new List<StackFrame> { new StackFrame(1, "global") });
         }
 
-        protected override void StepBackRequest(StepBackArguments arguments)
-        {
-            SendStoppedEvent(StopReason.Step, "Paused after step");
-        }
-
         protected override void StepInRequest(StepInArguments arguments)
         {
             SendStoppedEvent(StopReason.Step, "Paused after step");
-        }
-
-        protected override StepInTargetsResponse StepInTargetsRequest(StepInTargetsArguments arguments)
-        {
-            throw new NotImplementedException();
         }
 
         protected override void StepOutRequest(StepOutArguments arguments)
@@ -209,10 +118,6 @@ namespace Jint.DebugAdapter
         }
 
         protected override void TerminateRequest(TerminateArguments arguments)
-        {
-        }
-
-        protected override void TerminateThreadsRequest(TerminateThreadsArguments arguments)
         {
         }
 
@@ -230,11 +135,5 @@ namespace Jint.DebugAdapter
                     new Variable("test", "Hello World")
                 });
         }
-
-        protected override WriteMemoryResponse WriteMemoryRequest(WriteMemoryArguments arguments)
-        {
-            return new WriteMemoryResponse();
-        }
-
     }
 }
