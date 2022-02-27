@@ -1,9 +1,11 @@
-﻿namespace Jint.DebugAdapter.Protocol.Types
+﻿using Jint.DebugAdapter.Helpers;
+
+namespace Jint.DebugAdapter.Protocol.Types
 {
-    public enum ThreadChangeReason
+    /// <completionlist cref="ThreadChangeReason"/>
+    public class ThreadChangeReason : StringEnum<ThreadChangeReason>
     {
-        Other,
-        Started,
-        Exited
+        public static readonly ThreadChangeReason Started = Create("started");
+        public static readonly ThreadChangeReason Exited = Create("exited");
     }
 }

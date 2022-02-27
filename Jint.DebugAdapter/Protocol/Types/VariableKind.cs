@@ -1,65 +1,66 @@
-﻿namespace Jint.DebugAdapter.Protocol.Types
-{
-    public enum VariableKind
-    {
-        Other,
+﻿using Jint.DebugAdapter.Helpers;
 
+namespace Jint.DebugAdapter.Protocol.Types
+{
+    /// <completionlist cref="VariableKind"/>
+    public class VariableKind : StringEnum<VariableKind>
+    {
         /// <summary>
         /// Indicates that the object is a property.
         /// </summary>
-        Property,
+        public static readonly VariableKind Property = Create("property");
 
         /// <summary>
         /// Indicates that the object is a method.
         /// </summary>
-        Method,
+        public static readonly VariableKind Method = Create("method");
 
         /// <summary>
         /// Indicates that the object is a class.
         /// </summary>
-        Class,
+        public static readonly VariableKind Class = Create("class");
 
         /// <summary>
         /// Indicates that the object is data.
         /// </summary>
-        Data,
+        public static readonly VariableKind Data = Create("data");
 
         /// <summary>
         /// Indicates that the object is an event.
         /// </summary>
-        Event,
+        public static readonly VariableKind Event = Create("event");
 
         /// <summary>
         /// Indicates that the object is a base class.
         /// </summary>
-        BaseClass,
+        public static readonly VariableKind BaseClass = Create("baseClass");
 
         /// <summary>
         /// Indicates that the object is an inner class.
         /// </summary>
-        InnerClass,
+        public static readonly VariableKind InnerClass = Create("innerClass");
 
         /// <summary>
         /// Indicates that the object is an interface.
         /// </summary>
-        Interface,
+        public static readonly VariableKind Interface = Create("interface");
 
         /// <summary>
         /// Indicates that the object is the most derived class.
         /// </summary>
-        MostDerivedClass,
+        public static readonly VariableKind MostDerivedClass = Create("mostDerivedClass");
 
         /// <summary>
         /// Indicates that the object is virtual, that means it is a synthetic object introduced by the
         /// adapter for rendering purposes, e.g. an index range for large arrays.
         /// </summary>
-        Virtual,
+        public static readonly VariableKind Virtual = Create("virtual");
 
         /// <summary>
         /// Indicates that a data breakpoint is registered for the object. The 'hasDataBreakpoint' attribute should
         /// generally be used instead.
         /// </summary>
         [Obsolete("Deprecated. The 'hasDataBreakpoint' attribute should generally be used instead.")]
-        DataBreakpoint
+        public static readonly VariableKind DataBreakpoint = Create("dataBreakpoint");
     }
 }

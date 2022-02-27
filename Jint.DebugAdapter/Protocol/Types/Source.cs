@@ -40,7 +40,7 @@ namespace Jint.DebugAdapter.Protocol.Types
         /// A value of 'deemphasize' can be used to indicate that the source is not available or that it is skipped 
         /// on stepping.
         /// </remarks>
-        public StringEnum<SourcePresentationHint>? PresentationHint { get; set; }
+        public SourcePresentationHint PresentationHint { get; set; }
 
         /// <summary>
         /// The (optional) origin of this source: possible values 'internal module', 'inlined content from source 

@@ -10,7 +10,7 @@ namespace Jint.DebugAdapter.Protocol.Events
     {
         protected override string EventNameInternal => "memory";
 
-        public ModuleEvent(StringEnum<ChangeReason> reason, Module module)
+        public ModuleEvent(ChangeReason reason, Module module)
         {
             Reason = reason;
             Module = module;
@@ -19,7 +19,7 @@ namespace Jint.DebugAdapter.Protocol.Events
         /// <summary>
         /// The reason for the event.
         /// </summary>
-        public StringEnum<ChangeReason> Reason { get; set; }
+        public ChangeReason Reason { get; set; }
 
         /// <summary>
         /// The new, changed, or removed module. In case of 'removed' only the module id is used.

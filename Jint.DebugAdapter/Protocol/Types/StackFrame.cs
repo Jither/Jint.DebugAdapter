@@ -78,6 +78,6 @@ namespace Jint.DebugAdapter.Protocol.Types
         /// <summary>
         /// 
         /// </summary>
-        public StringEnum<StackFramePresentationHint>? PresentationHint { get; set; }
+        public StackFramePresentationHint PresentationHint { get; set; }
     }
 }

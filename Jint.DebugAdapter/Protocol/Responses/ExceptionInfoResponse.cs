@@ -10,7 +10,7 @@ namespace Jint.DebugAdapter.Protocol.Responses
     {
         /// <param name="exceptionId">ID of the exception that was thrown.</param>
         /// <param name="breakMode">Mode that caused the exception notification to be raised.</param>
-        public ExceptionInfoResponse(string exceptionId, StringEnum<ExceptionBreakMode> breakMode)
+        public ExceptionInfoResponse(string exceptionId, ExceptionBreakMode breakMode)
         {
             ExceptionId = exceptionId;
             BreakMode = breakMode;
@@ -29,7 +29,7 @@ namespace Jint.DebugAdapter.Protocol.Responses
         /// <summary>
         /// Mode that caused the exception notification to be raised.
         /// </summary>
-        public StringEnum<ExceptionBreakMode> BreakMode { get; set; }
+        public ExceptionBreakMode BreakMode { get; set; }
 
         /// <summary>
         /// Detailed information about the exception.

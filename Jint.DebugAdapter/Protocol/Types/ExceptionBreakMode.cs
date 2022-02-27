@@ -1,27 +1,28 @@
-﻿namespace Jint.DebugAdapter.Protocol.Types
-{
-    public enum ExceptionBreakMode
-    {
-        Other,
+﻿using Jint.DebugAdapter.Helpers;
 
+namespace Jint.DebugAdapter.Protocol.Types
+{
+    /// <completionlist cref="ExceptionBreakMode"/>
+    public class ExceptionBreakMode : StringEnum<ExceptionBreakMode>
+    {
         /// <summary>
         /// Never breaks.
         /// </summary>
-        Never,
+        public static readonly ExceptionBreakMode Never = Create("never");
 
         /// <summary>
         /// Always breaks.
         /// </summary>
-        Always,
+        public static readonly ExceptionBreakMode Always = Create("always");
 
         /// <summary>
         /// Breaks when exception unhandled.
         /// </summary>
-        Unhandled,
+        public static readonly ExceptionBreakMode Unhandled = Create("unhandled");
 
         /// <summary>
         /// Breaks if the exception is not handled by user code.
         /// </summary>
-        UserUnhandled
+        public static readonly ExceptionBreakMode UserUnhandled = Create("userUnhandled");
     }
 }

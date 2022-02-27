@@ -1,13 +1,15 @@
-﻿namespace Jint.DebugAdapter.Protocol.Types
+﻿using Jint.DebugAdapter.Helpers;
+
+namespace Jint.DebugAdapter.Protocol.Types
 {
     // Breakpoint event: reason: 'changed' | 'new' | 'removed' | string;
     // LoadedSource event: reason: 'new' | 'changed' | 'removed';
     // Module event: reason: 'new' | 'changed' | 'removed';
-    public enum ChangeReason
+    /// <completionlist cref="ChangeReason"/>
+    public class ChangeReason : StringEnum<ChangeReason>
     {
-        Other,
-        New,
-        Changed,
-        Removed
+        public static readonly ChangeReason New = Create("new");
+        public static readonly ChangeReason Changed = Create("changed");
+        public static readonly ChangeReason Removed = Create("removed");
     }
 }

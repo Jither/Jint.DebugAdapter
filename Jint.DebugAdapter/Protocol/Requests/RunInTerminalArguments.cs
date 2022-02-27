@@ -16,7 +16,7 @@ namespace Jint.DebugAdapter.Protocol.Requests
         /// <summary>
         /// What kind of terminal to launch.
         /// </summary>
-        public StringEnum<TerminalKind>? Kind { get; set; }
+        public TerminalKind Kind { get; set; }
 
         /// <summary>
         /// Optional title of the terminal.

@@ -39,7 +39,7 @@ namespace Jint.DebugAdapter.Protocol.Types
         /// <summary>
         /// Datatype of values in this column.  Defaults to 'string' if not specified.
         /// </summary>
-        public StringEnum<ColumnType>? Type { get; set; }
+        public ColumnType Type { get; set; }
 
         /// <summary>
         /// Width of this column in characters (hint only).

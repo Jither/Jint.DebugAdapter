@@ -28,6 +28,6 @@ namespace Jint.DebugAdapter.Protocol.Requests
         /// <summary>
         /// Optional granularity to step. If no granularity is specified, a granularity of 'statement' is assumed.
         /// </summary>
-        public StringEnum<SteppingGranularity>? Granularity { get; set; }
+        public SteppingGranularity Granularity { get; set; }
     }
 }

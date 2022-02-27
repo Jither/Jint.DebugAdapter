@@ -1,9 +1,11 @@
-﻿namespace Jint.DebugAdapter.Protocol.Types
+﻿using Jint.DebugAdapter.Helpers;
+
+namespace Jint.DebugAdapter.Protocol.Types
 {
-    public enum TerminalKind
+    /// <completionlist cref="TerminalKind"/>
+    public class TerminalKind : StringEnum<TerminalKind>
     {
-        Other,
-        Integrated,
-        External
+        public static readonly TerminalKind Integrated = Create("integrated");
+        public static readonly TerminalKind External = Create("external");
     }
 }

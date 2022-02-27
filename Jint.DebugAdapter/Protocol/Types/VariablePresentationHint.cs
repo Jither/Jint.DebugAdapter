@@ -1,6 +1,4 @@
-﻿using Jint.DebugAdapter.Helpers;
-
-namespace Jint.DebugAdapter.Protocol.Types
+﻿namespace Jint.DebugAdapter.Protocol.Types
 {
     /// <summary>
     /// Optional properties of a variable that can be used to determine how to render the variable in the UI.
@@ -10,7 +8,7 @@ namespace Jint.DebugAdapter.Protocol.Types
         /// <summary>
         /// The kind of variable. Before introducing additional values, try to use the listed values.
         /// </summary>
-        public StringEnum<VariableKind>? Kind { get; set; }
+        public VariableKind Kind { get; set; }
 
         /// <summary>
         /// Set of attributes represented as an array of strings. Before introducing additional values, try to use
@@ -22,7 +20,7 @@ namespace Jint.DebugAdapter.Protocol.Types
         /// <summary>
         /// Visibility of variable. Before introducing additional values, try to use the listed values.
         /// </summary>
-        public StringEnum<VariableVisibility>? Visibility { get; set; }
+        public VariableVisibility Visibility { get; set; }
 
         /// <summary>
         /// If true, clients can present the variable with a UI that supports a specific gesture to trigger
@@ -37,15 +35,5 @@ namespace Jint.DebugAdapter.Protocol.Types
         /// variable that will provide the value through another 'variable' request.
         /// </remarks>
         public bool? Lazy { get; set; }
-    }
-
-    public enum VariableVisibility
-    {
-        Other,
-        Public,
-        Private,
-        Protected,
-        Internal,
-        Final
     }
 }

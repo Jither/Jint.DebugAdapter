@@ -8,7 +8,7 @@ namespace Jint.DebugAdapter.Protocol.Types
     public class ExceptionOptions
     {
         /// <param name="breakMode">Condition when a thrown exception should result in a break.</param>
-        public ExceptionOptions(StringEnum<ExceptionBreakMode> breakMode)
+        public ExceptionOptions(ExceptionBreakMode breakMode)
         {
             BreakMode = breakMode;
         }
@@ -23,6 +23,6 @@ namespace Jint.DebugAdapter.Protocol.Types
         /// <summary>
         /// Condition when a thrown exception should result in a break.
         /// </summary>
-        public StringEnum<ExceptionBreakMode> BreakMode { get; set; }
+        public ExceptionBreakMode BreakMode { get; set; }
     }
 }

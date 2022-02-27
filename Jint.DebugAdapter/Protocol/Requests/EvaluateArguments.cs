@@ -23,7 +23,7 @@ namespace Jint.DebugAdapter.Protocol.Requests
         /// <summary>
         /// The context in which the evaluate request is run.
         /// </summary>
-        public StringEnum<EvaluationContext>? Context { get; set; }
+        public EvaluationContext Context { get; set; }
 
         /// <summary>
         /// Specifies details on how to format the Evaluate result.

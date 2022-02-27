@@ -42,7 +42,7 @@ namespace Jint.DebugAdapter.Protocol.Types
         /// <summary>
         /// The item's type. Typically the client uses this information to render the item in the UI with an icon.
         /// </summary>
-        public StringEnum<CompletionItemType>? Type { get; set; }
+        public CompletionItemType Type { get; set; }
 
         /// <summary>
         /// This value determines the location (in the CompletionsRequest's 'text' attribute) where the completion 

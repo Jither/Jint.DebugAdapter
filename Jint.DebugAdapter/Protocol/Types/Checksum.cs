@@ -11,7 +11,7 @@ namespace Jint.DebugAdapter.Protocol.Types
         /// <param name="algorithm">The algorithm used to calculate this checksum.</param>
         /// <param name="value">Value of the checksum.</param>
         [JsonConstructor]
-        public Checksum(StringEnum<ChecksumAlgorithm> algorithm, string value)
+        public Checksum(ChecksumAlgorithm algorithm, string value)
         {
             Algorithm = algorithm;
             Value = value;
@@ -20,7 +20,7 @@ namespace Jint.DebugAdapter.Protocol.Types
         /// <summary>
         /// The algorithm used to calculate this checksum.
         /// </summary>
-        public StringEnum<ChecksumAlgorithm> Algorithm { get; set; }
+        public ChecksumAlgorithm Algorithm { get; set; }
 
         /// <summary>
         /// Value of the checksum.

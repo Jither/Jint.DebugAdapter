@@ -1,11 +1,13 @@
-﻿namespace Jint.DebugAdapter.Protocol.Types
+﻿using Jint.DebugAdapter.Helpers;
+
+namespace Jint.DebugAdapter.Protocol.Types
 {
-    public enum ColumnType
+    /// <completionlist cref="ColumnType"/>
+    public class ColumnType : StringEnum<ColumnType>
     {
-        Other,
-        String,
-        Number,
-        Boolean,
-        UnixTimestampUTC
+        public static readonly ColumnType String = Create("string");
+        public static readonly ColumnType Number = Create("number");
+        public static readonly ColumnType Boolean = Create("boolean");
+        public static readonly ColumnType UnixTimestampUTC = Create("unixTimestampUTC");
     }
 }

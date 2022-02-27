@@ -54,7 +54,7 @@ namespace Jint.DebugAdapter.Protocol.Requests
         /// <summary>
         /// Determines in what format paths are specified. The default is 'path', which is the native format.
         /// </summary>
-        public StringEnum<PathFormat>? PathFormat { get; set; }
+        public PathFormat PathFormat { get; set; }
 
         /// <summary>
         /// Client supports the optional type attribute for variables.

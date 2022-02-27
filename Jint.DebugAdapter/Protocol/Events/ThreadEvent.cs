@@ -10,7 +10,7 @@ namespace Jint.DebugAdapter.Protocol.Events
     {
         protected override string EventNameInternal => "thread";
 
-        public ThreadEvent(StringEnum<ThreadChangeReason> reason, int threadId)
+        public ThreadEvent(ThreadChangeReason reason, int threadId)
         {
             Reason = reason;
             ThreadId = threadId;
@@ -19,7 +19,7 @@ namespace Jint.DebugAdapter.Protocol.Events
         /// <summary>
         /// The reason for the event.
         /// </summary>
-        public StringEnum<ThreadChangeReason> Reason { get; set; }
+        public ThreadChangeReason Reason { get; set; }
 
         /// <summary>
         /// The identifier of the thread.

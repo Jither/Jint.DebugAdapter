@@ -1,22 +1,24 @@
-﻿namespace Jint.DebugAdapter.Protocol.Types
+﻿using Jint.DebugAdapter.Helpers;
+
+namespace Jint.DebugAdapter.Protocol.Types
 {
-    public enum EvaluationContext
+    /// <completionlist cref="EvaluationContext"/>
+    public class EvaluationContext : StringEnum<EvaluationContext>
     {
-        Other,
         /// <summary>
         /// Evaluate is run in a watch.
         /// </summary>
-        Watch,
+        public static readonly EvaluationContext Watch = Create("watch");
 
         /// <summary>
         /// Evaluate is run from REPL console.
         /// </summary>
-        Repl,
+        public static readonly EvaluationContext Repl = Create("repl");
 
         /// <summary>
         /// Evaluate is run from a data hover.
         /// </summary>
-        Hover,
+        public static readonly EvaluationContext Hover = Create("hover");
 
         /// <summary>
         /// Evaluate is run to generate the value that will be stored in the clipboard.
@@ -24,6 +26,6 @@
         /// <remarks>
         /// The attribute is only honored by a debug adapter if the capability 'supportsClipboardContext' is true.
         /// </remarks>
-        Clipboard
+        public static readonly EvaluationContext Clipboard = Create("clipboard");
     }
 }

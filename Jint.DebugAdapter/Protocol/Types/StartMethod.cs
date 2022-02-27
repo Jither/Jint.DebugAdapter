@@ -1,21 +1,23 @@
-﻿namespace Jint.DebugAdapter.Protocol.Types
+﻿using Jint.DebugAdapter.Helpers;
+
+namespace Jint.DebugAdapter.Protocol.Types
 {
-    public enum StartMethod
+    /// <completionlist cref="StartMethod"/>
+    public class StartMethod : StringEnum<StartMethod>
     {
-        Other,
         /// <summary>
         /// Process was launched under the debugger.
         /// </summary>
-        Launch,
+        public static readonly StartMethod Launch = Create("launch");
 
         /// <summary>
         /// Debugger attached to an existing process.
         /// </summary>
-        Attach,
+        public static readonly StartMethod Attach = Create("attach");
 
         /// <summary>
         /// A project launcher component has launched a new process in a suspended state and then asked the debugger to attach.
         /// </summary>
-        AttachForSuspendedLaunch
+        public static readonly StartMethod AttachForSuspendedLaunch = Create("attachForSuspendedLaunch");
     }
 }

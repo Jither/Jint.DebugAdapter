@@ -12,7 +12,7 @@ namespace Jint.DebugAdapter.Protocol.Events
     {
         protected override string EventNameInternal => "stopped";
 
-        public StoppedEvent(StringEnum<StopReason> reason, int threadId = 1)
+        public StoppedEvent(StopReason reason, int threadId = 1)
         {
             Reason = reason;
             ThreadId = threadId;
@@ -23,7 +23,7 @@ namespace Jint.DebugAdapter.Protocol.Events
         /// </summary>
         /// <remarks>For backward compatibility this string is shown in the UI if the 'description' attribute is
         /// missing (but it must not be translated).</remarks>
-        public StringEnum<StopReason> Reason { get; set; }
+        public StopReason Reason { get; set; }
 
         /// <summary>
         /// The full reason for the event, e.g. 'Paused on exception'. This string is shown in the UI as is and

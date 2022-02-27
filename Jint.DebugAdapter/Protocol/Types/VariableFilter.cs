@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Jint.DebugAdapter.Helpers;
 
 namespace Jint.DebugAdapter.Protocol.Types
 {
-    public enum VariableFilter
+    /// <completionlist cref="VariableFilter"/>
+    public class VariableFilter : StringEnum<VariableFilter>
     {
-        Other,
-        Indexed,
-        Named
+        public static readonly VariableFilter Indexed = Create("indexed");
+        public static readonly VariableFilter Named = Create("named");
     }
 }

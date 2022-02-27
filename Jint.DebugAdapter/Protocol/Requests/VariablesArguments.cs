@@ -20,7 +20,7 @@ namespace Jint.DebugAdapter.Protocol.Requests
         /// Optional filter to limit the child variables to either named or indexed. If omitted, 
         /// both types are fetched.
         /// </summary>
-        public StringEnum<VariableFilter>? Filter { get; set; }
+        public VariableFilter Filter { get; set; }
 
         /// <summary>
         /// The index of the first variable to return; if omitted children start at 0.

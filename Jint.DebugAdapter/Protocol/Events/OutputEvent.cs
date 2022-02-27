@@ -19,7 +19,7 @@ namespace Jint.DebugAdapter.Protocol.Events
         /// The output category. If not specified or if the category is not understood by the client,
         /// 'console' is assumed.
         /// </summary>
-        public StringEnum<OutputCategory>? Category { get; set; }
+        public OutputCategory Category { get; set; }
 
         /// <summary>
         /// The output to report.
@@ -29,7 +29,7 @@ namespace Jint.DebugAdapter.Protocol.Events
         /// <summary>
         /// Support for keeping an output log organized by grouping related messages.
         /// </summary>
-        public StringEnum<OutputGroup>? Group { get; set; }
+        public OutputGroup Group { get; set; }
 
         /// <summary>
         /// If an attribute 'variablesReference' exists and its value is > 0, the output contains objects which

@@ -28,7 +28,7 @@ namespace Jint.DebugAdapter.Protocol.Types
         /// An optional hint for how to present this scope in the UI. If this attribute is missing, the scope is
         /// shown with a generic UI.
         /// </summary>
-        public StringEnum<ScopePresentationHint>? PresentationHint { get; set; }
+        public ScopePresentationHint PresentationHint { get; set; }
 
         /// <summary>
         /// The variables of this scope can be retrieved by passing the value of variablesReference

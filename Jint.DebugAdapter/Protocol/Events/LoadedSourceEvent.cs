@@ -10,7 +10,7 @@ namespace Jint.DebugAdapter.Protocol.Events
     {
         protected override string EventNameInternal => "loadedSource";
 
-        public LoadedSourceEvent(StringEnum<ChangeReason> reason, Source source)
+        public LoadedSourceEvent(ChangeReason reason, Source source)
         {
             Reason = reason;
             Source = source;
@@ -19,7 +19,7 @@ namespace Jint.DebugAdapter.Protocol.Events
         /// <summary>
         /// The reason for the event.
         /// </summary>
-        public StringEnum<ChangeReason> Reason { get; set; }
+        public ChangeReason Reason { get; set; }
 
         /// <summary>
         /// The new, changed, or removed source.

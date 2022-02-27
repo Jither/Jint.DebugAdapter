@@ -10,7 +10,7 @@ namespace Jint.DebugAdapter.Protocol.Events
     {
         protected override string EventNameInternal => "breakpoint";
 
-        public BreakpointEvent(StringEnum<ChangeReason> reason, Breakpoint breakpoint)
+        public BreakpointEvent(ChangeReason reason, Breakpoint breakpoint)
         {
             Reason = reason;
             Breakpoint = breakpoint;
@@ -19,7 +19,7 @@ namespace Jint.DebugAdapter.Protocol.Events
         /// <summary>
         /// The reason for the event.
         /// </summary>
-        public StringEnum<ChangeReason> Reason { get; set; }
+        public ChangeReason Reason { get; set; }
 
         /// <summary>
         /// The 'id' attribute is used to find the target breakpoint

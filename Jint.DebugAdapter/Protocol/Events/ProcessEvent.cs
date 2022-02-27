@@ -35,7 +35,7 @@ namespace Jint.DebugAdapter.Protocol.Events
         /// <summary>
         /// Describes how the debug engine started debugging this process.
         /// </summary>
-        public StringEnum<StartMethod>? StartMethod { get; set; }
+        public StartMethod StartMethod { get; set; }
 
         /// <summary>
         /// The size of a pointer or address for this process, in bits.

@@ -1,10 +1,12 @@
-﻿namespace Jint.DebugAdapter.Protocol.Types
+﻿using Jint.DebugAdapter.Helpers;
+
+namespace Jint.DebugAdapter.Protocol.Types
 {
-    public enum SourcePresentationHint
+    /// <completionlist cref="SourcePresentationHint"/>
+    public class SourcePresentationHint : StringEnum<SourcePresentationHint>
     {
-        Other,
-        Normal,
-        Emphasize,
-        Deemphasize
+        public static readonly SourcePresentationHint Normal = Create("normal");
+        public static readonly SourcePresentationHint Emphasize = Create("emphasize");
+        public static readonly SourcePresentationHint Deemphasize = Create("deemphasize");
     }
 }

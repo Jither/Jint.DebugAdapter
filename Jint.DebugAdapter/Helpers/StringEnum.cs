@@ -1,155 +1,96 @@
-﻿/*
-StringEnum idea and implementation based on:
-https://github.com/octokit/octokit.net/blob/main/Octokit/Models/Response/StringEnum.cs
-
-Copyright (c) 2021 Jither
-Copyright (c) 2017 GitHub, Inc.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of 
-this software and associated documentation files (the "Software"), to deal in 
-the Software without restriction, including without limitation the rights to 
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software is furnished to do so, 
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all 
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR 
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER 
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
-
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-
-namespace Jint.DebugAdapter.Helpers
+﻿namespace Jint.DebugAdapter.Helpers
 {
-    [DebuggerDisplay("{DebuggerDisplay,nq}")]
-    public struct StringEnum<TEnum> : IEquatable<StringEnum<TEnum>> where TEnum : struct, Enum
+    public abstract class StringEnum<T> : IEquatable<T> where T: StringEnum<T>, new()
     {
-        private readonly string stringValue;
-        private TEnum? value;
+        public string EnumValue { get; private set; }
+        public bool IsCustom { get; private set; }
 
-        public StringEnum(TEnum value)
+        private static readonly Dictionary<string, T> values = new();
+
+        protected StringEnum()
         {
-            if (!Enum.IsDefined(value))
+
+        }
+
+        protected static T Create(string value)
+        {
+            if (value == null)
             {
-                throw new ArgumentException($"Invalid StringEnum value - must be defined on enum. Was: {value}", nameof(value));
+                return null;
             }
 
-            stringValue = EnumNameHelper.ValueToName(value);
-            this.value = value;
+            EnsureUnique(value);
+
+            var result = new T() { EnumValue = value, IsCustom = false };
+            values.Add(value, result);
+
+            return result;
         }
 
-        public StringEnum(string stringValue)
+        public static T Custom(string value)
         {
-            if (String.IsNullOrEmpty(stringValue))
+            if (value == null)
             {
-                throw new ArgumentNullException(nameof(stringValue), "StringEnum cannot be null or empty string");
-            }
-            this.stringValue = stringValue;
-            value = null;
-        }
-
-        public string StringValue => stringValue;
-
-        public TEnum Value => value ?? (value = ParseValue()).Value;
-
-        internal string DebuggerDisplay
-        {
-            get
-            {
-                if (TryParse(out var value))
-                {
-                    return value.ToString();
-                }
-                return StringValue;
-            }
-        }
-
-        public bool TryParse(out TEnum value)
-        {
-            if (this.value.HasValue)
-            {
-                value = this.value.Value;
-                return true;
+                return null;
             }
 
-            try
+            EnsureUnique(value);
+
+            return new T() { EnumValue = value, IsCustom = true };
+        }
+
+        private static void EnsureUnique(string value)
+        {
+            if (values.ContainsKey(value))
             {
-                value = EnumNameHelper.NameToValue<TEnum>(StringValue);
-                this.value = value;
-                return true;
+                throw new ArgumentException($"'{value}' is already defined on {typeof(T)}");
             }
-            catch (ArgumentException)
-            {
-                value = default;
-                return false;
-            }
-        }
-
-        public bool Equals(StringEnum<TEnum> other)
-        {
-            if (TryParse(out var value) && other.TryParse(out var otherValue))
-            {
-                return value.Equals(otherValue);
-            }
-
-            return String.Equals(StringValue, other.StringValue, StringComparison.OrdinalIgnoreCase);
-        }
-
-        public override bool Equals([NotNullWhen(true)] object obj)
-        {
-            if (obj is null)
-            {
-                return false;
-            }
-
-            return obj is StringEnum<TEnum> other && Equals(other);
-        }
-
-        public override int GetHashCode()
-        {
-            return StringComparer.OrdinalIgnoreCase.GetHashCode(StringValue);
-        }
-
-        public static bool operator ==(StringEnum<TEnum> left, StringEnum<TEnum> right)
-        {
-            return left.Equals(right);
-        }
-
-        public static bool operator !=(StringEnum<TEnum> left, StringEnum<TEnum> right)
-        {
-            return !left.Equals(right);
-        }
-
-        public static implicit operator StringEnum<TEnum>(string value)
-        {
-            return new StringEnum<TEnum>(value);
-        }
-
-        public static implicit operator StringEnum<TEnum>(TEnum value)
-        {
-            return new StringEnum<TEnum>(value);
         }
 
         public override string ToString()
         {
-            return StringValue;
+            return EnumValue;
         }
 
-        private TEnum ParseValue()
+        public static T Parse(string value)
         {
-            if (TryParse(out var value))
+            if (!TryParse(value, out var result))
             {
-                return value;
+                throw new ArgumentException($"{value} is not a valid value for the StringEnum {typeof(T).Name}", nameof(value));
             }
-
-            throw new ArgumentException($"Value '{value}' is not a valid {typeof(TEnum).Name} value");
+            return result;
         }
+
+        public static bool TryParse(string value, out T result)
+        {
+            return values.TryGetValue(value, out result);
+        }
+
+        public bool Equals(T other)
+        {
+            return other?.EnumValue == EnumValue;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return EnumValue.Equals((obj as T)?.EnumValue ?? (obj as string));
+        }
+
+        public override int GetHashCode()
+        {
+            return EnumValue.GetHashCode();
+        }
+
+        public static bool operator ==(StringEnum<T> a, StringEnum<T> b)
+        {
+            return a?.Equals(b) ?? false;
+        }
+
+        public static bool operator !=(StringEnum<T> a, StringEnum<T> b)
+        {
+            return !(a?.Equals(b) ?? false);
+        }
+
+
     }
 }

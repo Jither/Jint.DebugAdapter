@@ -6,7 +6,6 @@ namespace Jint.DebugAdapter.Helpers
 {
     /// <summary>
     /// StringEnum converter, tailored for DebugAdapter protocol.
-    /// The StringEnum allows using Enum values for known values while still allowing arbitrary string values.
     /// </summary>
     public class StringEnumConverter : JsonConverterFactory
     {
@@ -17,35 +16,23 @@ namespace Jint.DebugAdapter.Helpers
 
         public override bool CanConvert(Type typeToConvert)
         {
-            if (!typeToConvert.IsGenericType)
+            while (typeToConvert != null)
             {
-                return false;
+                if (typeToConvert.IsGenericType && typeToConvert.GetGenericTypeDefinition() == typeof(StringEnum<>))
+                {
+                    return true;
+                }
+                typeToConvert = typeToConvert.BaseType;
             }
 
-            // If nullable, check underlying type instead
-            bool isNullable = CheckNullableType(typeToConvert, out var underlyingType);
-            if (isNullable)
-            {
-                typeToConvert = underlyingType;
-            }
-
-            return typeToConvert.GetGenericTypeDefinition() == typeof(StringEnum<>);
+            return false;
         }
 
         public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
         {
-            bool isNullable = CheckNullableType(typeToConvert, out var underlyingType);
             try
             {
-                Type enumType;
-                if (isNullable)
-                {
-                    enumType = underlyingType.GetGenericArguments()[0];
-
-                    return Activator.CreateInstance(typeof(NullableConverter<>).MakeGenericType(enumType)) as JsonConverter;
-                }
-                enumType = typeToConvert.GetGenericArguments()[0];
-                return Activator.CreateInstance(typeof(Converter<>).MakeGenericType(enumType)) as JsonConverter;
+                return Activator.CreateInstance(typeof(Converter<>).MakeGenericType(typeToConvert)) as JsonConverter;
             }
             catch (TargetInvocationException ex)
             {
@@ -57,60 +44,30 @@ namespace Jint.DebugAdapter.Helpers
             }
         }
 
-        private static bool CheckNullableType(Type type, out Type underlyingType)
-        {
-            underlyingType = Nullable.GetUnderlyingType(type);
-            return underlyingType == typeof(StringEnum<>);
-        }
-
-        private class Converter<TEnum> : JsonConverter<StringEnum<TEnum>> where TEnum: struct, Enum
+        private class Converter<T> : JsonConverter<StringEnum<T>> where T : StringEnum<T>, new()
         {
             public Converter()
             {
             }
 
-            public override StringEnum<TEnum> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            public override StringEnum<T> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
             {
                 if (reader.TokenType != JsonTokenType.String)
                 {
                     throw new JsonException("Expected string value");
                 }
                 string value = reader.GetString();
-                return new StringEnum<TEnum>(value);
-            }
-
-            public override void Write(Utf8JsonWriter writer, StringEnum<TEnum> value, JsonSerializerOptions options)
-            {
-                writer.WriteStringValue(value.StringValue);
-            }
-        }
-
-        private class NullableConverter<TEnum> : JsonConverter<StringEnum<TEnum>?> where TEnum: struct, Enum
-        {
-            public NullableConverter()
-            {
-            }
-
-            public override StringEnum<TEnum>? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-            {
-                return reader.TokenType switch
+                if (StringEnum<T>.TryParse(value, out T result))
                 {
-                    JsonTokenType.String => new StringEnum<TEnum>(reader.GetString()),
-                    JsonTokenType.Null => null,
-                    _ => throw new JsonException("Expected string or null value"),
-                };
-            }
-
-            public override void Write(Utf8JsonWriter writer, StringEnum<TEnum>? value, JsonSerializerOptions options)
-            {
-                if (value == null)
-                {
-                    writer.WriteNullValue();
+                    return result;
                 }
-                else
-                {
-                    writer.WriteStringValue(value.Value.StringValue);
-                }
+
+                return StringEnum<T>.Custom(value);
+            }
+
+            public override void Write(Utf8JsonWriter writer, StringEnum<T> value, JsonSerializerOptions options)
+            {
+                writer.WriteStringValue(value.EnumValue);
             }
         }
     }
