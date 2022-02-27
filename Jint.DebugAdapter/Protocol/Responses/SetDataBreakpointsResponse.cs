@@ -7,6 +7,13 @@ namespace Jint.DebugAdapter.Protocol.Responses
     /// </summary>
     public class SetDataBreakpointsResponse : ProtocolResponseBody
     {
+        /// <param name="breakpoints">Information about the data breakpoints. The array elements correspond to
+        /// the elements of the input argument 'breakpoints' array.</param>
+        public SetDataBreakpointsResponse(List<Breakpoint> breakpoints)
+        {
+            Breakpoints = breakpoints;
+        }
+
         /// <summary>
         /// Information about the data breakpoints. The array elements correspond to
         /// the elements of the input argument 'breakpoints' array.

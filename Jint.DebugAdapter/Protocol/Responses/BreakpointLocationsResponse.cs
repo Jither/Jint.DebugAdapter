@@ -10,6 +10,7 @@ namespace Jint.DebugAdapter.Protocol.Responses
     /// </remarks>
     public class BreakpointLocationsResponse : ProtocolResponseBody
     {
+        /// <param name="breakpoints">Sorted set of possible breakpoint locations.</param>
         public BreakpointLocationsResponse(List<BreakpointLocation> breakpoints)
         {
             Breakpoints = breakpoints;

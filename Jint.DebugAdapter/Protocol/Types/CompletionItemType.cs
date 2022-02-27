@@ -1,4 +1,6 @@
-﻿namespace Jint.DebugAdapter.Protocol.Types
+﻿using System.Text.Json.Serialization;
+
+namespace Jint.DebugAdapter.Protocol.Types
 {
     public enum CompletionItemType
     {
@@ -21,6 +23,7 @@
         Color,
         File,
         Reference,
+        [JsonPropertyName("customcolor")]
         CustomColor
     }
 }

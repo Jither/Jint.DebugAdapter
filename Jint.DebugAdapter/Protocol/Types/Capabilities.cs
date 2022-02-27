@@ -1,5 +1,9 @@
 ﻿namespace Jint.DebugAdapter.Protocol.Types
 {
+    /// <summary>
+    /// Information about the capabilities of a debug adapter.
+    /// </summary>
+    /// <inheritdoc/>
     public class Capabilities : ICapabilities
     {
         public bool? SupportsConfigurationDoneRequest { get; set; }

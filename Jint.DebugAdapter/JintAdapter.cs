@@ -54,7 +54,7 @@ namespace Jint.DebugAdapter
 
         protected override DisassembleResponse DisassembleRequest(DisassembleArguments arguments)
         {
-            return new DisassembleResponse();
+            throw new NotImplementedException();
         }
 
         protected override void DisconnectRequest(DisconnectArguments arguments)
@@ -63,15 +63,12 @@ namespace Jint.DebugAdapter
 
         protected override EvaluateResponse EvaluateRequest(EvaluateArguments arguments)
         {
-            return new EvaluateResponse
-            {
-                Result = "evaluated"
-            };
+            return new EvaluateResponse("evaluated");
         }
 
         protected override ExceptionInfoResponse ExceptionInfoRequest(ExceptionInfoArguments arguments)
         {
-            return new ExceptionInfoResponse();
+            throw new NotImplementedException();
         }
 
         protected override void GotoRequest(GotoArguments arguments)
@@ -81,7 +78,7 @@ namespace Jint.DebugAdapter
 
         protected override GotoTargetsResponse GotoTargetsRequest(GotoTargetsArguments arguments)
         {
-            return new GotoTargetsResponse();
+            throw new NotImplementedException();
         }
 
         protected override InitializeResponse InitializeRequest(InitializeArguments arguments)
@@ -100,12 +97,12 @@ namespace Jint.DebugAdapter
 
         protected override LoadedSourcesResponse LoadedSourcesRequest()
         {
-            return new LoadedSourcesResponse();
+            return new LoadedSourcesResponse(new List<Source>());
         }
 
         protected override ModulesResponse ModulesRequest(ModulesArguments arguments)
         {
-            return new ModulesResponse();
+            throw new NotImplementedException();
         }
 
         protected override void NextRequest(NextArguments arguments)
@@ -120,7 +117,7 @@ namespace Jint.DebugAdapter
 
         protected override ReadMemoryResponse ReadMemoryRequest(ReadMemoryArguments arguments)
         {
-            return new ReadMemoryResponse();
+            throw new NotImplementedException();
         }
 
         protected override void RestartFrameRequest(RestartFrameArguments arguments)
@@ -140,62 +137,55 @@ namespace Jint.DebugAdapter
 
         protected override ScopesResponse ScopesRequest(ScopesArguments arguments)
         {
-            return new ScopesResponse
+            return new ScopesResponse(new List<Scope>
             {
-                Scopes = new List<Scope>
-                {
-                    new Scope
-                    {
-                        Name = "Global",
-                        VariablesReference = 1
-                    }
-                }
-            };
+                new Scope("Global", 1)
+            });
         }
 
         protected override SetBreakpointsResponse SetBreakpointsRequest(SetBreakpointsArguments arguments)
         {
-            return new SetBreakpointsResponse();
+            return new SetBreakpointsResponse(new List<Breakpoint>());
         }
 
         protected override SetDataBreakpointsResponse SetDataBreakpointsRequest(SetDataBreakpointsArguments arguments)
         {
-            return new SetDataBreakpointsResponse();
+            throw new NotImplementedException();
         }
 
         protected override SetExceptionBreakpointsResponse SetExceptionBreakpointsRequest(SetExceptionBreakpointsArguments arguments)
         {
-            return new SetExceptionBreakpointsResponse(new List<Breakpoint>());
+            throw new NotImplementedException();
         }
 
         protected override SetExpressionResponse SetExpressionRequest(SetExpressionArguments arguments)
         {
-            return new SetExpressionResponse();
+            throw new NotImplementedException();
         }
 
         protected override SetFunctionBreakpointsResponse SetFunctionBreakpointsRequest(SetFunctionBreakpointsArguments arguments)
         {
-            return new SetFunctionBreakpointsResponse();
+            throw new NotImplementedException();
         }
 
         protected override SetInstructionBreakpointsResponse SetInstructionBreakpointsRequest(SetInstructionBreakpointsArguments arguments)
         {
-            return new SetInstructionBreakpointsResponse(new List<Breakpoint>());
+            throw new NotImplementedException();
         }
 
         protected override SetVariableResponse SetVariableRequest(SetVariableArguments arguments)
         {
-            return new SetVariableResponse();
+            throw new NotImplementedException();
         }
 
         protected override SourceResponse SourceRequest(SourceArguments arguments)
         {
-            return new SourceResponse();
+            throw new NotImplementedException();
         }
 
         protected override StackTraceResponse StackTraceRequest(StackTraceArguments arguments)
         {
-            return new StackTraceResponse();
+            return new StackTraceResponse(new List<StackFrame> { new StackFrame(1, "global") });
         }
 
         protected override void StepBackRequest(StepBackArguments arguments)
@@ -210,8 +200,7 @@ namespace Jint.DebugAdapter
 
         protected override StepInTargetsResponse StepInTargetsRequest(StepInTargetsArguments arguments)
         {
-            SendStoppedEvent(StopReason.Step, "Paused after step");
-            return new StepInTargetsResponse();
+            throw new NotImplementedException();
         }
 
         protected override void StepOutRequest(StepOutArguments arguments)
@@ -230,30 +219,16 @@ namespace Jint.DebugAdapter
         protected override ThreadsResponse ThreadsRequest()
         {
             // "Even if a debug adapter does not support multiple threads, it must implement the threads request and return a single (dummy) thread."
-            return new ThreadsResponse
-            {
-                Threads = new List<Protocol.Types.Thread> { new Protocol.Types.Thread { Id = 1, Name = "Main Thread" } }
-            };
+            return new ThreadsResponse(new List<Protocol.Types.Thread> { new Protocol.Types.Thread(1, "Main Thread") });
         }
 
         protected override VariablesResponse VariablesRequest(VariablesArguments arguments)
         {
-            return new VariablesResponse
-            {
-                Variables = new List<Variable>
+            return new VariablesResponse(new List<Variable>
                 {
-                    new Variable
-                    {
-                        Name = "x",
-                        Value = "3"
-                    },
-                    new Variable
-                    {
-                        Name = "test",
-                        Value = "Hello World"
-                    }
-                }
-            };
+                    new Variable("x", "3"),
+                    new Variable("test", "Hello World")
+                });
         }
 
         protected override WriteMemoryResponse WriteMemoryRequest(WriteMemoryArguments arguments)
