@@ -3,9 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31919.166
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jint.DebugAdapterExample", "Jint.DebugAdapterExample\Jint.DebugAdapterExample.csproj", "{F264091D-DE42-44CC-9553-716272EA3A3F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jint.DebugAdapterExample", "Jint.DebugAdapterExample\Jint.DebugAdapterExample.csproj", "{F264091D-DE42-44CC-9553-716272EA3A3F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jint.DebugAdapter", "Jint.DebugAdapter\Jint.DebugAdapter.csproj", "{61CE4E89-93A2-4915-9FA8-51DF01BD294C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jint.DebugAdapter", "Jint.DebugAdapter\Jint.DebugAdapter.csproj", "{61CE4E89-93A2-4915-9FA8-51DF01BD294C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jint", "..\Jint\Jint\Jint.csproj", "{4BE4AD8D-AD68-4927-8043-2D450A13CEF5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jint.Tests", "..\Jint\Jint.Tests\Jint.Tests.csproj", "{6D6E1D90-EE4D-4CB3-A9EA-613BB3E44232}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +25,14 @@ Global
 		{61CE4E89-93A2-4915-9FA8-51DF01BD294C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{61CE4E89-93A2-4915-9FA8-51DF01BD294C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{61CE4E89-93A2-4915-9FA8-51DF01BD294C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4BE4AD8D-AD68-4927-8043-2D450A13CEF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4BE4AD8D-AD68-4927-8043-2D450A13CEF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4BE4AD8D-AD68-4927-8043-2D450A13CEF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4BE4AD8D-AD68-4927-8043-2D450A13CEF5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D6E1D90-EE4D-4CB3-A9EA-613BB3E44232}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D6E1D90-EE4D-4CB3-A9EA-613BB3E44232}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D6E1D90-EE4D-4CB3-A9EA-613BB3E44232}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D6E1D90-EE4D-4CB3-A9EA-613BB3E44232}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

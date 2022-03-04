@@ -7,14 +7,52 @@ using Jint.DebugAdapter.Protocol.Events;
 using Jint.DebugAdapter.Protocol.Requests;
 using Jint.DebugAdapter.Protocol.Responses;
 using Jint.DebugAdapter.Protocol.Types;
+using Jint.Runtime.Debugger;
 
 namespace Jint.DebugAdapter
 {
     public class JintAdapter : Adapter
     {
-        public void SendStoppedEvent(StopReason reason, string description)
+        private readonly Debugger debugger;
+        private InitializeArguments clientCapabilities;
+
+        public JintAdapter(Debugger debugger)
         {
-            SendEvent(new StoppedEvent(reason) { Description = description });
+            this.debugger = debugger;
+            debugger.Continue += Debugger_Continue;
+            debugger.Stop += Debugger_Stop;
+        }
+
+        private void Debugger_Stop(PauseReason reason, DebugInformation info)
+        {
+
+            SendEvent(new StoppedEvent(
+                reason switch
+                {
+                    PauseReason.Breakpoint => StopReason.Breakpoint,
+                    PauseReason.Entry => StopReason.Entry,
+                    PauseReason.Exception => StopReason.Exception,
+                    PauseReason.Pause => StopReason.Pause,
+                    PauseReason.Step => StopReason.Step,
+                    _ => throw new NotImplementedException($"DebugAdapter reason not implemented for {reason}")
+                }
+            )
+            {
+                Description = reason switch
+                {
+                    PauseReason.Breakpoint => "Hit breakpoint",
+                    PauseReason.Entry => "Stopped on entry",
+                    PauseReason.Exception => "An error occurred",
+                    PauseReason.Pause => "Paused by user",
+                    PauseReason.Step => "Stopped after step",
+                    _ => throw new NotImplementedException($"DebugAdapter reason not implemented for {reason}")
+                }
+            });
+        }
+
+        private void Debugger_Continue()
+        {
+            SendEvent(new ContinuedEvent());
         }
 
         protected override void AttachRequest(AttachArguments arguments)
@@ -32,12 +70,11 @@ namespace Jint.DebugAdapter
 
         protected override void ConfigurationDoneRequest()
         {
-            SendStoppedEvent(StopReason.Entry, "Paused on entry");
+            // TODO: Run the debugger here?
         }
 
         protected override ContinueResponse ContinueRequest(ContinueArguments arguments)
         {
-            SendStoppedEvent(StopReason.Breakpoint, "Hit breakpoint");
             return new ContinueResponse();
         }
 
@@ -57,6 +94,9 @@ namespace Jint.DebugAdapter
 
         protected override InitializeResponse InitializeRequest(InitializeArguments arguments)
         {
+            Logger.Log($"Connection established from: {arguments.ClientName} ({arguments.ClientId})");
+            clientCapabilities = arguments;
+
             SendEvent(new InitializedEvent());
             return new InitializeResponse
             {
@@ -67,6 +107,9 @@ namespace Jint.DebugAdapter
 
         protected override void LaunchRequest(LaunchArguments arguments)
         {
+            string path = arguments.AdditionalProperties["program"].GetString();
+            bool stopOnEntry = arguments.AdditionalProperties["stopOnEntry"].GetBoolean();
+            debugger.ExecuteAsync(path, noDebug: arguments.NoDebug ?? false, pauseOnEntry: stopOnEntry);
         }
 
         protected override LoadedSourcesResponse LoadedSourcesRequest()
@@ -76,12 +119,12 @@ namespace Jint.DebugAdapter
 
         protected override void NextRequest(NextArguments arguments)
         {
-            SendStoppedEvent(StopReason.Step, "Paused after step");
+            debugger.StepOver();
         }
 
         protected override void PauseRequest(PauseArguments arguments)
         {
-        
+            debugger.Pause();
         }
 
         protected override void RestartRequest(RestartArguments arguments)
@@ -109,12 +152,12 @@ namespace Jint.DebugAdapter
 
         protected override void StepInRequest(StepInArguments arguments)
         {
-            SendStoppedEvent(StopReason.Step, "Paused after step");
+            debugger.StepInto();
         }
 
         protected override void StepOutRequest(StepOutArguments arguments)
         {
-            SendStoppedEvent(StopReason.Step, "Paused after step");
+            debugger.StepOut();
         }
 
         protected override void TerminateRequest(TerminateArguments arguments)

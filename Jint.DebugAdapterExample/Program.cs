@@ -8,7 +8,8 @@ namespace Jint.DebugAdapterExample
         {
             Logger.Log("Started");
             Endpoint endpoint;
-            var adapter = new JintAdapter();
+            var host = new ScriptHost();
+            var adapter = new JintAdapter(host.Debugger);
 
             if (args.Length > 0)
             {

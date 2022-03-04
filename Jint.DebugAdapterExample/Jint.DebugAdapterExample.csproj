@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Jint\Jint\Jint.csproj" />
     <ProjectReference Include="..\Jint.DebugAdapter\Jint.DebugAdapter.csproj" />
   </ItemGroup>
 

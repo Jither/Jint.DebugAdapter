@@ -115,7 +115,7 @@ namespace Jint.DebugAdapter.Protocol
                 catch (Exception ex)
                 {
                     HandleFatalError(ex);
-                    if (Debugger.IsAttached)
+                    if (System.Diagnostics.Debugger.IsAttached)
                     {
                         throw;
                     }
@@ -465,7 +465,7 @@ namespace Jint.DebugAdapter.Protocol
                         IsSending = false;
                     }
                     HandleFatalError(ex);
-                    if (Debugger.IsAttached)
+                    if (System.Diagnostics.Debugger.IsAttached)
                     {
                         throw;
                     }

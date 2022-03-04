@@ -12,7 +12,7 @@
     {
         protected override string EventNameInternal => "continued";
 
-        public ContinuedEvent(int threadId)
+        public ContinuedEvent(int threadId = 1)
         {
             ThreadId = threadId;
         }

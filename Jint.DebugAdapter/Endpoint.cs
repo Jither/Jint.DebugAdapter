@@ -39,7 +39,14 @@ namespace Jint.DebugAdapter
 
         public async Task StartAsync()
         {
-            await protocol.StartAsync();
+            try
+            {
+                await protocol.StartAsync();
+            }
+            catch (TaskCanceledException)
+            {
+                Logger.Log("Cancelled server task.");
+            }
         }
 
         protected abstract void StartListening();
