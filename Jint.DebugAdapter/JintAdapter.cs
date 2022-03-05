@@ -19,18 +19,26 @@ namespace Jint.DebugAdapter
         private readonly Logger logger = LogManager.GetLogger();
         private readonly Debugger debugger;
         private readonly VariableStore variableStore;
-        private InitializeArguments clientCapabilities;
+        private Dictionary<string, string> sourceIdByPath = new();
+        private Dictionary<string, string> pathBySourceId = new();
+
+        private bool clientLinesStartAt1;
+        private bool clientColumnsStartAt1;
+
+        private string mainScriptId;
+        private bool noDebug;
+        private bool stopOnEntry;
 
         public JintAdapter(Debugger debugger)
         {
             this.debugger = debugger;
-            debugger.Continue += Debugger_Continue;
-            debugger.Stop += Debugger_Stop;
+            debugger.Continued += Debugger_Continued;
+            debugger.Stopped += Debugger_Stopped;
 
             variableStore = new VariableStore(debugger.Engine);
         }
 
-        private void Debugger_Stop(PauseReason reason, DebugInformation info)
+        private void Debugger_Stopped(PauseReason reason, DebugInformation info)
         {
             variableStore.Clear();
 
@@ -58,8 +66,10 @@ namespace Jint.DebugAdapter
             });
         }
 
-        private void Debugger_Continue()
+        private void Debugger_Continued()
         {
+            // TODO: a debug adapter is not expected to send this event in response to a request
+            // that implies that execution continues, e.g. ‘launch’ or ‘continue’.
             SendEvent(new ContinuedEvent());
         }
 
@@ -69,7 +79,16 @@ namespace Jint.DebugAdapter
 
         protected override BreakpointLocationsResponse BreakpointLocationsRequest(BreakpointLocationsArguments arguments)
         {
-            return new BreakpointLocationsResponse(new List<BreakpointLocation>());
+            string sourceId = GetSourceId(arguments.Source.Path);
+
+            var info = debugger.GetScriptInfo(sourceId);
+            
+            var locations = info.BreakpointPositions.Select(p => {
+                var pos = ToClientLocation(p.Position);
+                return new BreakpointLocation(pos.Line, pos.Column);
+            });
+            
+            return new BreakpointLocationsResponse(locations);
         }
 
         protected override void CancelRequest(CancelArguments arguments)
@@ -78,11 +97,12 @@ namespace Jint.DebugAdapter
 
         protected override void ConfigurationDoneRequest()
         {
-            // TODO: Run the debugger here?
+            debugger.ExecuteAsync(mainScriptId, noDebug, stopOnEntry);
         }
 
         protected override ContinueResponse ContinueRequest(ContinueArguments arguments)
         {
+            debugger.Run();
             return new ContinueResponse();
         }
 
@@ -103,21 +123,28 @@ namespace Jint.DebugAdapter
         protected override InitializeResponse InitializeRequest(InitializeArguments arguments)
         {
             logger.Info($"Connection established from: {arguments.ClientName} ({arguments.ClientId})");
-            clientCapabilities = arguments;
+            clientLinesStartAt1 = arguments.LinesStartAt1 ?? false;
+            clientColumnsStartAt1 = arguments.ColumnsStartAt1 ?? false;
 
-            SendEvent(new InitializedEvent());
             return new InitializeResponse
             {
                 SupportsConditionalBreakpoints = true,
-                SupportsConfigurationDoneRequest = true
+                SupportsBreakpointLocationsRequest = true,
+                SupportsConfigurationDoneRequest = true,
+                SupportsTerminateRequest = true
             };
         }
 
         protected override void LaunchRequest(LaunchArguments arguments)
         {
             string path = arguments.AdditionalProperties["program"].GetString();
-            bool stopOnEntry = arguments.AdditionalProperties["stopOnEntry"].GetBoolean();
-            debugger.ExecuteAsync(path, noDebug: arguments.NoDebug ?? false, pauseOnEntry: stopOnEntry);
+            this.noDebug = arguments.NoDebug ?? false;
+            this.stopOnEntry = arguments.AdditionalProperties["stopOnEntry"].GetBoolean();
+            string sourceId = AddSource(path);
+            this.mainScriptId = sourceId;
+            debugger.Prepare(sourceId, path);
+
+            SendEvent(new InitializedEvent());
         }
 
         protected override LoadedSourcesResponse LoadedSourcesRequest()
@@ -150,22 +177,44 @@ namespace Jint.DebugAdapter
 
         protected override SetBreakpointsResponse SetBreakpointsRequest(SetBreakpointsArguments arguments)
         {
-            return new SetBreakpointsResponse(new List<Breakpoint>());
+            string id = GetSourceId(arguments.Source.Path);
+            debugger.ClearBreakpoints();
+            List<Breakpoint> results = new();
+            foreach (var breakpoint in arguments.Breakpoints)
+            {
+                var jintPosition = ToJintLocation(breakpoint.Line, breakpoint.Column ?? 0);
+                var actualJintPosition = debugger.SetBreakpoint(id, jintPosition, breakpoint.Condition);
+                var actualBreakpoint = new Breakpoint
+                {
+                    Verified = true
+                };
+                if (actualJintPosition != jintPosition)
+                {
+                    var actualLocation = ToClientLocation(actualJintPosition);
+                    actualBreakpoint.Line = actualLocation.Line;
+                    actualBreakpoint.Column = actualLocation.Column;
+                }
+                results.Add(actualBreakpoint);
+            }
+            return new SetBreakpointsResponse(results);
         }
 
         protected override StackTraceResponse StackTraceRequest(StackTraceArguments arguments)
         {
-            return new StackTraceResponse(debugger.CurrentDebugInformation.CallStack.Select((frame, index) =>
-                new StackFrame(index, frame.FunctionName)
+            return new StackTraceResponse(debugger.CurrentDebugInformation.CallStack.Select((frame, index) => {
+                var start = ToClientLocation(frame.Location.Start);
+                var end = ToClientLocation(frame.Location.End);
+                return new StackFrame(index, frame.FunctionName)
                 {
                     Source = new Source
                     {
-                        Path = frame.Location.Source
+                        Path = GetSourcePath(frame.Location.Source)
                     },
-                    Line = frame.Location.Start.Line,
-                    Column = frame.Location.Start.Column,
-                    EndLine = frame.Location.End.Line,
-                    EndColumn = frame.Location.End.Column
+                    Line = start.Line,
+                    Column = start.Column,
+                    EndLine = end.Line,
+                    EndColumn = end.Column
+                };
                 }
             ));
         }
@@ -182,6 +231,7 @@ namespace Jint.DebugAdapter
 
         protected override void TerminateRequest(TerminateArguments arguments)
         {
+            debugger.Terminate();
         }
 
         protected override ThreadsResponse ThreadsRequest()
@@ -195,6 +245,61 @@ namespace Jint.DebugAdapter
             var container = variableStore.GetContainer(arguments.VariablesReference);
             var variables = container.GetVariables();
             return new VariablesResponse(variables);
+        }
+
+        private string AddSource(string path)
+        {
+            string id = Guid.NewGuid().ToString();
+            pathBySourceId.Add(id, path);
+            path = NormalizePath(path);
+            sourceIdByPath.Add(path, id);
+            return id;
+        }
+
+        private string GetSourceId(string path)
+        {
+            path = NormalizePath(path);
+            return sourceIdByPath.GetValueOrDefault(path);
+        }
+
+        private string GetSourcePath(string id)
+        {
+            return pathBySourceId.GetValueOrDefault(id);
+        }
+
+        private string NormalizePath(string path)
+        {
+            return path.ToLowerInvariant().Replace('\\', '/');
+        }
+
+        /// <summary>
+        /// Converts Jint (Esprima) location to client location.
+        /// </summary>
+        /// <remarks>
+        /// Esprima lines start at 1 while columns start at 0. The client may be different - indeed, in VSCode, both
+        /// lines and columns start at 1.
+        /// </remarks>
+        private Esprima.Position ToClientLocation(Esprima.Position position)
+        {
+            return new Esprima.Position(
+                clientLinesStartAt1 ? position.Line : position.Line - 1,
+                clientColumnsStartAt1 ? position.Column + 1 : position.Column
+                );
+        }
+
+        /// <summary>
+        /// Converts client location to Jint location.
+        /// </summary>
+        /// <remarks>
+        /// Esprima lines start at 1 while columns start at 0. The client may be different - indeed, in VSCode, both
+        /// lines and columns start at 1.
+        /// </remarks>
+        private Esprima.Position ToJintLocation(int line, int column)
+        {
+            return new Esprima.Position(
+                clientLinesStartAt1 ? line : line + 1,
+                clientColumnsStartAt1 ? column - 1 : column
+                );
         }
     }
 }

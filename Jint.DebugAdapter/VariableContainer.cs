@@ -14,7 +14,7 @@ namespace Jint.DebugAdapter
 {
     public abstract class VariableContainer
     {
-        private static JsonSerializerOptions stringToJsonOptions = new()
+        private static readonly JsonSerializerOptions stringToJsonOptions = new()
         {
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
         };
@@ -38,7 +38,7 @@ namespace Jint.DebugAdapter
             string valueString = value switch
             {
                 null => "null",
-                FunctionInstance f => name,
+                FunctionInstance => name,
                 RegExpInstance rx => rx.ToString(),
                 ArgumentsInstance => "[...]",
                 ArrayInstance => "[...]",
@@ -62,10 +62,12 @@ namespace Jint.DebugAdapter
         {
             if (prop.Get != null)
             {
-                var result = new Variable($"get {name}", "(...)");
-                // Add a variable reference for lazy evaluation of the getter
-                result.VariablesReference = store.Add(prop, owner);
-                result.PresentationHint = new VariablePresentationHint { Lazy = true };
+                var result = new Variable($"get {name}", "(...)")
+                {
+                    // Add a variable reference for lazy evaluation of the getter
+                    VariablesReference = store.Add(prop, owner),
+                    PresentationHint = new VariablePresentationHint { Lazy = true }
+                };
                 return result;
             }
             else

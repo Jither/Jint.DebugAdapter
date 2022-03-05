@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Esprima;
 using Esprima.Ast;
 using Jint.Native;
 using Jint.Runtime.Debugger;
@@ -10,7 +11,7 @@ using Jint.Runtime.Debugger;
 namespace Jint.DebugAdapter
 {
     public delegate void DebugPauseEventHandler(PauseReason reason, DebugInformation info);
-    public delegate void DebugContinueEventHandler();
+    public delegate void DebugEventHandler();
 
     public enum PauseReason
     {
@@ -23,17 +24,53 @@ namespace Jint.DebugAdapter
 
     internal enum DebuggerState
     {
+        Preparing,
         Entering,
         Running,
         Pausing,
         Stepping,
     }
 
+    public class ScriptInfo
+    {
+        private List<BreakpointPosition> breakpointPositions;
+
+        public Script Ast { get; }
+        public List<BreakpointPosition> BreakpointPositions => breakpointPositions ??= CollectBreakpointPositions();
+
+        public ScriptInfo(Script ast)
+        {
+            Ast = ast;
+        }
+
+
+        public Position FindNearestBreakpointPosition(Position position)
+        {
+            var positions = BreakpointPositions;
+            int index = positions.BinarySearch(new BreakpointPosition(BreakpointPositionType.None, position));
+            if (index < 0)
+            {
+                // Get the first break after the location
+                index = ~index;
+            }
+            return positions[index].Position;
+        }
+
+        private List<BreakpointPosition> CollectBreakpointPositions()
+        {
+            var collector = new BreakpointCollector();
+            collector.Visit(Ast);
+            // Some statements may be at the same location
+            return collector.Positions.Distinct().ToList();
+        }
+    }
+
     public class Debugger
     {
-        private readonly Dictionary<string, Script> astBySourceId = new();
+        private readonly Dictionary<string, ScriptInfo> scriptInfoBySourceId = new();
         private readonly Engine engine;
         private readonly ManualResetEvent waitForContinue = new(false);
+        private readonly CancellationTokenSource cts = new();
         private StepMode nextStep;
         private DebuggerState state;
         private bool pauseOnEntry;
@@ -43,8 +80,10 @@ namespace Jint.DebugAdapter
         public DebugInformation CurrentDebugInformation { get; private set; }
         public Engine Engine => engine;
 
-        public event DebugPauseEventHandler Stop;
-        public event DebugContinueEventHandler Continue;
+        public event DebugPauseEventHandler Stopped;
+        public event DebugEventHandler Continued;
+        public event DebugEventHandler Cancelled;
+        public event DebugEventHandler Finished;
 
         public Debugger(Engine engine)
         {
@@ -54,27 +93,53 @@ namespace Jint.DebugAdapter
             engine.DebugHandler.Step += DebugHandler_Step;
         }
 
-        public async Task<JsValue> ExecuteAsync(string path, bool noDebug = false, bool pauseOnEntry = false)
+        public ScriptInfo GetScriptInfo(string id)
         {
+            return scriptInfoBySourceId.GetValueOrDefault(id);
+        }
+
+        public void Prepare(string id, string path)
+        {
+            var script = File.ReadAllText(path);
+            var parser = new JavaScriptParser(script, new ParserOptions(id) { Tokens = true });
+            var ast = parser.ParseScript();
+            RegisterScriptInfo(id, ast);
+        }
+
+        public async Task ExecuteAsync(string id, bool noDebug = false, bool pauseOnEntry = false)
+        {
+            var ast = GetScriptInfo(id).Ast;
+
             this.pauseOnEntry = pauseOnEntry;
 
-            var script = File.ReadAllText(path);
             IsAttached = !noDebug;
             IsStopped = false;
-            state = DebuggerState.Entering;
+            state = DebuggerState.Preparing;
             try
             {
                 var result = await Task.Run(() =>
                 {
-                    return engine.Evaluate(script, parserOptions: new Esprima.ParserOptions(path) { Tokens = true });
-                });
-                return result;
+                    return engine.Evaluate(ast);
+                }, cts.Token);
+                Finished?.Invoke();
+            }
+            catch (OperationCanceledException)
+            {
+                Cancelled?.Invoke();
             }
             finally
             {
                 IsAttached = false;
                 IsStopped = false;
             }
+        }
+
+        /// <summary>
+        /// Terminates script execution
+        /// </summary>
+        public void Terminate()
+        {
+            cts.Cancel();
         }
 
         public void StepOver()
@@ -97,7 +162,8 @@ namespace Jint.DebugAdapter
 
         public void Run()
         {
-            nextStep = StepMode.None;
+            state = DebuggerState.Running;
+            nextStep = StepMode.Into;
             waitForContinue.Set();
         }
 
@@ -106,16 +172,37 @@ namespace Jint.DebugAdapter
             state = DebuggerState.Pausing;
         }
 
+        public void ClearBreakpoints()
+        {
+            engine.DebugHandler.BreakPoints.Clear();
+        }
+
+        public Position SetBreakpoint(string sourceId, Position position, string condition)
+        {
+            var info = GetScriptInfo(sourceId);
+            position = info.FindNearestBreakpointPosition(position);
+
+            engine.DebugHandler.BreakPoints.Set(new BreakPoint(sourceId, position.Line, position.Column, condition));
+            return position;
+        }
+
         private void Engine_Parsed(object sender, SourceParsedEventArgs e)
         {
             // Whenever the engine parses a script (but before it's executed), this event handler is called,
             // allowing us to store the script's AST and source ID. We use this for e.g. verifying breakpoint
             // locations.
-            astBySourceId.Add(e.SourceId, e.Ast);
+            RegisterScriptInfo(e.SourceId, e.Ast);
+        }
+
+        private void RegisterScriptInfo(string id, Script ast)
+        {
+            scriptInfoBySourceId.Add(id, new ScriptInfo(ast));
         }
 
         private StepMode DebugHandler_Step(object sender, DebugInformation e)
         {
+            cts.Token.ThrowIfCancellationRequested();
+
             if (!IsAttached)
             {
                 return StepMode.Over;
@@ -123,6 +210,8 @@ namespace Jint.DebugAdapter
 
             switch (state)
             {
+                case DebuggerState.Preparing:
+
                 case DebuggerState.Entering:
                     if (!pauseOnEntry)
                     {
@@ -150,6 +239,8 @@ namespace Jint.DebugAdapter
 
         private StepMode DebugHandler_Break(object sender, DebugInformation e)
         {
+            cts.Token.ThrowIfCancellationRequested();
+
             if (!IsAttached)
             {
                 return StepMode.Over;
@@ -161,14 +252,14 @@ namespace Jint.DebugAdapter
         {
             IsStopped = true;
             CurrentDebugInformation = e;
-            Stop?.Invoke(reason, e);
+            Stopped?.Invoke(reason, e);
             
             // Pause the thread until waitForContinue is set
             waitForContinue.WaitOne();
             waitForContinue.Reset();
             
             IsStopped = false;
-            Continue?.Invoke();
+            Continued?.Invoke();
 
             return nextStep;
         }
