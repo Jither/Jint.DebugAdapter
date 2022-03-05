@@ -306,7 +306,7 @@ namespace Jither.DebugAdapter.Protocol
                     Stop();
                 }
             }
-            catch (ProtocolException ex)
+            catch (Exception ex)
             {
                 var error = new ErrorResponse(ex);
                 BuildAndSendResponse(request, error, false, ex.Message);

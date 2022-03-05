@@ -7,14 +7,14 @@ namespace Jint.DebugAdapter
     {
         private readonly ObjectInstance instance;
 
-        public ObjectVariableContainer(int id, ObjectInstance instance) : base(id)
+        public ObjectVariableContainer(VariableStore store, int id, ObjectInstance instance) : base(store, id)
         {
             this.instance = instance;
         }
 
         protected override IEnumerable<Variable> InternalGetVariables()
         {
-            throw new NotImplementedException();
+            return instance.GetOwnProperties().Select(p => CreateVariable(p.Key.ToString(), p.Value, instance));
         }
     }
 }

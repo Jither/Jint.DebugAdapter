@@ -14,6 +14,10 @@ namespace Jither.DebugAdapter.Helpers
     {
         private readonly StringBuilder builder;
 
+// Suppress "Remove unused parameter" - formattedCount, although unused, is required by compiler for
+// InterpolatedStringHandler.
+#pragma warning disable IDE0060
+
         public LoggerStringHandler(int literalLength, int formattedCount, LogLevel level, out bool shouldAppend)
         {
             shouldAppend = level >= LogManager.Level;
@@ -29,6 +33,8 @@ namespace Jither.DebugAdapter.Helpers
         {
             builder = new StringBuilder(literalLength);
         }
+
+#pragma warning restore IDE0060 // Remove unused parameter
 
         public void AppendLiteral(string str)
         {

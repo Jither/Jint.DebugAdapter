@@ -7,14 +7,14 @@ namespace Jint.DebugAdapter
     {
         private readonly DebugScope scope;
 
-        public ScopeVariableContainer(int id, DebugScope scope) : base(id)
+        public ScopeVariableContainer(VariableStore store, int id, DebugScope scope) : base(store, id)
         {
             this.scope = scope;
         }
 
         protected override IEnumerable<Variable> InternalGetVariables()
         {
-            return scope.BindingNames.Select(n => new Variable(n, scope.GetBindingValue(n).ToString()));
+            return scope.BindingNames.Select(n => CreateVariable(n, scope.GetBindingValue(n)));
         }
     }
 }

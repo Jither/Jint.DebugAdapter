@@ -41,6 +41,7 @@ namespace Jint.DebugAdapter
         public bool IsAttached { get; private set; }
         public bool IsStopped { get; private set; }
         public DebugInformation CurrentDebugInformation { get; private set; }
+        public Engine Engine => engine;
 
         public event DebugPauseEventHandler Stop;
         public event DebugContinueEventHandler Continue;
@@ -58,7 +59,7 @@ namespace Jint.DebugAdapter
             this.pauseOnEntry = pauseOnEntry;
 
             var script = File.ReadAllText(path);
-            IsAttached = true;
+            IsAttached = !noDebug;
             IsStopped = false;
             state = DebuggerState.Entering;
             try

@@ -8,7 +8,7 @@ namespace Jint.DebugAdapterExample
     {
         public static async Task Main(string[] args)
         {
-            LogManager.Level = LogLevel.Info;
+            LogManager.Level = LogLevel.Verbose;
             LogManager.Provider = new ConsoleLogProvider();
 
             var logger = LogManager.GetLogger();

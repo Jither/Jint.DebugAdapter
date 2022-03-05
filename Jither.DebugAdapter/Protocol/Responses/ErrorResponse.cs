@@ -13,7 +13,7 @@ namespace Jither.DebugAdapter.Protocol.Responses
 
         public ErrorResponse(Exception ex)
         {
-
+            // TODO: Implement proper error response
         }
     }
 }

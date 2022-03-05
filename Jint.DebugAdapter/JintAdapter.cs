@@ -18,7 +18,7 @@ namespace Jint.DebugAdapter
     {
         private readonly Logger logger = LogManager.GetLogger();
         private readonly Debugger debugger;
-        private readonly VariableStore variableStore = new();
+        private readonly VariableStore variableStore;
         private InitializeArguments clientCapabilities;
 
         public JintAdapter(Debugger debugger)
@@ -26,6 +26,8 @@ namespace Jint.DebugAdapter
             this.debugger = debugger;
             debugger.Continue += Debugger_Continue;
             debugger.Stop += Debugger_Stop;
+
+            variableStore = new VariableStore(debugger.Engine);
         }
 
         private void Debugger_Stop(PauseReason reason, DebugInformation info)
