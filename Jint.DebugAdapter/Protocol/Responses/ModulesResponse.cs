@@ -8,7 +8,7 @@ namespace Jint.DebugAdapter.Protocol.Responses
     public class ModulesResponse : ProtocolResponseBody
     {
         /// <param name="modules">All modules or range of modules.</param>
-        public ModulesResponse(List<Module> modules)
+        public ModulesResponse(IEnumerable<Module> modules)
         {
             Modules = modules;
         }
@@ -16,7 +16,7 @@ namespace Jint.DebugAdapter.Protocol.Responses
         /// <summary>
         /// All modules or range of modules.
         /// </summary>
-        public List<Module> Modules { get; set; }
+        public IEnumerable<Module> Modules { get; set; }
 
         /// <summary>
         /// The total number of modules available.

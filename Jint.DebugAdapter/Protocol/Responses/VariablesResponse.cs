@@ -8,7 +8,7 @@ namespace Jint.DebugAdapter.Protocol.Responses
     public class VariablesResponse : ProtocolResponseBody
     {
         /// <param name="variables">All (or a range) of variables for the given variable reference.</param>
-        public VariablesResponse(List<Variable> variables)
+        public VariablesResponse(IEnumerable<Variable> variables)
         {
             Variables = variables;
         }
@@ -16,6 +16,6 @@ namespace Jint.DebugAdapter.Protocol.Responses
         /// <summary>
         /// All (or a range) of variables for the given variable reference.
         /// </summary>
-        public List<Variable> Variables { get; set; }
+        public IEnumerable<Variable> Variables { get; set; }
     }
 }

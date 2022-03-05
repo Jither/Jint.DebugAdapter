@@ -6,7 +6,7 @@
     public class ThreadsResponse : ProtocolResponseBody
     {
         /// <param name="threads">All threads.</param>
-        public ThreadsResponse(List<Types.Thread> threads)
+        public ThreadsResponse(IEnumerable<Types.Thread> threads)
         {
             Threads = threads;
         }
@@ -14,6 +14,6 @@
         /// <summary>
         /// All threads.
         /// </summary>
-        public List<Types.Thread> Threads { get; set; }
+        public IEnumerable<Types.Thread> Threads { get; set; }
     }
 }

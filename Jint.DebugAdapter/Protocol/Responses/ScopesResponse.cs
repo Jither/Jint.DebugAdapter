@@ -9,7 +9,7 @@ namespace Jint.DebugAdapter.Protocol.Responses
     {
         /// <param name="scopes">The scopes of the stackframe. If the array has length zero,
         /// there are no scopes available.</param>
-        public ScopesResponse(List<Scope> scopes)
+        public ScopesResponse(IEnumerable<Scope> scopes)
         {
             Scopes = scopes;
         }
@@ -17,6 +17,6 @@ namespace Jint.DebugAdapter.Protocol.Responses
         /// <summary>
         /// The scopes of the stackframe. If the array has length zero, there are no scopes available.
         /// </summary>
-        public List<Scope> Scopes { get; set; }
+        public IEnumerable<Scope> Scopes { get; set; }
     }
 }

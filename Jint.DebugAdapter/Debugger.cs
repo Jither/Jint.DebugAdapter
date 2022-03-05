@@ -40,6 +40,7 @@ namespace Jint.DebugAdapter
 
         public bool IsAttached { get; private set; }
         public bool IsStopped { get; private set; }
+        public DebugInformation CurrentDebugInformation { get; private set; }
 
         public event DebugPauseEventHandler Stop;
         public event DebugContinueEventHandler Continue;
@@ -129,13 +130,17 @@ namespace Jint.DebugAdapter
                     }
                     state = DebuggerState.Stepping;
                     return OnPause(PauseReason.Entry, e);
+
                 case DebuggerState.Running:
                     return StepMode.Into;
+
                 case DebuggerState.Pausing:
                     state = DebuggerState.Stepping;
                     return OnPause(PauseReason.Pause, e);
+
                 case DebuggerState.Stepping:
                     return OnPause(PauseReason.Step, e);
+
                 default:
                     throw new NotImplementedException($"Debugger state handling for {state} not implemented.");
             }
@@ -154,6 +159,7 @@ namespace Jint.DebugAdapter
         private StepMode OnPause(PauseReason reason, DebugInformation e)
         {
             IsStopped = true;
+            CurrentDebugInformation = e;
             Stop?.Invoke(reason, e);
             
             // Pause the thread until waitForContinue is set

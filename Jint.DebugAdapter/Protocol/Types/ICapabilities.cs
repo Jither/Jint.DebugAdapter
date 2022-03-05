@@ -35,7 +35,7 @@
         /// <summary>
         /// Available exception filter options for the 'setExceptionBreakpoints' request.
         /// </summary>
-        List<ExceptionBreakpointsFilter> ExceptionBreakpointFilters { get; set; }
+        IEnumerable<ExceptionBreakpointsFilter> ExceptionBreakpointFilters { get; set; }
 
         /// <summary>
         /// The debug adapter supports stepping back via the 'stepBack' and 'reverseContinue' requests.
@@ -71,7 +71,7 @@
         /// The set of characters that should trigger completion in a REPL. If not specified, the UI should
         /// assume the '.' character.
         /// </summary>
-        List<string> CompletionTriggerCharacters { get; set; }
+        IEnumerable<string> CompletionTriggerCharacters { get; set; }
 
         /// <summary>
         /// The debug adapter supports the 'modules' request.
@@ -81,12 +81,12 @@
         /// <summary>
         /// The set of additional module information exposed by the debug adapter.
         /// </summary>
-        List<ColumnDescriptor> AdditionalModuleColumns { get; set; }
+        IEnumerable<ColumnDescriptor> AdditionalModuleColumns { get; set; }
 
         /// <summary>
         /// Checksum algorithms supported by the debug adapter.
         /// </summary>
-        List<ChecksumAlgorithm> SupportedChecksumAlgorithms { get; set; }
+        IEnumerable<ChecksumAlgorithm> SupportedChecksumAlgorithms { get; set; }
 
         /// <summary>
         /// The debug adapter supports the 'restart' request. In this case a client should not implement 'restart'

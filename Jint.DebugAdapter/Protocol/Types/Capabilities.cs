@@ -11,17 +11,17 @@
         public bool? SupportsConditionalBreakpoints { get; set; }
         public bool? SupportsHitConditionalBreakpoints { get; set; }
         public bool? SupportsEvaluateForHovers { get; set; }
-        public List<ExceptionBreakpointsFilter> ExceptionBreakpointFilters { get; set; }
+        public IEnumerable<ExceptionBreakpointsFilter> ExceptionBreakpointFilters { get; set; }
         public bool? SupportsStepBack { get; set; }
         public bool? SupportsSetVariable { get; set; }
         public bool? SupportsRestartFrame { get; set; }
         public bool? SupportsGotoTargetsRequest { get; set; }
         public bool? SupportsStepInTargetsRequest { get; set; }
         public bool? SupportsCompletionsRequest { get; set; }
-        public List<string> CompletionTriggerCharacters { get; set; }
+        public IEnumerable<string> CompletionTriggerCharacters { get; set; }
         public bool? SupportsModulesRequest { get; set; }
-        public List<ColumnDescriptor> AdditionalModuleColumns { get; set; }
-        public List<ChecksumAlgorithm> SupportedChecksumAlgorithms { get; set; }
+        public IEnumerable<ColumnDescriptor> AdditionalModuleColumns { get; set; }
+        public IEnumerable<ChecksumAlgorithm> SupportedChecksumAlgorithms { get; set; }
         public bool? SupportsRestartRequest { get; set; }
         public bool? SupportsExceptionOptions { get; set; }
         public bool? SupportsValueFormattingOptions { get; set; }

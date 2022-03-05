@@ -8,7 +8,7 @@ namespace Jint.DebugAdapter.Protocol.Responses
     public class CompletionsResponse : ProtocolResponseBody
     {
         /// <param name="targets">The possible completions</param>
-        public CompletionsResponse(List<CompletionItem> targets)
+        public CompletionsResponse(IEnumerable<CompletionItem> targets)
         {
             Targets = targets;
         }
@@ -16,6 +16,6 @@ namespace Jint.DebugAdapter.Protocol.Responses
         /// <summary>
         /// The possible completions
         /// </summary>
-        public List<CompletionItem> Targets { get; set; }
+        public IEnumerable<CompletionItem> Targets { get; set; }
     }
 }

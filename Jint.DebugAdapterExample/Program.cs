@@ -1,4 +1,5 @@
 ﻿using Jint.DebugAdapter;
+using Jint.DebugAdapter.Endpoints;
 
 namespace Jint.DebugAdapterExample
 {

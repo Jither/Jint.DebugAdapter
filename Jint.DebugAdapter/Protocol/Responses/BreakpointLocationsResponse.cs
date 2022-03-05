@@ -11,7 +11,7 @@ namespace Jint.DebugAdapter.Protocol.Responses
     public class BreakpointLocationsResponse : ProtocolResponseBody
     {
         /// <param name="breakpoints">Sorted set of possible breakpoint locations.</param>
-        public BreakpointLocationsResponse(List<BreakpointLocation> breakpoints)
+        public BreakpointLocationsResponse(IEnumerable<BreakpointLocation> breakpoints)
         {
             Breakpoints = breakpoints;
         }
@@ -19,6 +19,6 @@ namespace Jint.DebugAdapter.Protocol.Responses
         /// <summary>
         /// Sorted set of possible breakpoint locations.
         /// </summary>
-        public List<BreakpointLocation> Breakpoints { get; set; }
+        public IEnumerable<BreakpointLocation> Breakpoints { get; set; }
     }
 }

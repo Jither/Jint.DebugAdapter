@@ -7,7 +7,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Jint.DebugAdapter.Protocol;
 
-namespace Jint.DebugAdapter
+namespace Jint.DebugAdapter.Endpoints
 {
     public abstract class Endpoint
     {
@@ -20,7 +20,7 @@ namespace Jint.DebugAdapter
         public bool LinesStartAt1 { get; private set; } = true;
         public bool ColumnsStartAt1 { get; private set; } = true;
         public string PathFormat { get; private set; }
-        
+
         protected Endpoint(Adapter adapter)
         {
             this.adapter = adapter;

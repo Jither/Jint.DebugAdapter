@@ -8,7 +8,7 @@ namespace Jint.DebugAdapter.Protocol.Responses
     public class GotoTargetsResponse : ProtocolResponseBody
     {
         /// <param name="targets">The possible goto targets of the specified location.</param>
-        public GotoTargetsResponse(List<GotoTarget> targets)
+        public GotoTargetsResponse(IEnumerable<GotoTarget> targets)
         {
             Targets = targets;
         }
@@ -16,6 +16,6 @@ namespace Jint.DebugAdapter.Protocol.Responses
         /// <summary>
         /// The possible goto targets of the specified location.
         /// </summary>
-        public List<GotoTarget> Targets { get; set; }
+        public IEnumerable<GotoTarget> Targets { get; set; }
     }
 }

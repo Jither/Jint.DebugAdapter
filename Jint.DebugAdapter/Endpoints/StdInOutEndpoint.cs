@@ -1,4 +1,4 @@
-﻿namespace Jint.DebugAdapter
+﻿namespace Jint.DebugAdapter.Endpoints
 {
     public class StdInOutEndpoint : Endpoint
     {

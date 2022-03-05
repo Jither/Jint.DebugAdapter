@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Net.Sockets;
 
-namespace Jint.DebugAdapter
+namespace Jint.DebugAdapter.Endpoints
 {
     public class TcpEndpoint : Endpoint
     {

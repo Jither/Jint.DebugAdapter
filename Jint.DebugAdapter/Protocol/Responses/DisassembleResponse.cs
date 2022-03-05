@@ -8,7 +8,7 @@ namespace Jint.DebugAdapter.Protocol.Responses
     public class DisassembleResponse : ProtocolResponseBody
     {
         /// <param name="instructions">The list of disassembled instructions.</param>
-        public DisassembleResponse(List<DisassembledInstruction> instructions)
+        public DisassembleResponse(IEnumerable<DisassembledInstruction> instructions)
         {
             Instructions = instructions;
         }
@@ -16,6 +16,6 @@ namespace Jint.DebugAdapter.Protocol.Responses
         /// <summary>
         /// The list of disassembled instructions.
         /// </summary>
-        public List<DisassembledInstruction> Instructions { get; set; }
+        public IEnumerable<DisassembledInstruction> Instructions { get; set; }
     }
 }

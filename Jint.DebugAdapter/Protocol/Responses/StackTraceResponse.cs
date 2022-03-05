@@ -8,7 +8,7 @@ namespace Jint.DebugAdapter.Protocol.Responses
     public class StackTraceResponse : ProtocolResponseBody
     {
         /// <param name="stackFrames">The frames of the stackframe.</param>
-        public StackTraceResponse(List<StackFrame> stackFrames)
+        public StackTraceResponse(IEnumerable<StackFrame> stackFrames)
         {
             StackFrames = stackFrames;
         }
@@ -20,7 +20,7 @@ namespace Jint.DebugAdapter.Protocol.Responses
         /// If the array has length zero, there are no stackframes available.
         /// This means that there is no location information available.
         /// </remarks>
-        public List<StackFrame> StackFrames { get; set; }
+        public IEnumerable<StackFrame> StackFrames { get; set; }
 
         /// <summary>
         /// The total number of frames available in the stack.

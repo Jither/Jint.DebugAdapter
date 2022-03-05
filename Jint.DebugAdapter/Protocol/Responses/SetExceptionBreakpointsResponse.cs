@@ -22,7 +22,7 @@ namespace Jint.DebugAdapter.Protocol.Responses
         /// returned are in the same order as the elements of the 'filters', 'filterOptions', 'exceptionOptions'
         /// arrays in the arguments. If both 'filters' and 'filterOptions' are given, the returned array must
         /// start with 'filters' information first, followed by 'filterOptions' information.</param>
-        public SetExceptionBreakpointsResponse(List<Breakpoint> breakpoints)
+        public SetExceptionBreakpointsResponse(IEnumerable<Breakpoint> breakpoints)
         {
             Breakpoints = breakpoints;
         }
@@ -37,6 +37,6 @@ namespace Jint.DebugAdapter.Protocol.Responses
         /// start with 'filters' information first, followed by 'filterOptions'
         /// information.
         /// </remarks>
-        public List<Breakpoint> Breakpoints { get; set; }
+        public IEnumerable<Breakpoint> Breakpoints { get; set; }
     }
 }

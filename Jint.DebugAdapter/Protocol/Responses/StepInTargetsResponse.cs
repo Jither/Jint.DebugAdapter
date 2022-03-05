@@ -8,7 +8,7 @@ namespace Jint.DebugAdapter.Protocol.Responses
     public class StepInTargetsResponse : ProtocolResponseBody
     {
         /// <param name="targets">The possible stepIn targets of the specified source location.</param>
-        public StepInTargetsResponse(List<StepInTarget> targets)
+        public StepInTargetsResponse(IEnumerable<StepInTarget> targets)
         {
             Targets = targets;
         }
@@ -16,6 +16,6 @@ namespace Jint.DebugAdapter.Protocol.Responses
         /// <summary>
         /// The possible stepIn targets of the specified source location.
         /// </summary>
-        public List<StepInTarget> Targets { get; set; }
+        public IEnumerable<StepInTarget> Targets { get; set; }
     }
 }

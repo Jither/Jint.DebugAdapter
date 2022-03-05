@@ -8,7 +8,7 @@ namespace Jint.DebugAdapter.Protocol.Responses
     public class LoadedSourcesResponse : ProtocolResponseBody
     {
         /// <param name="sources">Set of loaded sources.</param>
-        public LoadedSourcesResponse(List<Source> sources)
+        public LoadedSourcesResponse(IEnumerable<Source> sources)
         {
             Sources = sources;
         }
@@ -16,6 +16,6 @@ namespace Jint.DebugAdapter.Protocol.Responses
         /// <summary>
         /// Set of loaded sources.
         /// </summary>
-        public List<Source> Sources { get; set; }
+        public IEnumerable<Source> Sources { get; set; }
     }
 }

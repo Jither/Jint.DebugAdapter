@@ -1,6 +1,6 @@
 ﻿using System.IO.Pipes;
 
-namespace Jint.DebugAdapter
+namespace Jint.DebugAdapter.Endpoints
 {
     public class NamedPipeEndpoint : Endpoint
     {

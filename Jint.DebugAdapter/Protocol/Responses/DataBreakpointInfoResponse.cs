@@ -35,7 +35,7 @@ namespace Jint.DebugAdapter.Protocol.Responses
         /// <remarks>
         /// A UI frontend could surface this information.
         /// </remarks>
-        public List<DataBreakpointAccessType> AccessTypes { get; set; }
+        public IEnumerable<DataBreakpointAccessType> AccessTypes { get; set; }
 
         /// <summary>
         /// Optional attribute indicating that a potential data breakpoint

@@ -9,7 +9,7 @@ namespace Jint.DebugAdapter.Protocol.Responses
     {
         /// <param name="breakpoints">Information about the data breakpoints. The array elements correspond to
         /// the elements of the input argument 'breakpoints' array.</param>
-        public SetDataBreakpointsResponse(List<Breakpoint> breakpoints)
+        public SetDataBreakpointsResponse(IEnumerable<Breakpoint> breakpoints)
         {
             Breakpoints = breakpoints;
         }
@@ -18,6 +18,6 @@ namespace Jint.DebugAdapter.Protocol.Responses
         /// Information about the data breakpoints. The array elements correspond to
         /// the elements of the input argument 'breakpoints' array.
         /// </summary>
-        public List<Breakpoint> Breakpoints { get; set; }
+        public IEnumerable<Breakpoint> Breakpoints { get; set; }
     }
 }

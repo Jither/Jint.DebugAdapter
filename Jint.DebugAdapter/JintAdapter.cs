@@ -7,13 +7,92 @@ using Jint.DebugAdapter.Protocol.Events;
 using Jint.DebugAdapter.Protocol.Requests;
 using Jint.DebugAdapter.Protocol.Responses;
 using Jint.DebugAdapter.Protocol.Types;
+using Jint.Native.Object;
 using Jint.Runtime.Debugger;
 
 namespace Jint.DebugAdapter
 {
+    public abstract class VariableContainer
+    {
+        public int Id { get; }
+        
+        protected VariableContainer(int id)
+        {
+            Id = id;
+        }
+
+        public IEnumerable<Variable> GetVariables()
+        {
+            return InternalGetVariables();
+        }
+
+        protected abstract IEnumerable<Variable> InternalGetVariables();
+    }
+
+    public class ScopeVariableContainer : VariableContainer
+    {
+        private readonly DebugScope scope;
+
+        public ScopeVariableContainer(int id, DebugScope scope) : base(id)
+        {
+            this.scope = scope;
+        }
+
+        protected override IEnumerable<Variable> InternalGetVariables()
+        {
+            return scope.BindingNames.Select(n => new Variable(n, scope.GetBindingValue(n).ToString()));
+        }
+    }
+
+    public class ObjectVariableContainer : VariableContainer
+    {
+        private readonly ObjectInstance instance;
+
+        public ObjectVariableContainer(int id, ObjectInstance instance) : base(id)
+        {
+            this.instance = instance;
+        }
+
+        protected override IEnumerable<Variable> InternalGetVariables()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class VariableStore
+    {
+        private int nextId = 1;
+        private readonly Dictionary<int, VariableContainer> containers = new();
+
+        public int Add(DebugScope scope)
+        {
+            var container = new ScopeVariableContainer(nextId++, scope);
+            containers.Add(container.Id, container);
+            return container.Id;
+        }
+
+        public int Add(ObjectInstance instance)
+        {
+            var container = new ObjectVariableContainer(nextId++, instance);
+            containers.Add(container.Id, container);
+            return container.Id;
+        }
+
+        public VariableContainer GetContainer(int id)
+        {
+            return containers[id];
+        }
+
+        public void Clear()
+        {
+            containers.Clear();
+        }
+    }
+
     public class JintAdapter : Adapter
     {
         private readonly Debugger debugger;
+        private readonly VariableStore variableStore = new();
         private InitializeArguments clientCapabilities;
 
         public JintAdapter(Debugger debugger)
@@ -25,6 +104,7 @@ namespace Jint.DebugAdapter
 
         private void Debugger_Stop(PauseReason reason, DebugInformation info)
         {
+            variableStore.Clear();
 
             SendEvent(new StoppedEvent(
                 reason switch
@@ -134,10 +214,10 @@ namespace Jint.DebugAdapter
 
         protected override ScopesResponse ScopesRequest(ScopesArguments arguments)
         {
-            return new ScopesResponse(new List<Scope>
-            {
-                new Scope("Global", 1)
-            });
+            var frame = debugger.CurrentDebugInformation.CallStack[arguments.FrameId];
+            return new ScopesResponse(frame.ScopeChain.Select(s =>
+                new Scope(s.ScopeType.ToString(), variableStore.Add(s))
+            ));
         }
 
         protected override SetBreakpointsResponse SetBreakpointsRequest(SetBreakpointsArguments arguments)
@@ -147,7 +227,19 @@ namespace Jint.DebugAdapter
 
         protected override StackTraceResponse StackTraceRequest(StackTraceArguments arguments)
         {
-            return new StackTraceResponse(new List<StackFrame> { new StackFrame(1, "global") });
+            return new StackTraceResponse(debugger.CurrentDebugInformation.CallStack.Select((frame, index) =>
+                new StackFrame(index, frame.FunctionName)
+                {
+                    Source = new Source
+                    {
+                        Path = frame.Location.Source
+                    },
+                    Line = frame.Location.Start.Line,
+                    Column = frame.Location.Start.Column,
+                    EndLine = frame.Location.End.Line,
+                    EndColumn = frame.Location.End.Column
+                }
+            ));
         }
 
         protected override void StepInRequest(StepInArguments arguments)
@@ -172,11 +264,9 @@ namespace Jint.DebugAdapter
 
         protected override VariablesResponse VariablesRequest(VariablesArguments arguments)
         {
-            return new VariablesResponse(new List<Variable>
-                {
-                    new Variable("x", "3"),
-                    new Variable("test", "Hello World")
-                });
+            var container = variableStore.GetContainer(arguments.VariablesReference);
+            var variables = container.GetVariables();
+            return new VariablesResponse(variables);
         }
     }
 }
