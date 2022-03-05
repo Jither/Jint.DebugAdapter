@@ -1,5 +1,6 @@
 ﻿using Jint.DebugAdapter;
-using Jint.DebugAdapter.Endpoints;
+using Jither.DebugAdapter;
+using Jither.DebugAdapter.Helpers;
 
 namespace Jint.DebugAdapterExample
 {
@@ -7,7 +8,12 @@ namespace Jint.DebugAdapterExample
     {
         public static async Task Main(string[] args)
         {
-            Logger.Log("Started");
+            LogManager.Level = LogLevel.Info;
+            LogManager.Provider = new ConsoleLogProvider();
+
+            var logger = LogManager.GetLogger();
+
+            logger.Info("Started");
             Endpoint endpoint;
             var host = new ScriptHost();
             var adapter = new JintAdapter(host.Debugger);

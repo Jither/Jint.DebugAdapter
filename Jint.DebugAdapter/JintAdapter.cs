@@ -3,94 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Jint.DebugAdapter.Protocol.Events;
-using Jint.DebugAdapter.Protocol.Requests;
-using Jint.DebugAdapter.Protocol.Responses;
-using Jint.DebugAdapter.Protocol.Types;
-using Jint.Native.Object;
+using Jither.DebugAdapter.Protocol.Events;
+using Jither.DebugAdapter.Protocol.Requests;
+using Jither.DebugAdapter.Protocol.Responses;
+using Jither.DebugAdapter.Protocol.Types;
 using Jint.Runtime.Debugger;
+using Jither.DebugAdapter;
+using Thread = Jither.DebugAdapter.Protocol.Types.Thread;
+using Jither.DebugAdapter.Helpers;
 
 namespace Jint.DebugAdapter
 {
-    public abstract class VariableContainer
-    {
-        public int Id { get; }
-        
-        protected VariableContainer(int id)
-        {
-            Id = id;
-        }
-
-        public IEnumerable<Variable> GetVariables()
-        {
-            return InternalGetVariables();
-        }
-
-        protected abstract IEnumerable<Variable> InternalGetVariables();
-    }
-
-    public class ScopeVariableContainer : VariableContainer
-    {
-        private readonly DebugScope scope;
-
-        public ScopeVariableContainer(int id, DebugScope scope) : base(id)
-        {
-            this.scope = scope;
-        }
-
-        protected override IEnumerable<Variable> InternalGetVariables()
-        {
-            return scope.BindingNames.Select(n => new Variable(n, scope.GetBindingValue(n).ToString()));
-        }
-    }
-
-    public class ObjectVariableContainer : VariableContainer
-    {
-        private readonly ObjectInstance instance;
-
-        public ObjectVariableContainer(int id, ObjectInstance instance) : base(id)
-        {
-            this.instance = instance;
-        }
-
-        protected override IEnumerable<Variable> InternalGetVariables()
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public class VariableStore
-    {
-        private int nextId = 1;
-        private readonly Dictionary<int, VariableContainer> containers = new();
-
-        public int Add(DebugScope scope)
-        {
-            var container = new ScopeVariableContainer(nextId++, scope);
-            containers.Add(container.Id, container);
-            return container.Id;
-        }
-
-        public int Add(ObjectInstance instance)
-        {
-            var container = new ObjectVariableContainer(nextId++, instance);
-            containers.Add(container.Id, container);
-            return container.Id;
-        }
-
-        public VariableContainer GetContainer(int id)
-        {
-            return containers[id];
-        }
-
-        public void Clear()
-        {
-            containers.Clear();
-        }
-    }
-
     public class JintAdapter : Adapter
     {
+        private readonly Logger logger = LogManager.GetLogger();
         private readonly Debugger debugger;
         private readonly VariableStore variableStore = new();
         private InitializeArguments clientCapabilities;
@@ -174,7 +100,7 @@ namespace Jint.DebugAdapter
 
         protected override InitializeResponse InitializeRequest(InitializeArguments arguments)
         {
-            Logger.Log($"Connection established from: {arguments.ClientName} ({arguments.ClientId})");
+            logger.Info($"Connection established from: {arguments.ClientName} ({arguments.ClientId})");
             clientCapabilities = arguments;
 
             SendEvent(new InitializedEvent());
@@ -259,7 +185,7 @@ namespace Jint.DebugAdapter
         protected override ThreadsResponse ThreadsRequest()
         {
             // "Even if a debug adapter does not support multiple threads, it must implement the threads request and return a single (dummy) thread."
-            return new ThreadsResponse(new List<Protocol.Types.Thread> { new Protocol.Types.Thread(1, "Main Thread") });
+            return new ThreadsResponse(new List<Thread> { new Thread(1, "Main Thread") });
         }
 
         protected override VariablesResponse VariablesRequest(VariablesArguments arguments)

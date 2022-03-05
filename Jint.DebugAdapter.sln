@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jint", "..\Jint\Jint\Jint.c
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jint.Tests", "..\Jint\Jint.Tests\Jint.Tests.csproj", "{6D6E1D90-EE4D-4CB3-A9EA-613BB3E44232}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jither.DebugAdapter", "Jither.DebugAdapter\Jither.DebugAdapter.csproj", "{91D80E36-EE0D-4424-9C93-91935EE7F6F2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{6D6E1D90-EE4D-4CB3-A9EA-613BB3E44232}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6D6E1D90-EE4D-4CB3-A9EA-613BB3E44232}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6D6E1D90-EE4D-4CB3-A9EA-613BB3E44232}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91D80E36-EE0D-4424-9C93-91935EE7F6F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91D80E36-EE0D-4424-9C93-91935EE7F6F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91D80E36-EE0D-4424-9C93-91935EE7F6F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91D80E36-EE0D-4424-9C93-91935EE7F6F2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
