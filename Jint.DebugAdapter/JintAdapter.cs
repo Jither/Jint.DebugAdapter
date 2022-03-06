@@ -19,8 +19,8 @@ namespace Jint.DebugAdapter
         private readonly Logger logger = LogManager.GetLogger();
         private readonly Debugger debugger;
         private readonly VariableStore variableStore;
-        private Dictionary<string, string> sourceIdByPath = new();
-        private Dictionary<string, string> pathBySourceId = new();
+        private readonly Dictionary<string, string> sourceIdByPath = new();
+        private readonly Dictionary<string, string> pathBySourceId = new();
 
         private bool clientLinesStartAt1;
         private bool clientColumnsStartAt1;
@@ -50,6 +50,7 @@ namespace Jint.DebugAdapter
                     PauseReason.Exception => StopReason.Exception,
                     PauseReason.Pause => StopReason.Pause,
                     PauseReason.Step => StopReason.Step,
+                    PauseReason.DebuggerStatement => StopReason.Breakpoint,
                     _ => throw new NotImplementedException($"DebugAdapter reason not implemented for {reason}")
                 }
             )
@@ -61,6 +62,7 @@ namespace Jint.DebugAdapter
                     PauseReason.Exception => "An error occurred",
                     PauseReason.Pause => "Paused by user",
                     PauseReason.Step => "Stopped after step",
+                    PauseReason.DebuggerStatement => "Hit debugger statement",
                     _ => throw new NotImplementedException($"DebugAdapter reason not implemented for {reason}")
                 }
             });

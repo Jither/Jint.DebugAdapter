@@ -4,6 +4,7 @@
     {
         Step,
         Breakpoint,
+        DebuggerStatement,
         Exception,
         Pause,
         Entry

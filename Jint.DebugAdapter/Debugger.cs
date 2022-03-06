@@ -200,7 +200,12 @@ namespace Jint.DebugAdapter
                 return StepMode.Over;
             }
             state = DebuggerState.Stepping;
-            return OnPause(PauseReason.Breakpoint, e);
+            var reason = e.PauseType switch
+            {
+                PauseType.DebuggerStatement => PauseReason.DebuggerStatement,
+                PauseType.Break or _ => PauseReason.Breakpoint
+            };
+            return OnPause(reason, e);
         }
 
         private StepMode OnPause(PauseReason reason, DebugInformation e)
