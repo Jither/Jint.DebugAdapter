@@ -14,10 +14,6 @@ namespace Jint.DebugAdapter
 {
     public abstract class VariableContainer
     {
-        private static readonly JsonSerializerOptions stringToJsonOptions = new()
-        {
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-        };
         protected readonly VariableStore store;
 
         public int Id { get; }
@@ -35,45 +31,26 @@ namespace Jint.DebugAdapter
 
         protected Variable CreateVariable(string name, JsValue value)
         {
-            string valueString = value switch
-            {
-                null => "null",
-                FunctionInstance => name,
-                RegExpInstance rx => rx.ToString(),
-                ArgumentsInstance => "[...]",
-                ArrayInstance => "[...]",
-                ObjectInstance => "{...}",
-                // DebugAdapter needs to return escaped string with surrounding quotes
-                JsString => JsonSerializer.Serialize(value.ToString(), stringToJsonOptions),
-                _ => value.ToString()
-            };
-
-            var result = new Variable(name, valueString);
-
-            if (value is ObjectInstance obj)
-            {
-                result.VariablesReference = store.Add(obj);
-            }
-
-            return result;
+            return CreateVariable(store.CreateValue(name, value));
         }
 
         protected Variable CreateVariable(string name, PropertyDescriptor prop, ObjectInstance owner)
         {
-            if (prop.Get != null)
+            return CreateVariable(store.CreateValue(name, prop, owner));
+        }
+
+        private Variable CreateVariable(ValueInfo valueInfo)
+        {
+            return new Variable(valueInfo.Name, valueInfo.Value)
             {
-                var result = new Variable($"get {name}", "(...)")
-                {
-                    // Add a variable reference for lazy evaluation of the getter
-                    VariablesReference = store.Add(prop, owner),
-                    PresentationHint = new VariablePresentationHint { Lazy = true }
-                };
-                return result;
-            }
-            else
-            {
-                return CreateVariable(name, prop.Value);
-            }
+                Type = valueInfo.Type,
+                VariablesReference = valueInfo.VariablesReference,
+                PresentationHint = valueInfo.PresentationHint,
+                IndexedVariables = valueInfo.IndexedVariables,
+                NamedVariables = valueInfo.NamedVariables,
+                MemoryReference = valueInfo.MemoryReference,
+                // TODO: EvaluateName
+            };
         }
 
         protected abstract IEnumerable<Variable> InternalGetVariables();

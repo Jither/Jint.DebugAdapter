@@ -70,7 +70,7 @@ namespace Jint.DebugAdapter
         {
             // TODO: a debug adapter is not expected to send this event in response to a request
             // that implies that execution continues, e.g. ‘launch’ or ‘continue’.
-            SendEvent(new ContinuedEvent());
+            //SendEvent(new ContinuedEvent());
         }
 
         protected override void AttachRequest(AttachArguments arguments)
@@ -112,7 +112,18 @@ namespace Jint.DebugAdapter
 
         protected override EvaluateResponse EvaluateRequest(EvaluateArguments arguments)
         {
-            return new EvaluateResponse("evaluated");
+            var result = debugger.Evaluate(arguments.Expression);
+
+            var valueInfo = variableStore.CreateValue("", result);
+            return new EvaluateResponse(valueInfo.Value)
+            {
+                Type = valueInfo.Type,
+                VariablesReference = valueInfo.VariablesReference,
+                PresentationHint = valueInfo.PresentationHint,
+                NamedVariables = valueInfo.NamedVariables,
+                IndexedVariables = valueInfo.IndexedVariables,
+                MemoryReference = valueInfo.MemoryReference
+            };
         }
 
         protected override ExceptionInfoResponse ExceptionInfoRequest(ExceptionInfoArguments arguments)
