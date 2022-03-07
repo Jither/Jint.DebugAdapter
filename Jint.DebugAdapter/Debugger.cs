@@ -80,7 +80,7 @@ namespace Jint.DebugAdapter
 
         public JsValue Evaluate(string expression)
         {
-            return engine.Evaluate(expression, new ParserOptions(EvaluationId));
+            return engine.DebugHandler.Evaluate(expression);
         }
 
         /// <summary>
