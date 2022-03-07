@@ -10,7 +10,6 @@ namespace Jint.DebugAdapter
 
     public class Debugger
     {
-        private const string EvaluationId = "<<<evaluation>>>";
         private readonly Dictionary<string, ScriptInfo> scriptInfoBySourceId = new();
         private readonly Engine engine;
         private readonly ManualResetEvent waitForContinue = new(false);
@@ -140,11 +139,6 @@ namespace Jint.DebugAdapter
             // Whenever the engine parses a script (but before it's executed), this event handler is called,
             // allowing us to store the script's AST and source ID. We use this for e.g. verifying breakpoint
             // locations.
-            // However, if this is the debugger evaluating a script, we don't need (or want) to register it:
-            if (e.SourceId == EvaluationId)
-            {
-                return;
-            }
             RegisterScriptInfo(e.SourceId, e.Ast);
         }
 
