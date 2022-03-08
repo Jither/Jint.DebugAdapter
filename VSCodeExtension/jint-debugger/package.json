@@ -1,19 +1,64 @@
 {
 	"name": "jint-debugger",
 	"displayName": "Jint Debugger",
-	"description": "Simple debugger for Jint",
-	"publisher": "jither",
+	"description": "Example debugger extension for Jint",
 	"version": "0.0.1",
+	"license": "MIT",
 	"engines": {
-		"vscode": "^1.62.0"
+		"vscode": "^1.65.0"
 	},
+	"private": true,
 	"categories": [
 		"Debuggers"
 	],
-	"private": true,
-	"main": "./extension.js",
-	"activationEvents": [],
+	"main": "./out/extension.js",
+	"activationEvents": [
+		"onCommand:extension.jint-debugger.getProgram",
+		"onCommand:extension.jint-debugger.runEditorFile",
+		"onCommand:extension.jint-debugger.debugEditorFile",
+		"onDebugResolve:jint"
+	],
 	"contributes": {
+		"menus": {
+			"editor/title/run": [
+				{
+					"command": "extension.jint-debugger.runEditorFile",
+					"when": "resourceLangId == javascript",
+					"group": "navigation@1"
+				},
+				{
+					"command": "extension.jint-debugger.debugEditorFile",
+					"when": "resourceLangId == javascript",
+					"group": "navigation@2"
+				}
+			],
+			"commandPalette": [
+				{
+					"command": "extension.jint-debugger.runEditorFile",
+					"when": "resourceLangId == javascript"
+				},
+				{
+					"command": "extension.jint-debugger.debugEditorFile",
+					"when": "resourceLangId == javascript"
+				}
+			]
+		},
+		"commands": [
+			{
+				"command": "extension.jint-debugger.runEditorFile",
+				"title": "Run File in Jint",
+				"category": "Jint",
+				"enablement": "!inDebugMode",
+				"icon": "$(play)"
+			},
+			{
+				"command": "extension.jint-debugger.debugEditorFile",
+				"title": "Debug File in Jint",
+				"category": "Jint",
+				"enablement": "!inDebugMode",
+				"icon": "$(debug-alt)"
+			}
+		],
 		"breakpoints": [
 			{
 				"language": "javascript"
@@ -24,35 +69,76 @@
 				"type": "jint",
 				"label": "Jint",
 				"program": "D:/Documents/Visual Studio 2022/Projects/Jint.DebugAdapter/Jint.DebugAdapterExample/bin/Debug/net6.0/Jint.DebugAdapterExample.exe",
-
-				"languages": ["javascript"],
-
+				"languages": [
+					"javascript"
+				],
 				"configurationAttributes": {
 					"launch": {
-						"required": ["program"],
-
+						"required": [
+							"program"
+						],
 						"properties": {
 							"program": {
 								"type": "string",
-								"description": "Script to be debugged"
+								"description": "Absolute path to the Javascript file to debug.",
+								"default": "${workspaceFolder}/${command:AskForProgram}"
+							},
+							"stopOnEntry": {
+								"type": "boolean",
+								"description": "Automatically stop before first line on launch.",
+								"default": true
 							}
 						}
 					}
+				},
+				"initialConfigurations": [
+					{
+						"type": "jint",
+						"request": "launch",
+						"name": "Debug in Jint (launch)",
+						"program": "${workspaceFolder}/${command:AskForProgram}",
+						"stopOnEntry": true,
+						"port": 4711
+					},
+					{
+						"type": "jint",
+						"request": "launch",
+						"name": "Debug in Jint (debug server launch)",
+						"program": "${workspaceFolder}/${command:AskForProgram}",
+						"stopOnEntry": true,
+						"debugServer": 4711
+					},
+					{
+						"type": "jint",
+						"request": "attach",
+						"name": "Debug in Jint (attach)",
+						"program": "${workspaceFolder}/${command:AskForProgram}",
+						"stopOnEntry": true,
+						"port": 4711
+					}
+				],
+				"variables": {
+					"AskForProgram": "extension.jint-debugger.getProgram"
 				}
 			}
 		]
 	},
 	"scripts": {
-		"lint": "eslint .",
-		"pretest": "npm run lint",
-		"test": "node ./test/runTest.js"
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"pretest": "npm run compile && npm run lint",
+		"lint": "eslint src --ext ts",
+		"test": "node ./out/test/runTest.js"
 	},
 	"devDependencies": {
-		"@types/vscode": "^1.62.0",
+		"@types/vscode": "^1.65.0",
 		"@types/glob": "^7.1.3",
 		"@types/mocha": "^8.0.4",
 		"@types/node": "^12.11.7",
 		"eslint": "^7.19.0",
+		"@typescript-eslint/eslint-plugin": "^4.14.1",
+		"@typescript-eslint/parser": "^4.14.1",
 		"glob": "^7.1.6",
 		"mocha": "^8.2.1",
 		"typescript": "^4.1.3",
