@@ -96,7 +96,7 @@
 						"type": "jint",
 						"request": "launch",
 						"name": "Debug in Jint (launch)",
-						"program": "${workspaceFolder}/${command:AskForProgram}",
+						"program": "${file}",
 						"stopOnEntry": true,
 						"port": 4711
 					},
@@ -104,7 +104,7 @@
 						"type": "jint",
 						"request": "launch",
 						"name": "Debug in Jint (debug server launch)",
-						"program": "${workspaceFolder}/${command:AskForProgram}",
+						"program": "${file}",
 						"stopOnEntry": true,
 						"debugServer": 4711
 					},
@@ -112,7 +112,7 @@
 						"type": "jint",
 						"request": "attach",
 						"name": "Debug in Jint (attach)",
-						"program": "${workspaceFolder}/${command:AskForProgram}",
+						"program": "${file}",
 						"stopOnEntry": true,
 						"port": 4711
 					}
