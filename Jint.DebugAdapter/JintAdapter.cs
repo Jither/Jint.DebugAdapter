@@ -77,6 +77,7 @@ namespace Jint.DebugAdapter
 
         protected override void AttachRequest(AttachArguments arguments)
         {
+            
         }
 
         protected override BreakpointLocationsResponse BreakpointLocationsRequest(BreakpointLocationsArguments arguments)
@@ -191,7 +192,10 @@ namespace Jint.DebugAdapter
         protected override SetBreakpointsResponse SetBreakpointsRequest(SetBreakpointsArguments arguments)
         {
             string id = GetSourceId(arguments.Source.Path);
+
+            // SetBreakpoints expects us to clear all current breakpoints
             debugger.ClearBreakpoints();
+
             List<Breakpoint> results = new();
             foreach (var breakpoint in arguments.Breakpoints)
             {
@@ -201,6 +205,7 @@ namespace Jint.DebugAdapter
                 {
                     Verified = true
                 };
+                // If requested breakpoint position changed, send back the new position
                 if (actualJintPosition != jintPosition)
                 {
                     var actualLocation = ToClientLocation(actualJintPosition);
@@ -214,9 +219,20 @@ namespace Jint.DebugAdapter
 
         protected override StackTraceResponse StackTraceRequest(StackTraceArguments arguments)
         {
-            return new StackTraceResponse(debugger.CurrentDebugInformation.CallStack.Select((frame, index) => {
+            // TODO: StackFrameFormat handling?
+            var frames = debugger.CurrentDebugInformation.CallStack.AsEnumerable();
+
+            // Return subset
+            if (arguments.Levels > 0)
+            {
+                frames = frames.Skip(arguments.StartFrame ?? 0).Take(arguments.Levels.Value);
+            }
+
+            return new StackTraceResponse(frames.Select((frame, index) =>
+            {
                 var start = ToClientLocation(frame.Location.Start);
                 var end = ToClientLocation(frame.Location.End);
+
                 return new StackFrame(index, frame.FunctionName)
                 {
                     Source = new Source
@@ -228,8 +244,10 @@ namespace Jint.DebugAdapter
                     EndLine = end.Line,
                     EndColumn = end.Column
                 };
-                }
-            ));
+            }))
+            {
+                TotalFrames = debugger.CurrentDebugInformation.CallStack.Count
+            };
         }
 
         protected override void StepInRequest(StepInArguments arguments)
@@ -257,6 +275,13 @@ namespace Jint.DebugAdapter
         {
             var container = variableStore.GetContainer(arguments.VariablesReference);
             var variables = container.GetVariables();
+
+            // Return subset
+            if (arguments.Count > 0)
+            {
+                variables = variables.Skip(arguments.Start ?? 0).Take(arguments.Count.Value);
+            }
+
             return new VariablesResponse(variables);
         }
 
