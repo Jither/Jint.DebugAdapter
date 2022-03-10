@@ -79,10 +79,14 @@ namespace Jint.DebugAdapter
         protected override BreakpointLocationsResponse BreakpointLocationsRequest(BreakpointLocationsArguments arguments)
         {
             string id = host.SourceProvider.GetSourceId(arguments.Source.Path);
-            var info = debugger.GetScriptInfo(id);
+            
+            var range = ToJintRange(arguments.Line, arguments.Column, arguments.EndLine, arguments.EndColumn);
 
-            var locations = info.BreakpointPositions.Select(p => {
-                var pos = ToClientLocation(p.Position);
+            var info = debugger.GetScriptInfo(id);
+            var positions = info.FindBreakpointPositionsInRange(range.Start, range.End);
+
+            var locations = positions.Select(p => {
+                var pos = ToClientLocation(p);
                 return new BreakpointLocation(pos.Line, pos.Column);
             });
             
@@ -150,7 +154,7 @@ namespace Jint.DebugAdapter
             bool pauseOnEntry = arguments.AdditionalProperties["stopOnEntry"].GetBoolean();
             debugger.PauseOnEntry = pauseOnEntry;
 
-            // Not a fan of double negatives (i.e. !NoDebug)
+            // Not a fan of double negatives (i.e. testing for !noDebug), so let's convert it to debug
             bool debug = !(arguments.NoDebug ?? false);
 
             // TODO: Need to figure out threading here...
@@ -311,6 +315,27 @@ namespace Jint.DebugAdapter
                 clientLinesStartAt1 ? line : line + 1,
                 clientColumnsStartAt1 ? column - 1 : column
                 );
+        }
+
+        private (Esprima.Position Start, Esprima.Position End) ToJintRange(int line, int? column, int? endLine, int? endColumn)
+        {
+            if (column == null)
+            {
+                // "If no start column is given, the first column in the start line is assumed."
+                column = 1;
+            }
+            if (endLine == null)
+            {
+                // "If no end line is given, then the end line is assumed to be the start line."
+                endLine = line;
+            }
+            if (endColumn == null)
+            {
+                // "If no end column is given, then it is assumed to be in the last column of the end line."
+                endColumn = Int32.MaxValue;
+            }
+
+            return (new Esprima.Position(line, column.Value), new Esprima.Position(endLine.Value, endColumn.Value));
         }
     }
 }

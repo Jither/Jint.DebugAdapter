@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Esprima;
 using Esprima.Ast;
 using Esprima.Utils;
 
@@ -16,12 +17,13 @@ namespace Jint.DebugAdapter
         Return
     }
 
-    public record BreakpointPosition : IComparable<BreakpointPosition>, IEquatable<BreakpointPosition>
+    // TODO: Consider just using Esprima.Position (needs to be IComparable and IEquatable) - do we actually need Type?
+    public record BreakpointPosition : IComparable<BreakpointPosition>, IComparable<Position>, IEquatable<BreakpointPosition>
     {
         public BreakpointPositionType Type { get; }
-        public Esprima.Position Position { get; }
+        public Position Position { get; }
 
-        public BreakpointPosition(BreakpointPositionType type, Esprima.Position position)
+        public BreakpointPosition(BreakpointPositionType type, Position position)
         {
             Type = type;
             Position = position;
@@ -34,6 +36,15 @@ namespace Jint.DebugAdapter
                 return Position.Line - other.Position.Line;
             }
             return Position.Column - other.Position.Column;
+        }
+
+        public int CompareTo(Position other)
+        {
+            if (Position.Line != other.Line)
+            {
+                return Position.Line - other.Line;
+            }
+            return Position.Column - other.Column;
         }
     }
 

@@ -15,6 +15,30 @@ namespace Jint.DebugAdapter
             Ast = ast;
         }
 
+        public IEnumerable<Position> FindBreakpointPositionsInRange(Position start, Position end)
+        {
+            var positions = BreakpointPositions;
+
+            int index = positions.BinarySearch(new BreakpointPosition(BreakpointPositionType.None, start));
+
+            if (index < 0)
+            {
+                // Get the first break after the location
+                index = ~index;
+            }
+
+            while (index < positions.Count)
+            {
+                var position = positions[index++];
+                // We know we're past the start of the range. If we're also past the end, break
+                if (position.CompareTo(end) > 0)
+                {
+                    break;
+                }
+                
+                yield return position.Position;
+            }
+        }
 
         public Position FindNearestBreakpointPosition(Position position)
         {
