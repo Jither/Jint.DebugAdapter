@@ -32,19 +32,8 @@ namespace Jint.DebugAdapterExample
         public void Launch(string program, bool debug, IReadOnlyDictionary<string, JsonElement> arguments)
         {
             string source = File.ReadAllText(program);
-            if (debug)
-            {
-                Debugger.Attach();
-            }
-            try
-            {
-                string sourceId = SourceProvider.Register(program);
-                engine.Execute(source, new Esprima.ParserOptions(sourceId));
-            }
-            finally
-            {
-                Debugger.Detach();
-            }
+            string sourceId = SourceProvider.Register(program);
+            Debugger.Execute(sourceId, source, debug);
         }
     }
 }

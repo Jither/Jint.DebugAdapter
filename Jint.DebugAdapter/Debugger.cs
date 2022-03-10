@@ -25,44 +25,51 @@ namespace Jint.DebugAdapter
         private readonly ManualResetEvent waitForContinue = new(false);
         private readonly CancellationTokenSource cts = new();
         private StepMode nextStep;
-        private DebuggerState state = DebuggerState.WaitingForUI;
+        private DebuggerState state;
 
         public bool PauseOnEntry { get; set; }
         public bool IsAttached { get; private set; }
         public DebugInformation CurrentDebugInformation { get; private set; }
         public Engine Engine => engine;
 
-        public event DebugEventHandler Ready;
         public event DebugPauseEventHandler Stopped;
         public event DebugEventHandler Continued;
+        public event DebugEventHandler Cancelled;
 
         public Debugger(Engine engine)
         {
             this.engine = engine;
         }
 
-        public void Attach()
+        public void Execute(string sourceId, string source, bool debug)
         {
-            if (IsAttached)
+            var ast = PrepareScript(sourceId, source);
+            try
             {
-                throw new InvalidOperationException($"Attempt to attach debugger when already attached.");
-            }
-            IsAttached = true;
-            engine.Parsed += Engine_Parsed;
-            engine.DebugHandler.Break += DebugHandler_Break;
-            engine.DebugHandler.Step += DebugHandler_Step;
-        }
+                Task.Run(() =>
+                {
+                    if (debug)
+                    {
+                        Attach();
+                    }
+                    try
+                    {
+                        // Pause the engine thread, to wait for the debugger UI
+                        state = DebuggerState.WaitingForUI;
+                        PauseThread();
 
-        public void Detach()
-        {
-            if (!IsAttached)
-            {
-                return;
+                        engine.Execute(ast);
+                    }
+                    finally
+                    {
+                        Detach();
+                    }
+                }, cts.Token);
             }
-            engine.Parsed -= Engine_Parsed;
-            engine.DebugHandler.Break -= DebugHandler_Break;
-            engine.DebugHandler.Step -= DebugHandler_Step;
-            IsAttached = false;
+            catch (OperationCanceledException)
+            {
+                Cancelled?.Invoke();
+            }
         }
 
         public ScriptInfo GetScriptInfo(string id)
@@ -133,19 +140,34 @@ namespace Jint.DebugAdapter
             waitForContinue.Set();
         }
 
-        private void Engine_Parsed(object sender, SourceParsedEventArgs e)
+        private void Attach()
         {
-            // Whenever the engine parses a script (but before it's executed), this event handler is called,
-            // allowing us to store the script's AST and source ID. We use this for e.g. verifying breakpoint
-            // locations.
-            RegisterScriptInfo(e.SourceId, e.Ast);
-
-            // And we pause the engine thread, to wait for the debugger UI
-            if (state == DebuggerState.WaitingForUI)
+            if (IsAttached)
             {
-                Ready?.Invoke();
-                PauseThread();
+                throw new InvalidOperationException($"Attempt to attach debugger when already attached.");
             }
+            IsAttached = true;
+            engine.DebugHandler.Break += DebugHandler_Break;
+            engine.DebugHandler.Step += DebugHandler_Step;
+        }
+
+        private void Detach()
+        {
+            if (!IsAttached)
+            {
+                return;
+            }
+            engine.DebugHandler.Break -= DebugHandler_Break;
+            engine.DebugHandler.Step -= DebugHandler_Step;
+            IsAttached = false;
+        }
+
+        private Script PrepareScript(string sourceId, string source)
+        {
+            var parser = new JavaScriptParser(source, new ParserOptions(sourceId) { Tokens = true, AdaptRegexp = true, Tolerant = true });
+            var ast = parser.ParseScript();
+            RegisterScriptInfo(sourceId, ast);
+            return ast;
         }
 
         private void RegisterScriptInfo(string id, Script ast)

@@ -154,15 +154,7 @@ namespace Jint.DebugAdapter
             bool debug = !(arguments.NoDebug ?? false);
 
             // TODO: Need to figure out threading here...
-            // Ideally, host.Launch should be called on the thread that constructed JintAdapter.
-            // It cannot be called on this thread, since it will block - i.e., we'll never get to send a response.
-            TaskCompletionSource tcs = new TaskCompletionSource();
-            debugger.Ready += () =>
-            {
-                tcs.SetResult();
-            };
-            Task.Run(() => host.Launch(program, debug, arguments.AdditionalProperties));
-            tcs.Task.Wait();
+            host.Launch(program, debug, arguments.AdditionalProperties);
 
             SendEvent(new InitializedEvent());
         }
