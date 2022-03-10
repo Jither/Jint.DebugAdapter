@@ -14,6 +14,7 @@ namespace Jint.DebugAdapter
     {
         None,
         Statement,
+        Expression,
         Return
     }
 
@@ -60,11 +61,46 @@ namespace Jint.DebugAdapter
 
         public override void Visit(Node node)
         {
-            if (node is Statement)
+            if (node is Statement && node is not BlockStatement)
             {
                 AddLocation(BreakpointPositionType.Statement, node.Location.Start);
             }
             base.Visit(node);
+        }
+
+        protected override void VisitDoWhileStatement(DoWhileStatement doWhileStatement)
+        {
+            base.VisitDoWhileStatement(doWhileStatement);
+
+            AddLocation(BreakpointPositionType.Expression, doWhileStatement.Test.Location.Start);
+        }
+
+        protected override void VisitForInStatement(ForInStatement forInStatement)
+        {
+            base.VisitForInStatement(forInStatement);
+
+            AddLocation(BreakpointPositionType.Expression, forInStatement.Left.Location.Start);
+        }
+
+        protected override void VisitForOfStatement(ForOfStatement forOfStatement)
+        {
+            base.VisitForOfStatement(forOfStatement);
+
+            AddLocation(BreakpointPositionType.Expression, forOfStatement.Left.Location.Start);
+        }
+
+        protected override void VisitForStatement(ForStatement forStatement)
+        {
+            base.VisitForStatement(forStatement);
+
+            if (forStatement.Test != null)
+            {
+                AddLocation(BreakpointPositionType.Expression, forStatement.Test.Location.Start);
+            }
+            if (forStatement.Update != null)
+            {
+                AddLocation(BreakpointPositionType.Expression, forStatement.Test.Location.Start);
+            }
         }
 
         protected override void VisitArrowFunctionExpression(ArrowFunctionExpression arrowFunctionExpression)
