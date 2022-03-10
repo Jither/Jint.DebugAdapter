@@ -18,20 +18,16 @@ namespace Jint.DebugAdapter
     {
         private readonly Logger logger = LogManager.GetLogger();
         private readonly Debugger debugger;
+        private readonly IScriptHost host;
         private readonly VariableStore variableStore;
-        private readonly Dictionary<string, string> sourceIdByPath = new();
-        private readonly Dictionary<string, string> pathBySourceId = new();
 
         private bool clientLinesStartAt1;
         private bool clientColumnsStartAt1;
 
-        private string mainScriptId;
-        private bool noDebug;
-        private bool stopOnEntry;
-
-        public JintAdapter(Debugger debugger)
+        public JintAdapter(Debugger debugger, IScriptHost host)
         {
             this.debugger = debugger;
+            this.host = host;
             debugger.Continued += Debugger_Continued;
             debugger.Stopped += Debugger_Stopped;
 
@@ -82,10 +78,9 @@ namespace Jint.DebugAdapter
 
         protected override BreakpointLocationsResponse BreakpointLocationsRequest(BreakpointLocationsArguments arguments)
         {
-            string sourceId = GetSourceId(arguments.Source.Path);
+            string id = host.SourceProvider.GetSourceId(arguments.Source.Path);
+            var info = debugger.GetScriptInfo(id);
 
-            var info = debugger.GetScriptInfo(sourceId);
-            
             var locations = info.BreakpointPositions.Select(p => {
                 var pos = ToClientLocation(p.Position);
                 return new BreakpointLocation(pos.Line, pos.Column);
@@ -100,7 +95,7 @@ namespace Jint.DebugAdapter
 
         protected override void ConfigurationDoneRequest()
         {
-            debugger.ExecuteAsync(mainScriptId, noDebug, stopOnEntry);
+            debugger.NotifyUIReady();
         }
 
         protected override ContinueResponse ContinueRequest(ContinueArguments arguments)
@@ -151,12 +146,23 @@ namespace Jint.DebugAdapter
 
         protected override void LaunchRequest(LaunchArguments arguments)
         {
-            string path = arguments.AdditionalProperties["program"].GetString();
-            this.noDebug = arguments.NoDebug ?? false;
-            this.stopOnEntry = arguments.AdditionalProperties["stopOnEntry"].GetBoolean();
-            string sourceId = AddSource(path);
-            this.mainScriptId = sourceId;
-            debugger.Prepare(sourceId, path);
+            string program = arguments.AdditionalProperties["program"].GetString();
+            bool pauseOnEntry = arguments.AdditionalProperties["stopOnEntry"].GetBoolean();
+            debugger.PauseOnEntry = pauseOnEntry;
+
+            // Not a fan of double negatives (i.e. !NoDebug)
+            bool debug = !(arguments.NoDebug ?? false);
+
+            // TODO: Need to figure out threading here...
+            // Ideally, host.Launch should be called on the thread that constructed JintAdapter.
+            // It cannot be called on this thread, since it will block - i.e., we'll never get to send a response.
+            TaskCompletionSource tcs = new TaskCompletionSource();
+            debugger.Ready += () =>
+            {
+                tcs.SetResult();
+            };
+            Task.Run(() => host.Launch(program, debug, arguments.AdditionalProperties));
+            tcs.Task.Wait();
 
             SendEvent(new InitializedEvent());
         }
@@ -191,7 +197,7 @@ namespace Jint.DebugAdapter
 
         protected override SetBreakpointsResponse SetBreakpointsRequest(SetBreakpointsArguments arguments)
         {
-            string id = GetSourceId(arguments.Source.Path);
+            string id = host.SourceProvider.GetSourceId(arguments.Source.Path);
 
             // SetBreakpoints expects us to clear all current breakpoints
             debugger.ClearBreakpoints();
@@ -237,7 +243,7 @@ namespace Jint.DebugAdapter
                 {
                     Source = new Source
                     {
-                        Path = GetSourcePath(frame.Location.Source)
+                        Path = host.SourceProvider.GetSourcePath(frame.Location.Source)
                     },
                     Line = start.Line,
                     Column = start.Column,
@@ -283,31 +289,6 @@ namespace Jint.DebugAdapter
             }
 
             return new VariablesResponse(variables);
-        }
-
-        private string AddSource(string path)
-        {
-            string id = Guid.NewGuid().ToString();
-            pathBySourceId.Add(id, path);
-            path = NormalizePath(path);
-            sourceIdByPath.Add(path, id);
-            return id;
-        }
-
-        private string GetSourceId(string path)
-        {
-            path = NormalizePath(path);
-            return sourceIdByPath.GetValueOrDefault(path);
-        }
-
-        private string GetSourcePath(string id)
-        {
-            return pathBySourceId.GetValueOrDefault(id);
-        }
-
-        private string NormalizePath(string path)
-        {
-            return path.ToLowerInvariant().Replace('\\', '/');
         }
 
         /// <summary>

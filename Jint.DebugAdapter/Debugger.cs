@@ -1,4 +1,5 @@
-﻿using Esprima;
+﻿using System.Threading.Channels;
+using Esprima;
 using Esprima.Ast;
 using Jint.Native;
 using Jint.Runtime.Debugger;
@@ -10,71 +11,63 @@ namespace Jint.DebugAdapter
 
     public class Debugger
     {
+        private enum DebuggerState
+        {
+            WaitingForUI,
+            Entering,
+            Running,
+            Pausing,
+            Stepping,
+        }
+
         private readonly Dictionary<string, ScriptInfo> scriptInfoBySourceId = new();
         private readonly Engine engine;
         private readonly ManualResetEvent waitForContinue = new(false);
         private readonly CancellationTokenSource cts = new();
         private StepMode nextStep;
-        private DebuggerState state;
-        private bool pauseOnEntry;
+        private DebuggerState state = DebuggerState.WaitingForUI;
 
+        public bool PauseOnEntry { get; set; }
         public bool IsAttached { get; private set; }
-        public bool IsStopped { get; private set; }
         public DebugInformation CurrentDebugInformation { get; private set; }
         public Engine Engine => engine;
 
+        public event DebugEventHandler Ready;
         public event DebugPauseEventHandler Stopped;
         public event DebugEventHandler Continued;
-        public event DebugEventHandler Cancelled;
-        public event DebugEventHandler Finished;
 
         public Debugger(Engine engine)
         {
             this.engine = engine;
+        }
+
+        public void Attach()
+        {
+            if (IsAttached)
+            {
+                throw new InvalidOperationException($"Attempt to attach debugger when already attached.");
+            }
+            IsAttached = true;
             engine.Parsed += Engine_Parsed;
             engine.DebugHandler.Break += DebugHandler_Break;
             engine.DebugHandler.Step += DebugHandler_Step;
         }
 
+        public void Detach()
+        {
+            if (!IsAttached)
+            {
+                return;
+            }
+            engine.Parsed -= Engine_Parsed;
+            engine.DebugHandler.Break -= DebugHandler_Break;
+            engine.DebugHandler.Step -= DebugHandler_Step;
+            IsAttached = false;
+        }
+
         public ScriptInfo GetScriptInfo(string id)
         {
             return scriptInfoBySourceId.GetValueOrDefault(id);
-        }
-
-        public void Prepare(string id, string path)
-        {
-            var script = File.ReadAllText(path);
-            var parser = new JavaScriptParser(script, new ParserOptions(id) { Tokens = true });
-            var ast = parser.ParseScript();
-            RegisterScriptInfo(id, ast);
-        }
-
-        public async Task ExecuteAsync(string id, bool noDebug = false, bool pauseOnEntry = false)
-        {
-            var ast = GetScriptInfo(id).Ast;
-
-            this.pauseOnEntry = pauseOnEntry;
-
-            IsAttached = !noDebug;
-            IsStopped = false;
-            state = DebuggerState.Preparing;
-            try
-            {
-                var result = await Task.Run(() =>
-                {
-                    return engine.Evaluate(ast);
-                }, cts.Token);
-                Finished?.Invoke();
-            }
-            catch (OperationCanceledException)
-            {
-                Cancelled?.Invoke();
-            }
-            finally
-            {
-                IsAttached = false;
-                IsStopped = false;
-            }
         }
 
         public JsValue Evaluate(string expression)
@@ -134,12 +127,25 @@ namespace Jint.DebugAdapter
             return position;
         }
 
+        public void NotifyUIReady()
+        {
+            state = DebuggerState.Entering;
+            waitForContinue.Set();
+        }
+
         private void Engine_Parsed(object sender, SourceParsedEventArgs e)
         {
             // Whenever the engine parses a script (but before it's executed), this event handler is called,
             // allowing us to store the script's AST and source ID. We use this for e.g. verifying breakpoint
             // locations.
             RegisterScriptInfo(e.SourceId, e.Ast);
+
+            // And we pause the engine thread, to wait for the debugger UI
+            if (state == DebuggerState.WaitingForUI)
+            {
+                Ready?.Invoke();
+                PauseThread();
+            }
         }
 
         private void RegisterScriptInfo(string id, Script ast)
@@ -158,10 +164,11 @@ namespace Jint.DebugAdapter
 
             switch (state)
             {
-                case DebuggerState.Preparing:
+                case DebuggerState.WaitingForUI:
+                    throw new InvalidOperationException($"Debugger should not be stepping while waiting for UI");
 
                 case DebuggerState.Entering:
-                    if (!pauseOnEntry)
+                    if (!PauseOnEntry)
                     {
                         state = DebuggerState.Running;
                         return StepMode.Into;
@@ -204,18 +211,21 @@ namespace Jint.DebugAdapter
 
         private StepMode OnPause(PauseReason reason, DebugInformation e)
         {
-            IsStopped = true;
             CurrentDebugInformation = e;
             Stopped?.Invoke(reason, e);
+
+            PauseThread();
             
-            // Pause the thread until waitForContinue is set
-            waitForContinue.WaitOne();
-            waitForContinue.Reset();
-            
-            IsStopped = false;
             Continued?.Invoke();
 
             return nextStep;
+        }
+
+        private void PauseThread()
+        {
+            // Pause the thread until waitForContinue is set
+            waitForContinue.WaitOne();
+            waitForContinue.Reset();
         }
     }
 }
