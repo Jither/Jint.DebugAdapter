@@ -40,9 +40,9 @@ namespace Jint.DebugAdapter
             this.engine = engine;
         }
 
-        public int Add(DebugScope scope)
+        public int Add(DebugScope scope, CallFrame frame = null)
         {
-            var container = new ScopeVariableContainer(this, nextId++, scope);
+            var container = new ScopeVariableContainer(this, nextId++, scope, frame);
             return Add(container);
         }
 

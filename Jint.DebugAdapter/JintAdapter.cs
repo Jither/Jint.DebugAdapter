@@ -30,8 +30,26 @@ namespace Jint.DebugAdapter
             this.host = host;
             debugger.Continued += Debugger_Continued;
             debugger.Stopped += Debugger_Stopped;
+            debugger.Cancelled += Debugger_Cancelled;
+            debugger.Done += Debugger_Done;
 
             variableStore = new VariableStore(debugger.Engine);
+        }
+
+        private void Debugger_Done()
+        {
+            // "In all situations where a debug adapter wants to end the debug session,
+            // a terminated event must be fired."
+            SendEvent(new TerminatedEvent());
+            
+            // "If the debuggee has ended (and the debug adapter is able to detect this), an optional exited
+            // event can be issued to return the exit code to the development tool."
+            // Do we have any need for an exit code?
+        }
+
+        private void Debugger_Cancelled()
+        {
+            Protocol.Stop();
         }
 
         private void Debugger_Stopped(PauseReason reason, DebugInformation info)
@@ -110,6 +128,7 @@ namespace Jint.DebugAdapter
 
         protected override void DisconnectRequest(DisconnectArguments arguments)
         {
+            
         }
 
         protected override EvaluateResponse EvaluateRequest(EvaluateArguments arguments)
@@ -144,7 +163,8 @@ namespace Jint.DebugAdapter
                 SupportsConditionalBreakpoints = true,
                 SupportsBreakpointLocationsRequest = true,
                 SupportsConfigurationDoneRequest = true,
-                SupportsTerminateRequest = true
+                SupportsTerminateRequest = true,
+                SupportsDelayedStackTraceLoading = true
             };
         }
 
@@ -187,7 +207,10 @@ namespace Jint.DebugAdapter
         {
             var frame = debugger.CurrentDebugInformation.CallStack[arguments.FrameId];
             return new ScopesResponse(frame.ScopeChain.Select(s =>
-                new Scope(s.ScopeType.ToString(), variableStore.Add(s))
+                new Scope(s.ScopeType.ToString(),
+                s.ScopeType == DebugScopeType.Local ?
+                    variableStore.Add(s, frame) : // For local scope, we include the frame to get "this" and returnval
+                    variableStore.Add(s))
             ));
         }
 

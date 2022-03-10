@@ -117,7 +117,7 @@ namespace Jither.DebugAdapter.Protocol
                 catch (Exception ex)
                 {
                     HandleFatalError(ex);
-                    if (System.Diagnostics.Debugger.IsAttached)
+                    if (Debugger.IsAttached)
                     {
                         throw;
                     }

@@ -18,6 +18,7 @@ namespace Jint.DebugAdapter
             Running,
             Pausing,
             Stepping,
+            Terminating
         }
 
         private readonly Dictionary<string, ScriptInfo> scriptInfoBySourceId = new();
@@ -35,6 +36,7 @@ namespace Jint.DebugAdapter
         public event DebugPauseEventHandler Stopped;
         public event DebugEventHandler Continued;
         public event DebugEventHandler Cancelled;
+        public event DebugEventHandler Done;
 
         public Debugger(Engine engine)
         {
@@ -44,32 +46,36 @@ namespace Jint.DebugAdapter
         public void Execute(string sourceId, string source, bool debug)
         {
             var ast = PrepareScript(sourceId, source);
-            try
+            Task.Run(() =>
             {
-                Task.Run(() =>
+                if (debug)
                 {
-                    if (debug)
-                    {
-                        Attach();
-                    }
-                    try
-                    {
-                        // Pause the engine thread, to wait for the debugger UI
-                        state = DebuggerState.WaitingForUI;
-                        PauseThread();
+                    Attach();
+                }
+                try
+                {
+                    // Pause the engine thread, to wait for the debugger UI
+                    state = DebuggerState.WaitingForUI;
+                    PauseThread();
 
-                        engine.Execute(ast);
-                    }
-                    finally
-                    {
-                        Detach();
-                    }
-                }, cts.Token);
-            }
-            catch (OperationCanceledException)
+                    engine.Execute(ast);
+                    Done?.Invoke();
+                }
+                finally
+                {
+                    Detach();
+                }
+            }, cts.Token).ContinueWith(t =>
             {
-                Cancelled?.Invoke();
-            }
+                if (t.IsCanceled)
+                {
+                    Cancelled?.Invoke();
+                }
+                if (t.IsFaulted)
+                {
+                    throw t.Exception;
+                }
+            });
         }
 
         public ScriptInfo GetScriptInfo(string id)
@@ -88,6 +94,8 @@ namespace Jint.DebugAdapter
         public void Terminate()
         {
             cts.Cancel();
+            state = DebuggerState.Terminating;
+            waitForContinue.Set();
         }
 
         public void StepOver()
@@ -187,7 +195,7 @@ namespace Jint.DebugAdapter
             switch (state)
             {
                 case DebuggerState.WaitingForUI:
-                    throw new InvalidOperationException($"Debugger should not be stepping while waiting for UI");
+                    throw new InvalidOperationException("Debugger should not be stepping while waiting for UI");
 
                 case DebuggerState.Entering:
                     if (!PauseOnEntry)
@@ -207,6 +215,10 @@ namespace Jint.DebugAdapter
 
                 case DebuggerState.Stepping:
                     return OnPause(PauseReason.Step, e);
+
+                case DebuggerState.Terminating:
+                    throw new InvalidOperationException("Debugger should not be stepping while terminating");
+                    return StepMode.Into;
 
                 default:
                     throw new NotImplementedException($"Debugger state handling for {state} not implemented.");

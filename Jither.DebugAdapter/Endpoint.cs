@@ -46,7 +46,7 @@ namespace Jither.DebugAdapter
             {
                 await protocol.StartAsync();
             }
-            catch (TaskCanceledException)
+            catch (OperationCanceledException)
             {
                 logger.Info("Cancelled server task.");
             }
