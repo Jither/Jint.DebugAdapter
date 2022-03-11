@@ -84,11 +84,14 @@ namespace Jint.DebugAdapter
                 _ => value.ToString()
             };
 
+            // TODO: result.Type
             var result = CreateValue(name, valueString);
 
             if (value is ObjectInstance obj)
             {
                 result.VariablesReference = Add(obj);
+                // TODO: result.NamedVariables
+                // TODO: result.IndexedVariables
             }
 
             return result;
