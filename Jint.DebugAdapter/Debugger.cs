@@ -6,7 +6,7 @@ using Jint.Runtime.Debugger;
 
 namespace Jint.DebugAdapter
 {
-    public delegate void DebugLogMessageEventHandler(string message);
+    public delegate void DebugLogMessageEventHandler(string message, DebugInformation info);
     public delegate void DebugPauseEventHandler(PauseReason reason, DebugInformation info);
     public delegate void DebugEventHandler();
 
@@ -86,6 +86,11 @@ namespace Jint.DebugAdapter
         }
 
         public JsValue Evaluate(string expression)
+        {
+            return engine.DebugHandler.Evaluate(expression);
+        }
+
+        public JsValue Evaluate(Script expression)
         {
             return engine.DebugHandler.Evaluate(expression);
         }
@@ -221,7 +226,6 @@ namespace Jint.DebugAdapter
 
                 case DebuggerState.Terminating:
                     throw new InvalidOperationException("Debugger should not be stepping while terminating");
-                    return StepMode.Into;
 
                 default:
                     throw new NotImplementedException($"Debugger state handling for {state} not implemented.");
@@ -253,7 +257,8 @@ namespace Jint.DebugAdapter
                 // If this is a logpoint rather than a breakpoint, log message and continue
                 if (breakpoint.LogMessage != null)
                 {
-                    LogPoint?.Invoke(breakpoint.LogMessage);
+                    var message = Evaluate(breakpoint.LogMessage);
+                    LogPoint?.Invoke(message.AsString(), e);
                     return nextStep;
                 }
             }

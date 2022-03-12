@@ -30,7 +30,7 @@ Planned (❌) and currently working (✔) - but not necessarily fully completed 
 - ✔ Conditional breakpoints
 - ✔ Break on `debugger` statement
 - ✔ Hit count breakpoints
-- ❌ Logpoints (output log message rather than breaking)
+- ✔ Logpoints (output log message rather than breaking)
 - ❌ Break on exceptions (requires Jint exception overhaul)
 
 ### Actions

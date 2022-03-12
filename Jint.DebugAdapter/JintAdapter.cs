@@ -11,10 +11,11 @@ using Jint.Runtime.Debugger;
 using Jither.DebugAdapter;
 using Thread = Jither.DebugAdapter.Protocol.Types.Thread;
 using Jither.DebugAdapter.Helpers;
+using Esprima;
 
 namespace Jint.DebugAdapter
 {
-    public class JintAdapter : Adapter
+    public partial class JintAdapter : Adapter
     {
         private readonly Logger logger = LogManager.GetLogger();
         private readonly Debugger debugger;
@@ -37,9 +38,16 @@ namespace Jint.DebugAdapter
             variableStore = new VariableStore(debugger.Engine);
         }
 
-        private void Debugger_LogPoint(string message)
+        private void Debugger_LogPoint(string message, DebugInformation e)
         {
-            SendEvent(new OutputEvent(message));
+            var clientLocation = ToClientSourceLocation(e.Location);
+
+            SendEvent(new OutputEvent(message + "\n") {
+                Category = OutputCategory.Stdout, 
+                Line = clientLocation.Start.Line, 
+                Column = clientLocation.Start.Column, 
+                Source = clientLocation.Source
+            });
         }
 
         private void Debugger_Done()
@@ -104,13 +112,13 @@ namespace Jint.DebugAdapter
         {
             string id = host.SourceProvider.GetSourceId(arguments.Source.Path);
             
-            var range = ToJintRange(arguments.Line, arguments.Column, arguments.EndLine, arguments.EndColumn);
+            var (start, end) = ToJintRange(arguments.Line, arguments.Column, arguments.EndLine, arguments.EndColumn);
 
             var info = debugger.GetScriptInfo(id);
-            var positions = info.FindBreakpointPositionsInRange(range.Start, range.End);
+            var positions = info.FindBreakpointPositionsInRange(start, end);
 
             var locations = positions.Select(p => {
-                var pos = ToClientLocation(p);
+                var pos = ToClientPosition(p);
                 return new BreakpointLocation(pos.Line, pos.Column);
             });
             
@@ -234,7 +242,7 @@ namespace Jint.DebugAdapter
             List<Breakpoint> results = new();
             foreach (var breakpoint in arguments.Breakpoints)
             {
-                var jintPosition = ToJintLocation(breakpoint.Line, breakpoint.Column);
+                var jintPosition = ToJintPosition(breakpoint.Line, breakpoint.Column);
                 var actualJintPosition = debugger.SetBreakpoint(id, jintPosition, breakpoint.Condition, breakpoint.HitCondition, breakpoint.LogMessage);
                 var actualBreakpoint = new Breakpoint
                 {
@@ -243,7 +251,7 @@ namespace Jint.DebugAdapter
                 // If requested breakpoint position changed, send back the new position
                 if (actualJintPosition != jintPosition)
                 {
-                    var actualLocation = ToClientLocation(actualJintPosition);
+                    var actualLocation = ToClientPosition(actualJintPosition);
                     actualBreakpoint.Line = actualLocation.Line;
                     actualBreakpoint.Column = actualLocation.Column;
                 }
@@ -265,19 +273,15 @@ namespace Jint.DebugAdapter
 
             return new StackTraceResponse(frames.Select((frame, index) =>
             {
-                var start = ToClientLocation(frame.Location.Start);
-                var end = ToClientLocation(frame.Location.End);
+                var location = ToClientSourceLocation(frame.Location);
 
                 return new StackFrame(index, frame.FunctionName)
                 {
-                    Source = new Source
-                    {
-                        Path = host.SourceProvider.GetSourcePath(frame.Location.Source)
-                    },
-                    Line = start.Line,
-                    Column = start.Column,
-                    EndLine = end.Line,
-                    EndColumn = end.Column
+                    Source = location.Source,
+                    Line = location.Start.Line,
+                    Column = location.Start.Column,
+                    EndLine = location.End.Line,
+                    EndColumn = location.End.Column
                 };
             }))
             {
@@ -314,38 +318,47 @@ namespace Jint.DebugAdapter
             return new VariablesResponse(variables);
         }
 
+        private (Position Start, Position End, Source Source) ToClientSourceLocation(Location location)
+        {
+            return (
+                Start: ToClientPosition(location.Start),
+                End: ToClientPosition(location.End),
+                Source: new Source { Path = host.SourceProvider.GetSourcePath(location.Source) }
+            );
+        }
+
         /// <summary>
-        /// Converts Jint (Esprima) location to client location.
+        /// Converts Jint (Esprima) position to client position.
         /// </summary>
         /// <remarks>
         /// Esprima lines start at 1 while columns start at 0. The client may be different - indeed, in VSCode, both
         /// lines and columns start at 1.
         /// </remarks>
-        private Esprima.Position ToClientLocation(Esprima.Position position)
+        private Position ToClientPosition(Position position)
         {
-            return new Esprima.Position(
+            return new Position(
                 clientLinesStartAt1 ? position.Line : position.Line - 1,
                 clientColumnsStartAt1 ? position.Column + 1 : position.Column
                 );
         }
 
         /// <summary>
-        /// Converts client location to Jint location.
+        /// Converts client position to Jint position.
         /// </summary>
         /// <remarks>
         /// Esprima lines start at 1 while columns start at 0. The client may be different - indeed, in VSCode, both
         /// lines and columns start at 1.
         /// </remarks>
-        private Esprima.Position ToJintLocation(int line, int? column)
+        private Position ToJintPosition(int line, int? column)
         {
-            column = column ?? (clientColumnsStartAt1 ? 1 : 0);
+            column ??= (clientColumnsStartAt1 ? 1 : 0);
             return new Esprima.Position(
                 clientLinesStartAt1 ? line : line + 1,
                 clientColumnsStartAt1 ? column.Value - 1 : column.Value
                 );
         }
 
-        private (Esprima.Position Start, Esprima.Position End) ToJintRange(int line, int? column, int? endLine, int? endColumn)
+        private (Position Start, Position End) ToJintRange(int line, int? column, int? endLine, int? endColumn)
         {
             if (column == null)
             {
@@ -363,7 +376,7 @@ namespace Jint.DebugAdapter
                 endColumn = Int32.MaxValue;
             }
 
-            return (new Esprima.Position(line, column.Value), new Esprima.Position(endLine.Value, endColumn.Value));
+            return (new Position(line, column.Value), new Position(endLine.Value, endColumn.Value));
         }
     }
 }
