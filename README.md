@@ -50,8 +50,8 @@ Planned (❌) and currently working (✔) - but not necessarily fully completed 
 - ✔ Lazy evaluation of structured types
 - ✔ Display `this` (when defined) and `Return value` (at function return points)
 - ❌ Summary of structured types (before expanding/lazy evaluation)
-- ❌ Display type on hover
-- ❌ Paged indices for array-likes
+- ✔ Display type on hover
+- ✔ Paged indices for array-likes
 - ❌ Modify/set variables
 
 ### Watch

@@ -1,4 +1,5 @@
-﻿using System.Text.Encodings.Web;
+﻿using System.Linq;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Jint.Native;
@@ -24,9 +25,24 @@ namespace Jint.DebugAdapter
             Id = id;
         }
 
-        public IEnumerable<Variable> GetVariables()
+        public IEnumerable<Variable> GetVariables(VariableFilter filter, int? start, int? count)
         {
-            return InternalGetVariables();
+            IEnumerable<Variable> result;
+            if (filter == VariableFilter.Indexed)
+            {
+                result = GetIndexedVariables(start, count);
+            }
+            else if (filter == VariableFilter.Named)
+            {
+                result = GetNamedVariables(start, count);
+
+            }
+            else
+            {
+                result = GetAllVariables(start, count);
+            }
+
+            return result;
         }
 
         protected Variable CreateVariable(string name, JsValue value)
@@ -49,10 +65,16 @@ namespace Jint.DebugAdapter
                 IndexedVariables = valueInfo.IndexedVariables,
                 NamedVariables = valueInfo.NamedVariables,
                 MemoryReference = valueInfo.MemoryReference,
-                // TODO: EvaluateName
+                EvaluateName = valueInfo.EvaluateName
             };
         }
 
-        protected abstract IEnumerable<Variable> InternalGetVariables();
+        protected abstract IEnumerable<Variable> GetAllVariables(int? start, int? count);
+
+        protected virtual IEnumerable<Variable> GetNamedVariables(int? start, int? count) =>
+            throw new NotImplementedException("Named filtering not implemented for this variable type");
+
+        protected virtual IEnumerable<Variable> GetIndexedVariables(int? start, int? count) =>
+            throw new NotImplementedException("Indexed filtering not implemented for this variable type");
     }
 }

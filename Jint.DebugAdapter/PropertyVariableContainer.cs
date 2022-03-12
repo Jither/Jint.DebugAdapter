@@ -17,7 +17,7 @@ namespace Jint.DebugAdapter
             this.engine = engine;
         }
 
-        protected override IEnumerable<Variable> InternalGetVariables()
+        protected override IEnumerable<Variable> GetAllVariables(int? start, int? count)
         {
             return new[] { CreateVariable(String.Empty, engine.Invoke(prop.Get, owner, Array.Empty<object>())) };
         }

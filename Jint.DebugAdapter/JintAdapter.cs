@@ -299,13 +299,7 @@ namespace Jint.DebugAdapter
         protected override VariablesResponse VariablesRequest(VariablesArguments arguments)
         {
             var container = variableStore.GetContainer(arguments.VariablesReference);
-            var variables = container.GetVariables();
-
-            // Return subset
-            if (arguments.Count > 0)
-            {
-                variables = variables.Skip(arguments.Start ?? 0).Take(arguments.Count.Value);
-            }
+            var variables = container.GetVariables(arguments.Filter, arguments.Start, arguments.Count);
 
             return new VariablesResponse(variables);
         }

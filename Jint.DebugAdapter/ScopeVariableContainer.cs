@@ -14,23 +14,40 @@ namespace Jint.DebugAdapter
             this.frame = frame;
         }
 
-        protected override IEnumerable<Variable> InternalGetVariables()
+        protected override IEnumerable<Variable> GetNamedVariables(int? start, int? count)
         {
-            if (frame != null)
+            IEnumerable<Variable> EnumerateVariables()
             {
-                if (frame.ReturnValue != null)
+                if (frame != null)
                 {
-                    yield return CreateVariable("Return value", frame.ReturnValue);
+                    if (frame.ReturnValue != null)
+                    {
+                        yield return CreateVariable("Return value", frame.ReturnValue);
+                    }
+                    if (!frame.This.IsUndefined())
+                    {
+                        yield return CreateVariable("this", frame.This);
+                    }
                 }
-                if (!frame.This.IsUndefined())
+                foreach (var name in scope.BindingNames)
                 {
-                    yield return CreateVariable("this", frame.This);
+                    yield return CreateVariable(name, scope.GetBindingValue(name));
                 }
             }
-            foreach (var name in scope.BindingNames)
+
+            var result = EnumerateVariables();
+
+            if (count > 0)
             {
-                yield return CreateVariable(name, scope.GetBindingValue(name));
+                result = result.Skip(start ?? 0).Take(count.Value);
             }
+
+            return result;
+        }
+
+        protected override IEnumerable<Variable> GetAllVariables(int? start, int? count)
+        {
+            return GetNamedVariables(start, count);
         }
     }
 }
