@@ -6,6 +6,7 @@ using Jint.Runtime.Debugger;
 
 namespace Jint.DebugAdapter
 {
+    public delegate void DebugLogMessageEventHandler(string message);
     public delegate void DebugPauseEventHandler(PauseReason reason, DebugInformation info);
     public delegate void DebugEventHandler();
 
@@ -33,6 +34,7 @@ namespace Jint.DebugAdapter
         public DebugInformation CurrentDebugInformation { get; private set; }
         public Engine Engine => engine;
 
+        public event DebugLogMessageEventHandler LogPoint;
         public event DebugPauseEventHandler Stopped;
         public event DebugEventHandler Continued;
         public event DebugEventHandler Cancelled;
@@ -133,12 +135,13 @@ namespace Jint.DebugAdapter
             engine.DebugHandler.BreakPoints.Clear();
         }
 
-        public Position SetBreakpoint(string sourceId, Position position, string condition)
+        public Position SetBreakpoint(string sourceId, Position position, string condition = null, string hitCondition = null, string logMessage = null)
         {
             var info = GetScriptInfo(sourceId);
             position = info.FindNearestBreakpointPosition(position);
 
-            engine.DebugHandler.BreakPoints.Set(new BreakPoint(sourceId, position.Line, position.Column, condition));
+            engine.DebugHandler.BreakPoints.Set(new ExtendedBreakPoint(
+                sourceId, position.Line, position.Column, condition, hitCondition, logMessage));
             return position;
         }
 
@@ -234,6 +237,27 @@ namespace Jint.DebugAdapter
             {
                 return StepMode.Over;
             }
+
+            if (e.BreakPoint is ExtendedBreakPoint breakpoint)
+            {
+                // If breakpoint has a hit condition, evaluate it
+                if (breakpoint.HitCondition != null)
+                {
+                    breakpoint.HitCount++;
+                    if (!breakpoint.HitCondition(breakpoint.HitCount))
+                    {
+                        return nextStep;
+                    }
+                }
+
+                // If this is a logpoint rather than a breakpoint, log message and continue
+                if (breakpoint.LogMessage != null)
+                {
+                    LogPoint?.Invoke(breakpoint.LogMessage);
+                    return nextStep;
+                }
+            }
+
             state = DebuggerState.Stepping;
             var reason = e.PauseType switch
             {

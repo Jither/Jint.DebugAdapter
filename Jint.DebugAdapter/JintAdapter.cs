@@ -32,8 +32,14 @@ namespace Jint.DebugAdapter
             debugger.Stopped += Debugger_Stopped;
             debugger.Cancelled += Debugger_Cancelled;
             debugger.Done += Debugger_Done;
+            debugger.LogPoint += Debugger_LogPoint;
 
             variableStore = new VariableStore(debugger.Engine);
+        }
+
+        private void Debugger_LogPoint(string message)
+        {
+            SendEvent(new OutputEvent(message));
         }
 
         private void Debugger_Done()
@@ -164,7 +170,9 @@ namespace Jint.DebugAdapter
                 SupportsBreakpointLocationsRequest = true,
                 SupportsConfigurationDoneRequest = true,
                 SupportsTerminateRequest = true,
-                SupportsDelayedStackTraceLoading = true
+                SupportsDelayedStackTraceLoading = true,
+                SupportsHitConditionalBreakpoints = true,
+                SupportsLogPoints = true
             };
         }
 
@@ -216,6 +224,8 @@ namespace Jint.DebugAdapter
 
         protected override SetBreakpointsResponse SetBreakpointsRequest(SetBreakpointsArguments arguments)
         {
+            // TODO: What should be done if client sends breakpoints for unknown source?
+            // (Happens e.g. when launching a file in VSCode while other files are open).
             string id = host.SourceProvider.GetSourceId(arguments.Source.Path);
 
             // SetBreakpoints expects us to clear all current breakpoints
@@ -224,8 +234,8 @@ namespace Jint.DebugAdapter
             List<Breakpoint> results = new();
             foreach (var breakpoint in arguments.Breakpoints)
             {
-                var jintPosition = ToJintLocation(breakpoint.Line, breakpoint.Column ?? 0);
-                var actualJintPosition = debugger.SetBreakpoint(id, jintPosition, breakpoint.Condition);
+                var jintPosition = ToJintLocation(breakpoint.Line, breakpoint.Column);
+                var actualJintPosition = debugger.SetBreakpoint(id, jintPosition, breakpoint.Condition, breakpoint.HitCondition, breakpoint.LogMessage);
                 var actualBreakpoint = new Breakpoint
                 {
                     Verified = true
@@ -326,11 +336,12 @@ namespace Jint.DebugAdapter
         /// Esprima lines start at 1 while columns start at 0. The client may be different - indeed, in VSCode, both
         /// lines and columns start at 1.
         /// </remarks>
-        private Esprima.Position ToJintLocation(int line, int column)
+        private Esprima.Position ToJintLocation(int line, int? column)
         {
+            column = column ?? (clientColumnsStartAt1 ? 1 : 0);
             return new Esprima.Position(
                 clientLinesStartAt1 ? line : line + 1,
-                clientColumnsStartAt1 ? column - 1 : column
+                clientColumnsStartAt1 ? column.Value - 1 : column.Value
                 );
         }
 

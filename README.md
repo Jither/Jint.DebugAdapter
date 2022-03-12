@@ -29,7 +29,7 @@ Planned (❌) and currently working (✔) - but not necessarily fully completed 
   - ✔ Skips block statements
 - ✔ Conditional breakpoints
 - ✔ Break on `debugger` statement
-- ❌ Hit count breakpoints
+- ✔ Hit count breakpoints
 - ❌ Logpoints (output log message rather than breaking)
 - ❌ Break on exceptions (requires Jint exception overhaul)
 
