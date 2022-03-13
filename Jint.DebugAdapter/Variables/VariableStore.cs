@@ -59,7 +59,8 @@ namespace Jint.DebugAdapter.Variables
         {
             return value switch
             {
-                null => new NullValueInfo(name),
+                // If value is (CLR) null, it means the variable is uninitialized (let/const)
+                null => new UninitializedValueInfo(name),
                 JsNull or
                 JsString or
                 JsNumber or

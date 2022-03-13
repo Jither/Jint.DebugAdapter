@@ -2,6 +2,8 @@
 using Jint.Native.Object;
 using Jint.Native;
 using Jint.Runtime;
+using Jint.Runtime.Descriptors;
+using Jint.Native.TypedArray;
 
 namespace Jint.DebugAdapter.Variables
 {
@@ -46,27 +48,65 @@ namespace Jint.DebugAdapter.Variables
 
         protected override IEnumerable<Variable> GetIndexedVariables(int? start, int? count)
         {
-            var length = instance.Length;
+            var items = instance is TypedArrayInstance ? GetTypedArrayIndexValues(start, count) : GetArrayIndexValues(start, count);
+
+            return items.Select(i => CreateVariable(i.Key, i.Value));
+        }
+
+        private IEnumerable<KeyValuePair<string, JsValue>> GetArrayIndexValues(int? start, int? count)
+        {
+            int length = (int)instance.Length;
+            if (count > 0)
+            {
+                length = Math.Min(length, count.Value);
+            }
 
             // We can assume that array indices are the first Length properties returned by GetOwnProperties
             // https://tc39.es/ecma262/#sec-ordinaryownpropertykeys
-            var items = instance.GetOwnProperties().Take((int)length);
-
-            if (count > 0)
+            var items = instance.GetOwnProperties();
+            if (start > 0)
             {
-                items = items.Skip(start ?? 0).Take(count.Value);
+                items = items.Skip(start.Value);
             }
-
-            return items.Select(i => CreateVariable(i.Key.ToString(), i.Value, instance));
+            return items.Take(length).Select(kv => KeyValuePair.Create(kv.Key.ToString(), kv.Value.Value));
         }
 
-        protected override IEnumerable<Variable> GetNamedVariables(int? start, int? count)
+        private IEnumerable<KeyValuePair<string, JsValue>> GetTypedArrayIndexValues(int? start, int? count)
+        {
+            var arr = instance as TypedArrayInstance;
+            
+            int length = (int)arr.Length;
+            if (count > 0)
+            {
+                length = Math.Min(length, count.Value);
+            }
+
+            var list = new List<KeyValuePair<string, JsValue>>();
+            for (int i = start ?? 0; i < length; i++)
+            {
+                list.Add(KeyValuePair.Create(i.ToString(), arr[i]));
+            }
+            return list;
+        }
+
+        private IEnumerable<KeyValuePair<JsValue, PropertyDescriptor>> GetArrayProperties()
         {
             var length = instance.Length;
 
             // We can assume that array indices are the first Length properties returned by GetOwnProperties
             // https://tc39.es/ecma262/#sec-ordinaryownpropertykeys
-            var props = instance.GetOwnProperties().Skip((int)length);
+            return instance.GetOwnProperties().Skip((int)length);
+        }
+
+        private IEnumerable<KeyValuePair<JsValue, PropertyDescriptor>> GetTypedArrayProperties()
+        {
+            // TypedArray does not include array indices in own properties
+            return instance.GetOwnProperties();
+        }
+
+        protected override IEnumerable<Variable> GetNamedVariables(int? start, int? count)
+        {
+            var props = instance is TypedArrayInstance ? GetTypedArrayProperties() : GetArrayProperties();
 
             if (count > 0)
             {
