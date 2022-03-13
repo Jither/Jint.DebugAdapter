@@ -1,6 +1,7 @@
 ﻿using System.Threading.Channels;
 using Esprima;
 using Esprima.Ast;
+using Jint.DebugAdapter.Breakpoints;
 using Jint.Native;
 using Jint.Runtime.Debugger;
 
@@ -126,7 +127,7 @@ namespace Jint.DebugAdapter
         public void Run()
         {
             state = DebuggerState.Running;
-            nextStep = StepMode.Into;
+            nextStep = StepMode.None;
             waitForContinue.Set();
         }
 
@@ -197,8 +198,10 @@ namespace Jint.DebugAdapter
 
             if (!IsAttached)
             {
-                return StepMode.Over;
+                return StepMode.None;
             }
+
+            HandleBreakpoint(e);
 
             switch (state)
             {
@@ -209,13 +212,13 @@ namespace Jint.DebugAdapter
                     if (!PauseOnEntry)
                     {
                         state = DebuggerState.Running;
-                        return StepMode.Into;
+                        return StepMode.None;
                     }
                     state = DebuggerState.Stepping;
                     return OnPause(PauseReason.Entry, e);
 
                 case DebuggerState.Running:
-                    return StepMode.Into;
+                    return StepMode.None;
 
                 case DebuggerState.Pausing:
                     state = DebuggerState.Stepping;
@@ -239,10 +242,37 @@ namespace Jint.DebugAdapter
 
             if (!IsAttached)
             {
-                return StepMode.Over;
+                return StepMode.None;
             }
 
-            if (e.BreakPoint is ExtendedBreakPoint breakpoint)
+            bool breakPointShouldBreak = HandleBreakpoint(e);
+
+            switch (e.PauseType)
+            {
+                case PauseType.DebuggerStatement:
+                    state = DebuggerState.Stepping;
+                    return OnPause(PauseReason.DebuggerStatement, e);
+
+                case PauseType.Break:
+                    if (breakPointShouldBreak)
+                    {
+                        state = DebuggerState.Stepping;
+                        return OnPause(PauseReason.Breakpoint, e);
+                    }
+                    break;
+            }
+
+            // Break is only called when we're not stepping - so since we didn't pause, keep running:
+            return StepMode.None;
+        }
+
+        private bool HandleBreakpoint(DebugInformation info)
+        {
+            if (info.BreakPoint == null)
+            {
+                return false;
+            }
+            if (info.BreakPoint is ExtendedBreakPoint breakpoint)
             {
                 // If breakpoint has a hit condition, evaluate it
                 if (breakpoint.HitCondition != null)
@@ -250,26 +280,22 @@ namespace Jint.DebugAdapter
                     breakpoint.HitCount++;
                     if (!breakpoint.HitCondition(breakpoint.HitCount))
                     {
-                        return nextStep;
+                        // Don't break if the hit condition wasn't met
+                        return false;
                     }
                 }
 
-                // If this is a logpoint rather than a breakpoint, log message and continue
+                // If this is a logpoint rather than a breakpoint, log message and don't break
                 if (breakpoint.LogMessage != null)
                 {
                     var message = Evaluate(breakpoint.LogMessage);
-                    LogPoint?.Invoke(message.AsString(), e);
-                    return nextStep;
+                    LogPoint?.Invoke(message.AsString(), info);
+                    return false;
                 }
             }
 
-            state = DebuggerState.Stepping;
-            var reason = e.PauseType switch
-            {
-                PauseType.DebuggerStatement => PauseReason.DebuggerStatement,
-                PauseType.Break or _ => PauseReason.Breakpoint
-            };
-            return OnPause(reason, e);
+            // Allow breakpoint to break
+            return true;
         }
 
         private StepMode OnPause(PauseReason reason, DebugInformation e)

@@ -3,7 +3,7 @@ using Jint.Native.Object;
 using Jint.Native;
 using Jint.Runtime;
 
-namespace Jint.DebugAdapter
+namespace Jint.DebugAdapter.Variables
 {
     public class ArrayLikeVariableContainer : VariableContainer
     {
@@ -12,6 +12,24 @@ namespace Jint.DebugAdapter
         public ArrayLikeVariableContainer(VariableStore store, int id, ObjectInstance instance) : base(store, id)
         {
             this.instance = instance;
+        }
+
+        public override JsValue SetVariable(string name, JsValue value)
+        {
+            var prop = instance.GetOwnProperty(name);
+            if (prop.Writable)
+            {
+                prop.Value = value;
+                return value;
+            }
+
+            if (prop.Set != null)
+            {
+                instance.Engine.Invoke(prop.Set, value);
+                return instance.Engine.Invoke(prop.Get);
+            }
+
+            throw new VariableException($"Property is read only.");
         }
 
         protected override IEnumerable<Variable> GetAllVariables(int? start, int? count)

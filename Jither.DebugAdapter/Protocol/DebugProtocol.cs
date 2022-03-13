@@ -351,7 +351,7 @@ namespace Jither.DebugAdapter.Protocol
                 }
                 catch (ProtocolException ex)
                 {
-
+                    logger.Error($"Exception during Stop: {ex.Message}");
                 }
             }
         }

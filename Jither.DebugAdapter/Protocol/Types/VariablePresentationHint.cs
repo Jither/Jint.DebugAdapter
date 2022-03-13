@@ -15,7 +15,7 @@
         /// the listed values.
         /// </summary>
         // TODO: List<StringEnum<>>
-        public List<string> Attributes { get; set; }
+        public List<VariableAttribute> Attributes { get; set; }
 
         /// <summary>
         /// Visibility of variable. Before introducing additional values, try to use the listed values.

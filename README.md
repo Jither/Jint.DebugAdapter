@@ -52,7 +52,7 @@ Planned (❌) and currently working (✔) - but not necessarily fully completed 
 - ❌ Summary of structured types (before expanding/lazy evaluation)
 - ✔ Display type on hover
 - ✔ Paged indices for array-likes
-- ❌ Modify/set variables
+- ✔ Modify/set variables
 
 ### Watch
 - ✔ Evaluation
@@ -64,3 +64,8 @@ Planned (❌) and currently working (✔) - but not necessarily fully completed 
 ### Debug console
 - ✔ Evaluation and "REPL"
 - ❌ Console output (e.g. `console.info`, `console.error`...)
+
+Outstanding general issues
+--------------------------
+- ❌ Threading and thread safety - particularly when using console output/logpoints
+- ❌ Proper client error handling

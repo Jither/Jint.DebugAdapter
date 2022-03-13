@@ -12,6 +12,7 @@ using Jither.DebugAdapter;
 using Thread = Jither.DebugAdapter.Protocol.Types.Thread;
 using Jither.DebugAdapter.Helpers;
 using Esprima;
+using Jint.DebugAdapter.Variables;
 
 namespace Jint.DebugAdapter
 {
@@ -42,6 +43,8 @@ namespace Jint.DebugAdapter
         {
             var clientLocation = ToClientSourceLocation(e.Location);
 
+            // TODO: Something is messing with the stack frames (and probably other things).
+            // Thread desynchronization due to outputting while running?
             SendEvent(new OutputEvent(message + "\n") {
                 Category = OutputCategory.Stdout, 
                 Line = clientLocation.Start.Line, 
@@ -180,7 +183,8 @@ namespace Jint.DebugAdapter
                 SupportsTerminateRequest = true,
                 SupportsDelayedStackTraceLoading = true,
                 SupportsHitConditionalBreakpoints = true,
-                SupportsLogPoints = true
+                SupportsLogPoints = true,
+                SupportsSetVariable = true
             };
         }
 
@@ -258,6 +262,29 @@ namespace Jint.DebugAdapter
                 results.Add(actualBreakpoint);
             }
             return new SetBreakpointsResponse(results);
+        }
+
+        protected override SetVariableResponse SetVariableRequest(SetVariableArguments arguments)
+        {
+            var value = debugger.Evaluate(arguments.Value);
+
+            try
+            {
+                var newInfo = variableStore.SetValue(arguments.VariablesReference, arguments.Name, value);
+
+                // TODO: Format
+                return new SetVariableResponse(newInfo.Value)
+                {
+                    Type = newInfo.Type,
+                    VariablesReference = newInfo.VariablesReference,
+                    IndexedVariables = newInfo.IndexedVariables,
+                    NamedVariables = newInfo.VariablesReference
+                };
+            }
+            catch (VariableException ex)
+            {
+                throw new DebuggerException($"Cannot set variable/property {arguments.Name}: {ex.Message}");
+            }
         }
 
         protected override StackTraceResponse StackTraceRequest(StackTraceArguments arguments)

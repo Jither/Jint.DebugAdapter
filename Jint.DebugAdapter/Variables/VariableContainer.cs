@@ -1,24 +1,16 @@
-﻿using System.Linq;
-using System.Text.Encodings.Web;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using Jint.Native;
-using Jint.Native.Argument;
-using Jint.Native.Array;
-using Jint.Native.Function;
+﻿using Jint.Native;
 using Jint.Native.Object;
-using Jint.Native.RegExp;
 using Jint.Runtime.Descriptors;
 using Jither.DebugAdapter.Protocol.Types;
 
-namespace Jint.DebugAdapter
+namespace Jint.DebugAdapter.Variables
 {
     public abstract class VariableContainer
     {
         protected readonly VariableStore store;
 
         public int Id { get; }
-        
+
         protected VariableContainer(VariableStore store, int id)
         {
             this.store = store;
@@ -44,6 +36,8 @@ namespace Jint.DebugAdapter
 
             return result;
         }
+
+        public abstract JsValue SetVariable(string name, JsValue value);
 
         protected Variable CreateVariable(string name, JsValue value)
         {

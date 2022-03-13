@@ -5,13 +5,12 @@ using Jint.Native.Argument;
 using Jint.Native.Array;
 using Jint.Native.Function;
 using Jint.Native.Object;
-using Jint.Native.RegExp;
 using Jint.Native.TypedArray;
 using Jint.Runtime.Debugger;
 using Jint.Runtime.Descriptors;
 using Jither.DebugAdapter.Protocol.Types;
 
-namespace Jint.DebugAdapter
+namespace Jint.DebugAdapter.Variables
 {
     public abstract class ValueInfo
     {
@@ -75,11 +74,11 @@ namespace Jint.DebugAdapter
 
             if (length > 100)
             {
-                this.IndexedVariables = (int)length;
+                IndexedVariables = length;
                 // If we specify number of indexed variables, we also need to specify number of named variables
                 // Judging from the VSCode JS debug adapter, we can just specify 1 (to get the client to query us
                 // when needed), rather than precounting the properties
-                this.NamedVariables = 1;
+                NamedVariables = 1;
             }
         }
     }
@@ -110,7 +109,7 @@ namespace Jint.DebugAdapter
             PresentationHint = new VariablePresentationHint { Lazy = true };
         }
     }
-    
+
 
     public class VariableStore
     {
@@ -194,6 +193,18 @@ namespace Jint.DebugAdapter
             {
                 return CreateValue(name, prop.Value);
             }
+        }
+
+        public ValueInfo SetValue(int variablesReference, string name, JsValue value)
+        {
+            var container = containers.GetValueOrDefault(variablesReference);
+            if (container == null)
+            {
+                throw new VariableException($"Unknown parent variables reference: {variablesReference}");
+            }
+
+            var newValue = container.SetVariable(name, value);
+            return CreateValue(name, newValue);
         }
 
         public void Clear()

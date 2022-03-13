@@ -1,7 +1,8 @@
 ﻿using Jither.DebugAdapter.Protocol.Types;
 using Jint.Runtime.Debugger;
+using Jint.Native;
 
-namespace Jint.DebugAdapter
+namespace Jint.DebugAdapter.Variables
 {
     public class ScopeVariableContainer : VariableContainer
     {
@@ -14,6 +15,19 @@ namespace Jint.DebugAdapter
             this.frame = frame;
         }
 
+        public override JsValue SetVariable(string name, JsValue value)
+        {
+            try
+            {
+                scope.SetBindingValue(name, value);
+                return scope.GetBindingValue(name);
+            }
+            catch (Exception ex)
+            {
+                throw new VariableException(ex.Message);
+            }
+        }
+
         protected override IEnumerable<Variable> GetNamedVariables(int? start, int? count)
         {
             IEnumerable<Variable> EnumerateVariables()
@@ -22,7 +36,8 @@ namespace Jint.DebugAdapter
                 {
                     if (frame.ReturnValue != null)
                     {
-                        yield return CreateVariable("Return value", frame.ReturnValue);
+                        var result = CreateVariable("Return value", frame.ReturnValue);
+                        yield return result;
                     }
                     if (!frame.This.IsUndefined())
                     {

@@ -1,12 +1,10 @@
-﻿using System.Text;
-using System.Text.Encodings.Web;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Web;
 using Esprima;
 using Esprima.Ast;
 using Jint.Runtime.Debugger;
 
-namespace Jint.DebugAdapter
+namespace Jint.DebugAdapter.Breakpoints
 {
     /// <summary>
     /// Custom breakpoint extensions for this debugger implementation. Adds hit conditions and log points.
@@ -15,7 +13,7 @@ namespace Jint.DebugAdapter
     {
         private static readonly Regex rxHitCondition = new(@"^((?<operator>(?:<=?|>=?|={1,3}|%))\s*)?(?<count>\d+)$");
 
-        public ExtendedBreakPoint(string source, int line, int column, string condition = null, string hitCondition = null, string logMessage = null) 
+        public ExtendedBreakPoint(string source, int line, int column, string condition = null, string hitCondition = null, string logMessage = null)
             : base(source, line, column, condition)
         {
             HitCondition = ParseHitCondition(hitCondition);
@@ -28,7 +26,7 @@ namespace Jint.DebugAdapter
 
         private Func<uint, bool> ParseHitCondition(string condition)
         {
-            if (String.IsNullOrEmpty(condition))
+            if (string.IsNullOrEmpty(condition))
             {
                 return null;
             }
@@ -41,26 +39,26 @@ namespace Jint.DebugAdapter
             string op = match.Groups["operator"].Success ? match.Groups["operator"].Value : "=";
             string strCount = match.Groups["count"].Value;
 
-            if (!Int32.TryParse(strCount, out int count))
+            if (!int.TryParse(strCount, out int count))
             {
                 throw new FormatException($"Invalid hit condition: {condition} - count should be a 32 bit integer");
             }
 
             return op switch
             {
-                "=" or "==" or "===" => (c => c == count),
-                "<" => (c => c < count),
-                "<=" => (c => c <= count),
-                ">" => (c => c > count),
-                ">=" => (c => c >= count),
-                "%" => (c => (c % count) == 0),
+                "=" or "==" or "===" => c => c == count,
+                "<" => c => c < count,
+                "<=" => c => c <= count,
+                ">" => c => c > count,
+                ">=" => c => c >= count,
+                "%" => c => c % count == 0,
                 _ => throw new NotImplementedException($"Cannot parse hit condition operator '{op}'")
             };
         }
 
         private Script LogMessageToAst(string message)
         {
-            if (String.IsNullOrEmpty(message))
+            if (string.IsNullOrEmpty(message))
             {
                 return null;
             }
@@ -73,7 +71,7 @@ namespace Jint.DebugAdapter
                 value = HttpUtility.JavaScriptStringEncode(value);
                 parts.Add(new Literal(value, "\"" + value + "\""));
             }
-            
+
             // Build a list of string literals (outside braces) and parsed expressions (inside braces):
             while (true)
             {
@@ -98,9 +96,9 @@ namespace Jint.DebugAdapter
                 end = start + partAst.Range.End;
 
                 string code = message[start..end];
-                
+
                 // If braces were empty or unclosed, treat as string literal
-                if (end - 1 == start + 1 ||  message[end - 1] != '}')
+                if (end - 1 == start + 1 || message[end - 1] != '}')
                 {
                     AddLiteral(code);
                     continue;

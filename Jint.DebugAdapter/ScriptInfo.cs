@@ -1,5 +1,6 @@
 ﻿using Esprima;
 using Esprima.Ast;
+using Jint.DebugAdapter.Breakpoints;
 
 namespace Jint.DebugAdapter
 {
