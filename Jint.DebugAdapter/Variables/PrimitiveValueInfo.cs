@@ -5,14 +5,10 @@ namespace Jint.DebugAdapter.Variables
 {
     public class PrimitiveValueInfo : ValueInfo
     {
-        public PrimitiveValueInfo(string name, JsValue value) : base(name)
+        public PrimitiveValueInfo(string name, string value, string type) : base(name)
         {
-            Value = value switch
-            {
-                JsString => JsonSerializer.Serialize(value.ToString(), stringToJsonOptions),
-                _ => value.ToString()
-            };
-            Type = value.Type.ToString();
+            Value = value;
+            Type = type;
         }
     }
 }

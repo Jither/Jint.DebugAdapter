@@ -7,11 +7,6 @@ namespace Jint.DebugAdapter.Variables
 {
     public abstract class ValueInfo
     {
-        protected static readonly JsonSerializerOptions stringToJsonOptions = new()
-        {
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-        };
-
         public string Name { get; }
         public string Value { get; protected set; }
         public string Type { get; protected set; }

@@ -1,10 +1,21 @@
-﻿using Jint.Native;
+﻿using System.Text.Json.Serialization;
+using Jint.Native;
 using Jint.Native.Object;
 using Jint.Runtime.Descriptors;
 using Jither.DebugAdapter.Protocol.Types;
 
 namespace Jint.DebugAdapter.Variables
 {
+    public class JintVariable : Variable
+    {
+        public JintVariable(string name, string value) : base(name, value)
+        {
+        }
+
+        [JsonIgnore]
+        public int SortOrder { get; set; }
+    }
+
     public abstract class VariableContainer
     {
         protected readonly VariableStore store;
@@ -17,9 +28,9 @@ namespace Jint.DebugAdapter.Variables
             Id = id;
         }
 
-        public IEnumerable<Variable> GetVariables(VariableFilter filter, int? start, int? count)
+        public IEnumerable<JintVariable> GetVariables(VariableFilter filter, int? start, int? count)
         {
-            IEnumerable<Variable> result;
+            IEnumerable<JintVariable> result;
             if (filter == VariableFilter.Indexed)
             {
                 result = GetIndexedVariables(start, count);
@@ -34,24 +45,24 @@ namespace Jint.DebugAdapter.Variables
                 result = GetAllVariables(start, count);
             }
 
-            return result;
+            return result.OrderBy(v => v.SortOrder);
         }
 
         public abstract JsValue SetVariable(string name, JsValue value);
 
-        protected Variable CreateVariable(string name, JsValue value)
+        protected JintVariable CreateVariable(string name, JsValue value)
         {
             return CreateVariable(store.CreateValue(name, value));
         }
 
-        protected Variable CreateVariable(string name, PropertyDescriptor prop, ObjectInstance owner)
+        protected JintVariable CreateVariable(string name, PropertyDescriptor prop, ObjectInstance owner)
         {
             return CreateVariable(store.CreateValue(name, prop, owner));
         }
 
-        private Variable CreateVariable(ValueInfo valueInfo)
+        private JintVariable CreateVariable(ValueInfo valueInfo)
         {
-            return new Variable(valueInfo.Name, valueInfo.Value)
+            return new JintVariable(valueInfo.Name, valueInfo.Value)
             {
                 Type = valueInfo.Type,
                 VariablesReference = valueInfo.VariablesReference,
@@ -63,12 +74,12 @@ namespace Jint.DebugAdapter.Variables
             };
         }
 
-        protected abstract IEnumerable<Variable> GetAllVariables(int? start, int? count);
+        protected abstract IEnumerable<JintVariable> GetAllVariables(int? start, int? count);
 
-        protected virtual IEnumerable<Variable> GetNamedVariables(int? start, int? count) =>
+        protected virtual IEnumerable<JintVariable> GetNamedVariables(int? start, int? count) =>
             throw new NotImplementedException("Named filtering not implemented for this variable type");
 
-        protected virtual IEnumerable<Variable> GetIndexedVariables(int? start, int? count) =>
+        protected virtual IEnumerable<JintVariable> GetIndexedVariables(int? start, int? count) =>
             throw new NotImplementedException("Indexed filtering not implemented for this variable type");
     }
 }

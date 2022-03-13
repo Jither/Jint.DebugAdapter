@@ -7,7 +7,7 @@ namespace Jint.DebugAdapter.Variables
 {
     public class ObjectVariableContainer : VariableContainer
     {
-        private readonly ObjectInstance instance;
+        protected readonly ObjectInstance instance;
 
         public ObjectVariableContainer(VariableStore store, int id, ObjectInstance instance) : base(store, id)
         {
@@ -32,7 +32,7 @@ namespace Jint.DebugAdapter.Variables
             throw new VariableException($"Property is read only.");
         }
 
-        protected override IEnumerable<Variable> GetNamedVariables(int? start, int? count)
+        protected override IEnumerable<JintVariable> GetNamedVariables(int? start, int? count)
         {
             var props = instance.GetOwnProperties();
 
@@ -43,12 +43,26 @@ namespace Jint.DebugAdapter.Variables
                 props = props.Skip(start ?? 0).Take(count.Value);
             }
 
-            return props.Select(p => CreateVariable(p.Key.ToString(), p.Value, instance));
+            return AddPrototypeIfExists(props.Select(p => CreateVariable(p.Key.ToString(), p.Value, instance)));
         }
 
-        protected override IEnumerable<Variable> GetAllVariables(int? start, int? count)
+        protected override IEnumerable<JintVariable> GetAllVariables(int? start, int? count)
         {
             return GetNamedVariables(start, count);
+        }
+
+        protected IEnumerable<JintVariable> AddPrototypeIfExists(IEnumerable<JintVariable> vars)
+        {
+            if (instance.Prototype != null)
+            {
+                var prototype = CreateVariable("[[Prototype]]", instance.Prototype);
+                // For prototypes, we want the value to display the prototype's constructor ("type")
+                prototype.Value = prototype.Type;
+                prototype.SortOrder = 10000;
+                vars = vars.Append(prototype);
+            }
+
+            return vars;
         }
     }
 }

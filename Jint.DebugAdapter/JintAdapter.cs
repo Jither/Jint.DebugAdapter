@@ -335,6 +335,7 @@ namespace Jint.DebugAdapter
 
         protected override void StepInRequest(StepInArguments arguments)
         {
+            // TODO: StepInTargets support
             debugger.StepInto();
         }
 

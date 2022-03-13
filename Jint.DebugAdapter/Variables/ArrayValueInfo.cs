@@ -4,13 +4,13 @@ namespace Jint.DebugAdapter.Variables
 {
     public class ArrayValueInfo : ValueInfo
     {
-        public ArrayValueInfo(string name, ObjectInstance value) : base(name)
+        public ArrayValueInfo(string name, string valueDescription, ObjectInstance value) : base(name)
         {
             // Yes, JS supports array length up to 2^32-1, but DAP only supports up to 2^31-1
             int length = (int)value.Length;
             Type = GetObjectType(value);
 
-            Value = $"({length}) []";
+            Value = valueDescription;
 
             if (length > 100)
             {

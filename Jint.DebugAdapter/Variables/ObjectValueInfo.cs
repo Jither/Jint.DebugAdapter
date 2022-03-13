@@ -6,15 +6,9 @@ namespace Jint.DebugAdapter.Variables
 {
     public class ObjectValueInfo : ValueInfo
     {
-        public ObjectValueInfo(string name, ObjectInstance value) : base(name)
+        public ObjectValueInfo(string name, string valueDescription, ObjectInstance value) : base(name)
         {
-            Value = value switch
-            {
-                DateInstance or
-                RegExpInstance => value.ToString(),
-                _ => "{...}" // TODO: Object preview
-            };
-
+            Value = valueDescription;
             Type = GetObjectType(value);
         }
     }

@@ -28,9 +28,9 @@ namespace Jint.DebugAdapter.Variables
             }
         }
 
-        protected override IEnumerable<Variable> GetNamedVariables(int? start, int? count)
+        protected override IEnumerable<JintVariable> GetNamedVariables(int? start, int? count)
         {
-            IEnumerable<Variable> EnumerateVariables()
+            IEnumerable<JintVariable> EnumerateVariables()
             {
                 if (frame != null)
                 {
@@ -60,7 +60,7 @@ namespace Jint.DebugAdapter.Variables
             return result;
         }
 
-        protected override IEnumerable<Variable> GetAllVariables(int? start, int? count)
+        protected override IEnumerable<JintVariable> GetAllVariables(int? start, int? count)
         {
             return GetNamedVariables(start, count);
         }

@@ -4,9 +4,9 @@ namespace Jint.DebugAdapter.Variables
 {
     public class FunctionValueInfo : ValueInfo
     {
-        public FunctionValueInfo(string name, FunctionInstance function) : base(name)
+        public FunctionValueInfo(string name, string valueDescription, FunctionInstance function) : base(name)
         {
-            Value = $"ƒ {name}";
+            Value = valueDescription;
             Type = "Function";
         }
     }

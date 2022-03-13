@@ -24,7 +24,7 @@ namespace Jint.DebugAdapter.Variables
             throw new VariableException($"Cannot modify property value {name}");
         }
 
-        protected override IEnumerable<Variable> GetAllVariables(int? start, int? count)
+        protected override IEnumerable<JintVariable> GetAllVariables(int? start, int? count)
         {
             return new[] { CreateVariable(string.Empty, engine.Invoke(prop.Get, owner, Array.Empty<object>())) };
         }

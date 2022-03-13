@@ -2,9 +2,9 @@
 {
     public class UninitializedValueInfo : ValueInfo
     {
-        public UninitializedValueInfo(string name) : base(name)
+        public UninitializedValueInfo(string name, string value) : base(name)
         {
-            Value = "null";
+            Value = value;
             Type = "Not Initialized";
         }
     }

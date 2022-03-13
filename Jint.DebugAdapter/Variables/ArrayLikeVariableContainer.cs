@@ -7,13 +7,10 @@ using Jint.Native.TypedArray;
 
 namespace Jint.DebugAdapter.Variables
 {
-    public class ArrayLikeVariableContainer : VariableContainer
+    public class ArrayLikeVariableContainer : ObjectVariableContainer
     {
-        private readonly ObjectInstance instance;
-
-        public ArrayLikeVariableContainer(VariableStore store, int id, ObjectInstance instance) : base(store, id)
+        public ArrayLikeVariableContainer(VariableStore store, int id, ObjectInstance instance) : base(store, id, instance)
         {
-            this.instance = instance;
         }
 
         public override JsValue SetVariable(string name, JsValue value)
@@ -34,7 +31,7 @@ namespace Jint.DebugAdapter.Variables
             throw new VariableException($"Property is read only.");
         }
 
-        protected override IEnumerable<Variable> GetAllVariables(int? start, int? count)
+        protected override IEnumerable<JintVariable> GetAllVariables(int? start, int? count)
         {
             var result = GetNamedVariables(null, 0).Concat(GetIndexedVariables(null, 0));
             // Return subset
@@ -46,7 +43,7 @@ namespace Jint.DebugAdapter.Variables
             return result;
         }
 
-        protected override IEnumerable<Variable> GetIndexedVariables(int? start, int? count)
+        protected override IEnumerable<JintVariable> GetIndexedVariables(int? start, int? count)
         {
             var items = instance is TypedArrayInstance ? GetTypedArrayIndexValues(start, count) : GetArrayIndexValues(start, count);
 
@@ -104,7 +101,7 @@ namespace Jint.DebugAdapter.Variables
             return instance.GetOwnProperties();
         }
 
-        protected override IEnumerable<Variable> GetNamedVariables(int? start, int? count)
+        protected override IEnumerable<JintVariable> GetNamedVariables(int? start, int? count)
         {
             var props = instance is TypedArrayInstance ? GetTypedArrayProperties() : GetArrayProperties();
 
@@ -113,7 +110,7 @@ namespace Jint.DebugAdapter.Variables
                 props = props.Skip(start ?? 0).Take(count.Value);
             }
 
-            return props.Select(p => CreateVariable(p.Key.ToString(), p.Value, instance));
+            return AddPrototypeIfExists(props.Select(p => CreateVariable(p.Key.ToString(), p.Value, instance)));
         }
     }
 }
