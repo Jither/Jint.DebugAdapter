@@ -107,7 +107,9 @@ namespace Jither.DebugAdapter.Protocol
                 Memory<byte> buffer = writer.GetMemory(minimumBufferSize);
                 try
                 {
-                    int bytesRead = await inputStream.ReadAsync(buffer, CancellationToken);
+                    int bytesRead = await inputStream.ReadAsync(buffer, CancellationToken)
+                        .ConfigureAwait(continueOnCapturedContext: false);
+
                     if (bytesRead == 0)
                     {
                         break;
@@ -124,14 +126,17 @@ namespace Jither.DebugAdapter.Protocol
                     break;
                 }
 
-                var result = await writer.FlushAsync(CancellationToken);
+                var result = await writer.FlushAsync(CancellationToken)
+                    .ConfigureAwait(continueOnCapturedContext: false);
+
                 if (result.IsCompleted)
                 {
                     break;
                 }
             }
 
-            await writer.CompleteAsync();
+            await writer.CompleteAsync()
+                .ConfigureAwait(continueOnCapturedContext: false);
         }
 
         private async Task ReadPipeAsync(PipeReader reader)
@@ -140,7 +145,8 @@ namespace Jither.DebugAdapter.Protocol
             int nextMessageBodyLength = -1;
             while (true)
             {
-                var result = await reader.ReadAsync(CancellationToken);
+                var result = await reader.ReadAsync(CancellationToken)
+                    .ConfigureAwait(continueOnCapturedContext: false);
                 var buffer = result.Buffer;
 
                 // Keep reading until we cannot parse a header or body from the current buffer
@@ -173,7 +179,8 @@ namespace Jither.DebugAdapter.Protocol
                     break;
                 }
             }
-            await reader.CompleteAsync();
+            await reader.CompleteAsync()
+                .ConfigureAwait(continueOnCapturedContext: false);
         }
 
         private bool TryReadHeader(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> header)

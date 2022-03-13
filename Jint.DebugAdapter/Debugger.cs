@@ -76,7 +76,8 @@ namespace Jint.DebugAdapter
                 }
                 if (t.IsFaulted)
                 {
-                    throw t.Exception;
+                    // TODO: Better handling
+                    throw t.Exception.InnerExceptions[0];
                 }
             });
         }
