@@ -63,7 +63,7 @@ Planned (❌) and currently working (✔) - but not necessarily fully completed 
 
 ### Debug console
 - ✔ Evaluation and "REPL"
-- ❌ Console output (e.g. `console.info`, `console.error`...)
+- ✔ Console output (`assert()`, `clear()`, `debug()`, `error()`, `group()`, `groupCollapsed()`, `info()`, `log()`, `warn()`)
 
 Outstanding general issues
 --------------------------

@@ -75,7 +75,7 @@ namespace Jither.DebugAdapter
             Protocol.Stop();
         }
 
-        protected void SendEvent(ProtocolEventBody body)
+        public void SendEvent(ProtocolEventBody body)
         {
             var evt = new ProtocolEvent(body.EventName, body);
             Protocol.SendEvent(evt);

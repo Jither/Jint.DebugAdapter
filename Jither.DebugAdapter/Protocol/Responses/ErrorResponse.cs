@@ -4,6 +4,10 @@ namespace Jither.DebugAdapter.Protocol.Responses
 {
     public class ErrorResponse : ProtocolResponseBody
     {
+        private int _nextId;
+
+        private int NextId => _nextId++;
+
         public Message Error { get; set; }
 
         public ErrorResponse()
@@ -13,7 +17,7 @@ namespace Jither.DebugAdapter.Protocol.Responses
 
         public ErrorResponse(Exception ex)
         {
-            // TODO: Implement proper error response
+            Error = new Message(NextId, ex.Message);
         }
     }
 }

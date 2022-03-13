@@ -16,20 +16,42 @@ using Jint.DebugAdapter.Variables;
 
 namespace Jint.DebugAdapter
 {
+    public class SourceLocation
+    {
+        public Position Start { get; }
+        public Position End { get; }
+        public Source Source { get; }
+
+        public SourceLocation(Source source, Position start, Position end)
+        {
+            Source = source;
+            Start = start;
+            End = end;
+        }
+    }
+
     public partial class JintAdapter : Adapter
     {
         private readonly Logger logger = LogManager.GetLogger();
         private readonly Debugger debugger;
         private readonly IScriptHost host;
+        private readonly Console console;
         private readonly VariableStore variableStore;
 
         private bool clientLinesStartAt1;
         private bool clientColumnsStartAt1;
 
-        public JintAdapter(Debugger debugger, IScriptHost host)
+        public JintAdapter(Debugger debugger, IScriptHost host, bool registerConsole = false)
         {
             this.debugger = debugger;
             this.host = host;
+            this.console = new Console(this);
+
+            if (registerConsole)
+            {
+                debugger.Engine.SetValue("console", console);
+            }
+
             debugger.Continued += Debugger_Continued;
             debugger.Stopped += Debugger_Stopped;
             debugger.Cancelled += Debugger_Cancelled;
@@ -45,12 +67,7 @@ namespace Jint.DebugAdapter
 
             // TODO: Something is messing with the stack frames (and probably other things).
             // Thread desynchronization due to outputting while running?
-            SendEvent(new OutputEvent(message + "\n") {
-                Category = OutputCategory.Stdout, 
-                Line = clientLocation.Start.Line, 
-                Column = clientLocation.Start.Column, 
-                Source = clientLocation.Source
-            });
+            console.Send(OutputCategory.Stdout, message, location: clientLocation);
         }
 
         private void Debugger_Done()
@@ -345,12 +362,12 @@ namespace Jint.DebugAdapter
             return new VariablesResponse(variables);
         }
 
-        private (Position Start, Position End, Source Source) ToClientSourceLocation(Location location)
+        private SourceLocation ToClientSourceLocation(Location location)
         {
-            return (
-                Start: ToClientPosition(location.Start),
-                End: ToClientPosition(location.End),
-                Source: new Source { Path = host.SourceProvider.GetSourcePath(location.Source) }
+            return new SourceLocation(
+                source: new Source { Path = host.SourceProvider.GetSourcePath(location.Source) },
+                start: ToClientPosition(location.Start),
+                end: ToClientPosition(location.End)
             );
         }
 
