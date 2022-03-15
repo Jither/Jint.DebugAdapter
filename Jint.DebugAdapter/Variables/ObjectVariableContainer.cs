@@ -34,6 +34,7 @@ namespace Jint.DebugAdapter.Variables
 
         protected override IEnumerable<JintVariable> GetNamedVariables(int? start, int? count)
         {
+            // TODO: Include prototype's getters
             var props = instance.GetOwnProperties();
 
             // Return subset
@@ -56,8 +57,9 @@ namespace Jint.DebugAdapter.Variables
             if (instance.Prototype != null)
             {
                 var prototype = CreateVariable("[[Prototype]]", instance.Prototype);
-                // For prototypes, we want the value to display the prototype's constructor ("type")
+                // For prototypes, we want the value to display the prototype's constructor ("type") (a la Chromium devtools)
                 prototype.Value = prototype.Type;
+                // Place last
                 prototype.SortOrder = 10000;
                 vars = vars.Append(prototype);
             }

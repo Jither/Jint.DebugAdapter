@@ -15,18 +15,15 @@ namespace Jint.DebugAdapter.Variables
 {
     public class VariableStore
     {
-        private static readonly JsonSerializerOptions stringToJsonOptions = new()
-        {
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-        };
-
         private readonly Engine engine;
+        private readonly ValueInfoProvider infoProvider;
         private int nextId = 1;
         private readonly Dictionary<int, VariableContainer> containers = new();
 
         public VariableStore(Engine engine)
         {
             this.engine = engine;
+            this.infoProvider = new ValueInfoProvider(this);
         }
 
         public int Add(DebugScope scope, CallFrame frame = null)
@@ -64,88 +61,14 @@ namespace Jint.DebugAdapter.Variables
             return containers[id];
         }
 
-        /// <summary>
-        /// Returns the string representation of a JsValue (displayed in the Variables panel in the debugger)
-        /// </summary>
-        private string GetValueDescription(string name, JsValue value)
-        {
-            return value switch
-            {
-                null => "null",
-
-                JsNull or
-                JsNumber or
-                JsBigInt or
-                JsBoolean or
-                JsUndefined or
-                JsSymbol => value.ToString(),
-
-                JsString => JsonSerializer.Serialize(value.ToString(), stringToJsonOptions),
-
-                // TODO: Array preview
-                ArgumentsInstance arr => $"({arr.Length}) []",
-                ArrayInstance arr => $"({arr.Length}) []",
-                TypedArrayInstance arr => $"({arr.Length}) []",
-
-                FunctionInstance func => $"ƒ {GetFunctionName(func) ?? name}",
-
-                DateInstance or
-                RegExpInstance => value.ToString(),
-                ObjectInstance => "{...}", // TODO: Object preview
-                _ => value.ToString()
-            };
-        }
-
-        private string GetFunctionName(FunctionInstance func)
-        {
-            var name = func.GetOwnProperty("name").Value;
-            if (!name.IsUndefined())
-            {
-                return name.ToString();
-            }
-            return null;
-        }
-
         public ValueInfo CreateValue(string name, JsValue value)
         {
-            string valueDescription = GetValueDescription(name, value);
-            return value switch
-            {
-                // If value is (CLR) null, it means the variable is uninitialized (let/const)
-                null => new UninitializedValueInfo(name, valueDescription),
-
-                JsString or
-                JsNumber or
-                JsBigInt or
-                JsBoolean or
-                JsUndefined or
-                JsSymbol or
-                JsNull => new PrimitiveValueInfo(name, valueDescription, value.Type.ToString()),
-
-                ArgumentsInstance arr => new ArrayValueInfo(name,  valueDescription, arr) { VariablesReference = AddArrayLike(arr) },
-                ArrayInstance arr => new ArrayValueInfo(name, valueDescription, arr) { VariablesReference = AddArrayLike(arr) },
-                TypedArrayInstance arr => new ArrayValueInfo(name, valueDescription, arr) { VariablesReference = AddArrayLike(arr) },
-
-                FunctionInstance func => new FunctionValueInfo(name, valueDescription, func),
-                ObjectInstance obj => new ObjectValueInfo(name, valueDescription, obj) { VariablesReference = Add(obj) },
-                _ => throw new NotImplementedException($"Unimplemented JsValue type: {value.GetType()}")
-            };
+            return infoProvider.Create(name, value);
         }
 
         public ValueInfo CreateValue(string name, PropertyDescriptor prop, ObjectInstance owner)
         {
-            if (prop.Get != null)
-            {
-                return new GetterValueInfo(name)
-                {
-                    // Add a variable reference for lazy evaluation of the getter
-                    VariablesReference = Add(prop, owner),
-                };
-            }
-            else
-            {
-                return CreateValue(name, prop.Value);
-            }
+            return infoProvider.Create(name, prop, owner);
         }
 
         public ValueInfo SetValue(int variablesReference, string name, JsValue value)

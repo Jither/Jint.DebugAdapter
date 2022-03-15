@@ -5,11 +5,11 @@ using Jither.DebugAdapter.Protocol.Types;
 
 namespace Jint.DebugAdapter.Variables
 {
-    public abstract class ValueInfo
+    public class ValueInfo
     {
         public string Name { get; }
-        public string Value { get; protected set; }
-        public string Type { get; protected set; }
+        public string Value { get; set; }
+        public string Type { get; set; }
         public int VariablesReference { get; set; }
         public VariablePresentationHint PresentationHint { get; set; }
         public int? NamedVariables { get; set; }
@@ -17,14 +17,9 @@ namespace Jint.DebugAdapter.Variables
         public string MemoryReference { get; set; }
         public string EvaluateName { get; set; }
 
-        protected ValueInfo(string name)
+        public ValueInfo(string name)
         {
             Name = name;
-        }
-
-        protected static string GetObjectType(ObjectInstance obj)
-        {
-            return obj.Get("constructor")?.Get("name")?.ToString() ?? "Object";
         }
     }
 }
