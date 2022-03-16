@@ -2,6 +2,7 @@
 using Jint.Native.Object;
 using Jint.Runtime;
 using Jint.Native;
+using Jint.Runtime.Descriptors;
 
 namespace Jint.DebugAdapter.Variables
 {
@@ -34,8 +35,8 @@ namespace Jint.DebugAdapter.Variables
 
         protected override IEnumerable<JintVariable> GetNamedVariables(int? start, int? count)
         {
-            // TODO: Include prototype's getters
             var props = instance.GetOwnProperties();
+            props = props.Concat(GetPrototypeProperties());
 
             // Return subset
             // TODO: Does this ever happen for anything except arrays in our implementation?
@@ -65,6 +66,24 @@ namespace Jint.DebugAdapter.Variables
             }
 
             return vars;
+        }
+
+        protected IEnumerable<KeyValuePair<JsValue, PropertyDescriptor>> GetPrototypeProperties()
+        {
+            // TODO: Handle shadowed prototype properties
+            var proto = instance.Prototype;
+            while (proto != null && proto is not ObjectConstructor)
+            {
+                var props = proto.GetOwnProperties();
+                foreach (var prop in props)
+                {
+                    if (prop.Value.Get != null)
+                    {
+                        yield return prop;
+                    }
+                }
+                proto = proto.Prototype;
+            }
         }
     }
 }

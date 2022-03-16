@@ -4,6 +4,7 @@ using Jint.Native;
 using Jint.Runtime;
 using Jint.Runtime.Descriptors;
 using Jint.Native.TypedArray;
+using Jint.Native.Argument;
 
 namespace Jint.DebugAdapter.Variables
 {
@@ -45,7 +46,12 @@ namespace Jint.DebugAdapter.Variables
 
         protected override IEnumerable<JintVariable> GetIndexedVariables(int? start, int? count)
         {
-            var items = instance is TypedArrayInstance ? GetTypedArrayIndexValues(start, count) : GetArrayIndexValues(start, count);
+            var items = instance switch
+            {
+                TypedArrayInstance => GetTypedArrayIndexValues(start, count),
+                ArgumentsInstance => GetArgumentsArrayIndexValues(start, count),
+                _ => GetArrayIndexValues(start, count)
+            };
 
             return items.Select(i => CreateVariable(i.Key, i.Value));
         }
@@ -66,6 +72,16 @@ namespace Jint.DebugAdapter.Variables
                 items = items.Skip(start.Value);
             }
             return items.Take(length).Select(kv => KeyValuePair.Create(kv.Key.ToString(), kv.Value.Value));
+        }
+
+        private IEnumerable<KeyValuePair<string, JsValue>> GetArgumentsArrayIndexValues(int? start, int? count)
+        {
+            var result = instance.GetOwnProperties().Where(p => IsArrayIndex(p.Key));
+            if (count > 0)
+            {
+                result = result.Skip(start ?? 0).Take(count.Value);
+            }
+            return result.Select(kv => KeyValuePair.Create(kv.Key.ToString(), kv.Value.Value));
         }
 
         private IEnumerable<KeyValuePair<string, JsValue>> GetTypedArrayIndexValues(int? start, int? count)
@@ -101,9 +117,23 @@ namespace Jint.DebugAdapter.Variables
             return instance.GetOwnProperties();
         }
 
+        private IEnumerable<KeyValuePair<JsValue, PropertyDescriptor>> GetArgumentsProperties()
+        {
+            // We can assume that array indices are the first Length properties returned by GetOwnProperties
+            // https://tc39.es/ecma262/#sec-ordinaryownpropertykeys
+            return instance.GetOwnProperties().Where(p => !IsArrayIndex(p.Key));
+        }
+
         protected override IEnumerable<JintVariable> GetNamedVariables(int? start, int? count)
         {
-            var props = instance is TypedArrayInstance ? GetTypedArrayProperties() : GetArrayProperties();
+            var props = instance switch
+            {
+                TypedArrayInstance => GetTypedArrayProperties(),
+                ArgumentsInstance => GetArgumentsProperties(),
+                _ => GetArrayProperties()
+            };
+
+            props = props.Concat(GetPrototypeProperties());
 
             if (count > 0)
             {
@@ -111,6 +141,19 @@ namespace Jint.DebugAdapter.Variables
             }
 
             return AddPrototypeIfExists(props.Select(p => CreateVariable(p.Key.ToString(), p.Value, instance)));
+        }
+
+        private static bool IsArrayIndex(JsValue value)
+        {
+            if (value.IsNumber())
+            {
+                var numValue = value.AsNumber();
+                uint intValue = (uint)numValue;
+                return numValue == intValue && intValue != UInt32.MaxValue;
+            }
+
+            // TODO: Handle numeric string
+            return false;
         }
     }
 }

@@ -117,7 +117,7 @@ namespace Jint.DebugAdapter.Variables
                 // TODO: Array preview
                 ArgumentsInstance arr => $"({arr.Length}) []",
                 ArrayInstance arr => $"({arr.Length}) []",
-                TypedArrayInstance arr => $"({arr.Length}) []",
+                TypedArrayInstance arr => $"{GetObjectType(arr)}({arr.Length}) []",
 
                 FunctionInstance func => $"ƒ {GetFunctionName(func) ?? name}",
 
