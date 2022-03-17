@@ -117,7 +117,6 @@ namespace Jint.DebugAdapter.Variables
                 // escaped - but otherwise with minimal escaping for readability.
                 JsString => JsonSerializer.Serialize(value.ToString(), stringToJsonOptions),
 
-                // TODO: Array preview
                 ArgumentsInstance arr => RenderArrayPreview(arr, String.Empty),
                 ArrayInstance arr => RenderArrayPreview(arr, String.Empty),
                 TypedArrayInstance arr => RenderArrayPreview(arr, GetObjectType(arr)),
@@ -126,8 +125,8 @@ namespace Jint.DebugAdapter.Variables
 
                 DateInstance or
                 RegExpInstance => value.ToString(),
-                // TODO: Object preview
-                ObjectInstance => "{...}", 
+                ObjectInstance obj => RenderObjectPreview(obj),
+
                 _ => value.ToString()
             };
         }
@@ -205,8 +204,39 @@ namespace Jint.DebugAdapter.Variables
                 propsBuilder.Append(RenderValue(i.ToString(), value));
             }
 
-            builder.Append($"[{propsBuilder.ToString()}]");
+            builder.Append($"[{propsBuilder}]");
             return builder.ToString();
+        }
+
+        protected string RenderObjectPreview(ObjectInstance obj)
+        {
+            // We subtract 2 from the budget to leave room for braces
+            var propsBuilder = new BudgetStringBuilder(objectPreviewBudget - 2, ", ");
+
+            var keys = obj.GetOwnPropertyKeys();
+            foreach (var key in keys)
+            {
+                if (!propsBuilder.CheckBudget())
+                {
+                    break;
+                }
+                var value = obj.Get(key);
+                propsBuilder.Append(RenderPropertyPreview(key, value));
+            }
+
+            return $"{{{propsBuilder}}}";
+        }
+
+        protected string RenderPropertyPreview(JsValue key, JsValue value)
+        {
+            string strValue = value switch
+            {
+                FunctionInstance => "ƒ",
+                ObjectInstance => "{…}",
+                _ => RenderValue(key.ToString(), value)
+            };
+
+            return $"{key}: {strValue}";
         }
     }
 }
