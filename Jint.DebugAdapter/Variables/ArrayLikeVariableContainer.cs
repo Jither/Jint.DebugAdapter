@@ -36,7 +36,7 @@ namespace Jint.DebugAdapter.Variables
         {
             var result = GetNamedVariables(null, 0).Concat(GetIndexedVariables(null, 0));
             // Return subset
-            // TODO: Does this ever happen?
+            // TODO: Does this ever happen? Unfiltered variables being paged?
             if (count > 0)
             {
                 result = result.Skip(start ?? 0).Take(count.Value);
@@ -76,6 +76,8 @@ namespace Jint.DebugAdapter.Variables
 
         private IEnumerable<KeyValuePair<string, JsValue>> GetArgumentsArrayIndexValues(int? start, int? count)
         {
+            // Unlike Array instances, we CAN'T assume order of properties on Arguments.
+            // So, we check if each property key is an array index.
             var result = instance.GetOwnProperties().Where(p => IsArrayIndex(p.Key));
             if (count > 0)
             {
@@ -119,8 +121,8 @@ namespace Jint.DebugAdapter.Variables
 
         private IEnumerable<KeyValuePair<JsValue, PropertyDescriptor>> GetArgumentsProperties()
         {
-            // We can assume that array indices are the first Length properties returned by GetOwnProperties
-            // https://tc39.es/ecma262/#sec-ordinaryownpropertykeys
+            // Unlike Array instances, we CAN'T assume the order of properties on Arguments.
+            // So, we're checking if each property is a valid array index.
             return instance.GetOwnProperties().Where(p => !IsArrayIndex(p.Key));
         }
 

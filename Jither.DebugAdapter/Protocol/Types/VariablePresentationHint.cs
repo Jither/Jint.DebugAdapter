@@ -14,7 +14,6 @@
         /// Set of attributes represented as an array of strings. Before introducing additional values, try to use
         /// the listed values.
         /// </summary>
-        // TODO: List<StringEnum<>>
         public List<VariableAttribute> Attributes { get; set; }
 
         /// <summary>

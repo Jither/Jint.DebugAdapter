@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Jint.DebugAdapter.Helpers;
 using Jint.Native;
 using Jint.Native.Argument;
 using Jint.Native.Array;
@@ -20,6 +21,8 @@ namespace Jint.DebugAdapter.Variables
 {
     public class ValueInfoProvider
     {
+        private const int objectPreviewBudget = 50;
+
         private static readonly JsonSerializerOptions stringToJsonOptions = new()
         {
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
@@ -115,9 +118,9 @@ namespace Jint.DebugAdapter.Variables
                 JsString => JsonSerializer.Serialize(value.ToString(), stringToJsonOptions),
 
                 // TODO: Array preview
-                ArgumentsInstance arr => $"({arr.Length}) []",
-                ArrayInstance arr => $"({arr.Length}) []",
-                TypedArrayInstance arr => $"{GetObjectType(arr)}({arr.Length}) []",
+                ArgumentsInstance arr => RenderArrayPreview(arr, String.Empty),
+                ArrayInstance arr => RenderArrayPreview(arr, String.Empty),
+                TypedArrayInstance arr => RenderArrayPreview(arr, GetObjectType(arr)),
 
                 FunctionInstance func => $"ƒ {GetFunctionName(func) ?? name}",
 
@@ -181,6 +184,29 @@ namespace Jint.DebugAdapter.Variables
                 return name.ToString();
             }
             return null;
+        }
+
+        protected string RenderArrayPreview(ObjectInstance obj, string prefix)
+        {
+            var builder = new BudgetStringBuilder(objectPreviewBudget);
+            builder.Append($"{prefix}({obj.Length})".CropEnd(builder.Budget));
+            builder.Append(" ");
+
+            // We subtract 2 from the budget to leave room for brackets
+            var propsBuilder = new BudgetStringBuilder(builder.Budget - 2, ", ");
+
+            for (int i = 0; i < obj.Length; i++)
+            {
+                if (!propsBuilder.CheckBudget())
+                {
+                    break;
+                }
+                var value = obj.Get(i);
+                propsBuilder.Append(RenderValue(i.ToString(), value));
+            }
+
+            builder.Append($"[{propsBuilder.ToString()}]");
+            return builder.ToString();
         }
     }
 }

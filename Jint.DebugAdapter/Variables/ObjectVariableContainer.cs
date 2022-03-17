@@ -38,7 +38,7 @@ namespace Jint.DebugAdapter.Variables
             var props = instance.GetOwnProperties();
             props = props.Concat(GetPrototypeProperties());
 
-            // Return subset
+            // Return subset/paging
             // TODO: Does this ever happen for anything except arrays in our implementation?
             if (count > 0)
             {
@@ -50,6 +50,8 @@ namespace Jint.DebugAdapter.Variables
 
         protected override IEnumerable<JintVariable> GetAllVariables(int? start, int? count)
         {
+            // We don't distinguish between named and indexed variables, except for Array-likes.
+            // All properties are returned from GetNamedVariables.
             return GetNamedVariables(start, count);
         }
 
