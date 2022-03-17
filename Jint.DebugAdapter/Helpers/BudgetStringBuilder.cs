@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Jint.DebugAdapter.Helpers
+﻿namespace Jint.DebugAdapter.Helpers
 {
     // Inspired by https://github.com/microsoft/vscode-js-debug/
     public class BudgetStringBuilder

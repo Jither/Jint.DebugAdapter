@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Jither.DebugAdapter.Protocol.Events;
+﻿using Jither.DebugAdapter.Protocol.Events;
 using Jither.DebugAdapter.Protocol.Requests;
 using Jither.DebugAdapter.Protocol.Responses;
 using Jither.DebugAdapter.Protocol.Types;
@@ -90,29 +85,15 @@ namespace Jint.DebugAdapter
         {
             variableStore.Clear();
 
-            SendEvent(new StoppedEvent(
-                reason switch
-                {
-                    PauseReason.Breakpoint => StopReason.Breakpoint,
-                    PauseReason.Entry => StopReason.Entry,
-                    PauseReason.Exception => StopReason.Exception,
-                    PauseReason.Pause => StopReason.Pause,
-                    PauseReason.Step => StopReason.Step,
-                    PauseReason.DebuggerStatement => StopReason.Breakpoint,
-                    _ => throw new NotImplementedException($"DebugAdapter reason not implemented for {reason}")
-                }
-            )
+            SendEvent(reason switch
             {
-                Description = reason switch
-                {
-                    PauseReason.Breakpoint => "Hit breakpoint",
-                    PauseReason.Entry => "Stopped on entry",
-                    PauseReason.Exception => "An error occurred",
-                    PauseReason.Pause => "Paused by user",
-                    PauseReason.Step => "Stopped after step",
-                    PauseReason.DebuggerStatement => "Hit debugger statement",
-                    _ => throw new NotImplementedException($"DebugAdapter reason not implemented for {reason}")
-                }
+                PauseReason.Breakpoint => new StoppedEvent(StopReason.Breakpoint) { Description = "Hit breakpoint" },
+                PauseReason.Entry => new StoppedEvent(StopReason.Entry) { Description = "Paused on entry" },
+                PauseReason.Exception => new StoppedEvent(StopReason.Exception) { Description = "An error occurred" },
+                PauseReason.Pause => new StoppedEvent(StopReason.Pause) { Description = "Paused by user" },
+                PauseReason.Step => new StoppedEvent(StopReason.Step) { Description = "Paused after step" },
+                PauseReason.DebuggerStatement => new StoppedEvent(StopReason.Breakpoint) { Description = "Hit debugger statement" },
+                _ => throw new NotImplementedException($"DebugAdapter reason not implemented for {reason}")
             });
         }
 
@@ -397,7 +378,7 @@ namespace Jint.DebugAdapter
         private Position ToJintPosition(int line, int? column)
         {
             column ??= (clientColumnsStartAt1 ? 1 : 0);
-            return new Esprima.Position(
+            return new Position(
                 clientLinesStartAt1 ? line : line + 1,
                 clientColumnsStartAt1 ? column.Value - 1 : column.Value
                 );

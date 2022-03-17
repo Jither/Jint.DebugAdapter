@@ -1,5 +1,4 @@
-﻿using Jither.DebugAdapter.Protocol.Types;
-using Jint.Runtime.Descriptors;
+﻿using Jint.Runtime.Descriptors;
 using Jint.Native.Object;
 using Jint.Native;
 

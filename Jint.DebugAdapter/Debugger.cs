@@ -1,5 +1,4 @@
-﻿using System.Threading.Channels;
-using Esprima;
+﻿using Esprima;
 using Esprima.Ast;
 using Jint.DebugAdapter.Breakpoints;
 using Jint.Native;

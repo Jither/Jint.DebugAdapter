@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
+using System.Globalization;
 using Jint.Native;
 using Jint.Runtime;
 using Jither.DebugAdapter.Protocol.Events;
@@ -14,6 +11,8 @@ namespace Jint.DebugAdapter
     internal class Console
     {
         private readonly JintAdapter adapter;
+        private readonly Dictionary<string, long> timers = new();
+        private readonly Dictionary<string, uint> counters = new();
 
         public Console(JintAdapter adapter)
         {
@@ -34,7 +33,32 @@ namespace Jint.DebugAdapter
             InternalSend(OutputCategory.Console, "\x1b[2J");
         }
 
-        // TODO: Count(), CountReset()
+        public void Count(string label = null)
+        {
+            label ??= "default";
+
+            if (!counters.TryGetValue(label, out var count))
+            {
+                count = 0;
+            }
+            count++;
+            counters[label] = count;
+            Log($"{label}: {count}");
+        }
+
+        public void CountReset(string label = null)
+        {
+            label ??= "default";
+
+            if (!counters.ContainsKey(label))
+            {
+                Warn($"Count for '{label}' does not exist.");
+                return;
+            }
+
+            counters[label] = 0;
+            Log($"{label}: 0");
+        }
 
         public void Debug(params JsValue[] values)
         {
@@ -73,7 +97,45 @@ namespace Jint.DebugAdapter
             Send(OutputCategory.Stdout, values);
         }
 
-        // TODO: Table(), Time(), TimeEnd() TimeLog()
+        // TODO: Table()
+
+        public void Time(string label = null)
+        {
+            label ??= "default";
+
+            timers[label] = Stopwatch.GetTimestamp();
+        }
+
+        public void TimeEnd(string label = null)
+        {
+            InternalTimeLog(label, end: true);
+        }
+
+        public void TimeLog(string label = null)
+        {
+            InternalTimeLog(label, end: false);
+        }
+
+        private void InternalTimeLog(string label, bool end)
+        {
+            label ??= "default";
+
+            if (!timers.TryGetValue(label, out var started))
+            {
+                Warn($"Timer '{label}' does not exist.");
+                return;
+            }
+
+            var elapsed = Stopwatch.GetTimestamp() - started;
+            string ms = (elapsed / 10000d).ToString(CultureInfo.InvariantCulture);
+            string message = $"{label}: {ms} ms";
+            if (end)
+            {
+                message += " - timer ended.";
+                timers.Remove(label);
+            }
+            Log(message);
+        }
 
         public void Trace()
         {
