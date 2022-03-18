@@ -36,6 +36,8 @@ namespace Jint.DebugAdapterExample
 
             endpoint.Initialize();
             await endpoint.StartAsync();
+            // TODO: This is for testing script execution after disconnect. Remove when working.
+            Console.ReadKey();
         }
     }
 }

@@ -19,13 +19,14 @@ namespace Jint.DebugAdapter
             Running,
             Pausing,
             Stepping,
-            Terminating
+            Terminating,
+            Terminated
         }
 
         private readonly Dictionary<string, ScriptInfo> scriptInfoBySourceId = new();
         private readonly Engine engine;
         private readonly ManualResetEvent waitForContinue = new(false);
-        private readonly CancellationTokenSource cts = new();
+        private CancellationTokenSource cts;
         private StepMode nextStep;
         private DebuggerState state;
 
@@ -48,6 +49,7 @@ namespace Jint.DebugAdapter
 
         public void Execute(string sourceId, string source, bool debug)
         {
+            cts = new CancellationTokenSource();
             var ast = PrepareScript(sourceId, source);
             Task.Run(() =>
             {
@@ -67,8 +69,10 @@ namespace Jint.DebugAdapter
                 finally
                 {
                     Detach();
+                    state = DebuggerState.Terminated;
                 }
-            }, cts.Token).ContinueWith(t =>
+            }, cts.Token)
+            .ContinueWith(t =>
             {
                 if (t.IsCanceled)
                 {
@@ -84,7 +88,11 @@ namespace Jint.DebugAdapter
 
         public ScriptInfo GetScriptInfo(string id)
         {
-            return scriptInfoBySourceId.GetValueOrDefault(id);
+            if (!scriptInfoBySourceId.TryGetValue(id, out var info))
+            {
+                throw new DebuggerException($"Requested source '{id}' not loaded.");
+            }
+            return info;
         }
 
         public JsValue Evaluate(string expression)
@@ -135,6 +143,13 @@ namespace Jint.DebugAdapter
         public void Pause()
         {
             state = DebuggerState.Pausing;
+        }
+
+        public void Disconnect()
+        {
+            Detach();
+            // Make sure we're not paused
+            waitForContinue.Set();
         }
 
         public void ClearBreakpoints()
@@ -190,7 +205,8 @@ namespace Jint.DebugAdapter
 
         private void RegisterScriptInfo(string id, Script ast)
         {
-            scriptInfoBySourceId.Add(id, new ScriptInfo(ast));
+            // This may be called multiple times with the same ID (on e.g. restart)
+            scriptInfoBySourceId[id] = new ScriptInfo(ast);
         }
 
         private StepMode DebugHandler_Step(object sender, DebugInformation e)

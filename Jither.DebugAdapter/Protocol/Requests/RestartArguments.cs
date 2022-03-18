@@ -12,7 +12,6 @@
         /// <summary>
         /// The latest version of the 'launch' or 'attach' configuration.
         /// </summary>
-        // TODO: This is either AttachArguments or LaunchArguments
-        public object Arguments { get; set; }
+        public ConfigurationArguments Arguments { get; set; }
     }
 }

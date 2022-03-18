@@ -40,7 +40,7 @@ Planned (❌) and currently working (✔) - but not necessarily fully completed 
 - ✔ Step points are the same as the possible breakpoint positions listed above
 - ✔ Continue/Pause
 - ✔ Terminate
-- ❌ Disconnect (but keep debuggee running/detach)
+- ✔ Disconnect (but keep debuggee running/detach)
 - ❌ Restart
 
 ### Variables

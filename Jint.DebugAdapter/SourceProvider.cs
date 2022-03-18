@@ -15,21 +15,32 @@ namespace Jint.DebugAdapter
 
         public string Register(string path)
         {
-            var sourceId = Guid.NewGuid().ToString();
-            pathsBySourceId.Add(sourceId, path);
-            sourceIdsByPath.Add(path, sourceId);
+            if (!sourceIdsByPath.TryGetValue(path, out string sourceId))
+            {
+                sourceId = Guid.NewGuid().ToString();
+                pathsBySourceId.Add(sourceId, path);
+                sourceIdsByPath.Add(path, sourceId);
+            }
 
             return sourceId;
         }
 
         public string GetSourceId(string path)
         {
-            return sourceIdsByPath.GetValueOrDefault(path);
+            if (!sourceIdsByPath.TryGetValue(path, out string id))
+            {
+                throw new DebuggerException($"Source ID for path '{path}' not found.");
+            }
+            return id;
         }
 
         public string GetSourcePath(string sourceId)
         {
-            return pathsBySourceId.GetValueOrDefault(sourceId);
+            if (!pathsBySourceId.TryGetValue(sourceId, out string path))
+            {
+                throw new DebuggerException($"Path for Source ID '{sourceId}' not found.");
+            }
+            return path;
         }
     }
 }

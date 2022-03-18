@@ -8,6 +8,7 @@ using Thread = Jither.DebugAdapter.Protocol.Types.Thread;
 using Jither.DebugAdapter.Helpers;
 using Esprima;
 using Jint.DebugAdapter.Variables;
+using System.Text.Json;
 
 namespace Jint.DebugAdapter
 {
@@ -35,7 +36,8 @@ namespace Jint.DebugAdapter
 
         private bool clientLinesStartAt1;
         private bool clientColumnsStartAt1;
-
+        private bool shouldTerminateOnDisconnect;
+    
         public SourceLocation CurrentLocation
         {
             get
@@ -65,13 +67,11 @@ namespace Jint.DebugAdapter
             debugger.Done += Debugger_Done;
             debugger.LogPoint += Debugger_LogPoint;
 
-            variableStore = new VariableStore(debugger.Engine);
+            variableStore = new VariableStore();
         }
 
         private void Debugger_LogPoint(string message, DebugInformation e)
         {
-            var clientLocation = ToClientSourceLocation(e.Location);
-
             // TODO: Something is messing with the stack frames (and probably other things).
             // Thread desynchronization due to outputting while running?
             console.Send(OutputCategory.Stdout, message);
@@ -90,7 +90,9 @@ namespace Jint.DebugAdapter
 
         private void Debugger_Cancelled()
         {
-            Protocol.Stop();
+            // TODO: We can't stop protocol here, because Cancelled also happens when handling Restart.
+            // Check if we *ever* need to stop the protocol
+            //Protocol.Stop();
         }
 
         private void Debugger_Stopped(PauseReason reason, DebugInformation info)
@@ -118,7 +120,9 @@ namespace Jint.DebugAdapter
 
         protected override void AttachRequest(AttachArguments arguments)
         {
-            
+            // "If the ‘attach’ request was used to connect to the debuggee, ‘disconnect’ does not terminate
+            // the debuggee."
+            shouldTerminateOnDisconnect = false;
         }
 
         protected override BreakpointLocationsResponse BreakpointLocationsRequest(BreakpointLocationsArguments arguments)
@@ -155,7 +159,23 @@ namespace Jint.DebugAdapter
 
         protected override void DisconnectRequest(DisconnectArguments arguments)
         {
-            
+            // Terminate if:
+            // - We're restarting (debug client will launch the adapter again)
+            // - If the client explicitly requests termination
+            // - If the client DOESN'T specify if we should terminate, but initial request (launch/attach) indicates
+            //   that we should.
+            if (
+                arguments.Restart == true ||
+                arguments.TerminateDebuggee == true ||
+                (arguments.TerminateDebuggee == null && shouldTerminateOnDisconnect)
+            )
+            {
+                debugger.Terminate();
+            }
+            else if (arguments.SuspendDebuggee != true)
+            {
+                debugger.Disconnect();
+            }
         }
 
         protected override EvaluateResponse EvaluateRequest(EvaluateArguments arguments)
@@ -194,23 +214,35 @@ namespace Jint.DebugAdapter
                 SupportsDelayedStackTraceLoading = true,
                 SupportsHitConditionalBreakpoints = true,
                 SupportsLogPoints = true,
-                SupportsSetVariable = true
+                SupportsSetVariable = true,
+                SupportSuspendDebuggee = true,
+                SupportTerminateDebuggee = true,
+                SupportsRestartRequest = true
             };
         }
 
         protected override void LaunchRequest(LaunchArguments arguments)
         {
+            // "If the debuggee has been started with the ‘launch’ request,
+            // the ‘disconnect’ request terminates the debuggee."
+            shouldTerminateOnDisconnect = true;
+
+            Launch(arguments);
+
+            SendEvent(new InitializedEvent());
+        }
+
+        private void Launch(ConfigurationArguments arguments)
+        {
             string program = arguments.AdditionalProperties["program"].GetString();
             bool pauseOnEntry = arguments.AdditionalProperties["stopOnEntry"].GetBoolean();
-            debugger.PauseOnEntry = pauseOnEntry;
-
             // Not a fan of double negatives (i.e. testing for !noDebug), so let's convert it to debug
             bool debug = !(arguments.NoDebug ?? false);
 
+            debugger.PauseOnEntry = pauseOnEntry;
+            
             // TODO: Need to figure out threading here...
             host.Launch(program, debug, arguments.AdditionalProperties);
-
-            SendEvent(new InitializedEvent());
         }
 
         protected override LoadedSourcesResponse LoadedSourcesRequest()
@@ -230,7 +262,9 @@ namespace Jint.DebugAdapter
 
         protected override void RestartRequest(RestartArguments arguments)
         {
-            
+            // TODO: Restart is still totally broken - threading issues.
+            debugger.Terminate();
+            Launch(arguments.Arguments);
         }
 
         protected override ScopesResponse ScopesRequest(ScopesArguments arguments)

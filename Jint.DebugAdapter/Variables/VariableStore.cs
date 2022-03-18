@@ -15,14 +15,12 @@ namespace Jint.DebugAdapter.Variables
 {
     public class VariableStore
     {
-        private readonly Engine engine;
         private readonly ValueInfoProvider infoProvider;
         private int nextId = 1;
         private readonly Dictionary<int, VariableContainer> containers = new();
 
-        public VariableStore(Engine engine)
+        public VariableStore()
         {
-            this.engine = engine;
             this.infoProvider = new ValueInfoProvider(this);
         }
 
@@ -46,7 +44,7 @@ namespace Jint.DebugAdapter.Variables
 
         public int Add(PropertyDescriptor prop, ObjectInstance owner)
         {
-            var container = new PropertyVariableContainer(this, nextId++, prop, owner, engine);
+            var container = new PropertyVariableContainer(this, nextId++, prop, owner);
             return Add(container);
         }
 

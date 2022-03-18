@@ -116,6 +116,10 @@ namespace Jither.DebugAdapter.Protocol
                     }
                     writer.Advance(bytesRead);
                 }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
                 catch (Exception ex)
                 {
                     HandleFatalError(ex);
@@ -123,7 +127,6 @@ namespace Jither.DebugAdapter.Protocol
                     {
                         throw;
                     }
-                    break;
                 }
 
                 var result = await writer.FlushAsync(CancellationToken)
@@ -478,7 +481,7 @@ namespace Jither.DebugAdapter.Protocol
                         IsSending = false;
                     }
                     HandleFatalError(ex);
-                    if (System.Diagnostics.Debugger.IsAttached)
+                    if (Debugger.IsAttached)
                     {
                         throw;
                     }

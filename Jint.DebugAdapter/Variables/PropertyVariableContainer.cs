@@ -7,14 +7,12 @@ namespace Jint.DebugAdapter.Variables
     public class PropertyVariableContainer : VariableContainer
     {
         private readonly PropertyDescriptor prop;
-        private readonly Engine engine;
         private readonly ObjectInstance owner;
 
-        public PropertyVariableContainer(VariableStore store, int id, PropertyDescriptor prop, ObjectInstance owner, Engine engine) : base(store, id)
+        public PropertyVariableContainer(VariableStore store, int id, PropertyDescriptor prop, ObjectInstance owner) : base(store, id)
         {
             this.prop = prop;
             this.owner = owner;
-            this.engine = engine;
         }
 
         public override JsValue SetVariable(string name, JsValue value)
@@ -25,7 +23,7 @@ namespace Jint.DebugAdapter.Variables
 
         protected override IEnumerable<JintVariable> GetAllVariables(int? start, int? count)
         {
-            return new[] { CreateVariable(string.Empty, engine.Invoke(prop.Get, owner, Array.Empty<object>())) };
+            return new[] { CreateVariable(string.Empty, owner.Engine.Invoke(prop.Get, owner, Array.Empty<object>())) };
         }
     }
 }
