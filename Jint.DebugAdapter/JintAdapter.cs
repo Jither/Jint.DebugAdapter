@@ -36,6 +36,18 @@ namespace Jint.DebugAdapter
         private bool clientLinesStartAt1;
         private bool clientColumnsStartAt1;
 
+        public SourceLocation CurrentLocation
+        {
+            get
+            {
+                if (debugger?.CurrentLocation == null)
+                {
+                    return null;
+                }
+                return ToClientSourceLocation(debugger.CurrentLocation.Value);
+            }
+        }
+
         public JintAdapter(Debugger debugger, IScriptHost host, bool registerConsole = false)
         {
             this.debugger = debugger;
@@ -62,7 +74,7 @@ namespace Jint.DebugAdapter
 
             // TODO: Something is messing with the stack frames (and probably other things).
             // Thread desynchronization due to outputting while running?
-            console.Send(OutputCategory.Stdout, message, location: clientLocation);
+            console.Send(OutputCategory.Stdout, message);
         }
 
         private void Debugger_Done()

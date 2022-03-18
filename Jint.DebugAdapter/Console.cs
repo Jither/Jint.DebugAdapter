@@ -147,19 +147,20 @@ namespace Jint.DebugAdapter
             Send(OutputCategory.Stderr, values);
         }
 
-        internal void Send(OutputCategory category, JsValue[] values, SourceLocation location = null, OutputGroup group = null)
+        private void Send(OutputCategory category, JsValue[] values, OutputGroup group = null)
         {
             string message = String.Join(' ', values.Select(v => v?.ToString()));
-            Send(category, message, location, group);
+            Send(category, message, group);
         }
 
-        internal void Send(OutputCategory category, string message, SourceLocation location = null, OutputGroup group = null)
+        internal void Send(OutputCategory category, string message, OutputGroup group = null)
         {
-            InternalSend(category, message + "\n", location, group);
+            InternalSend(category, message + "\n", group);
         }
 
-        private void InternalSend(OutputCategory category, string message, SourceLocation location = null, OutputGroup group = null)
+        private void InternalSend(OutputCategory category, string message, OutputGroup group = null)
         {
+            var location = adapter.CurrentLocation;
             adapter.SendEvent(new OutputEvent(message)
             {
                 Category = category,

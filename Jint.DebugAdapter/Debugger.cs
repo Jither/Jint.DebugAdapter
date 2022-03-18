@@ -31,6 +31,7 @@ namespace Jint.DebugAdapter
 
         public bool PauseOnEntry { get; set; }
         public bool IsAttached { get; private set; }
+        public Location? CurrentLocation => engine?.DebugHandler.CurrentLocation;
         public DebugInformation CurrentDebugInformation { get; private set; }
         public Engine Engine => engine;
 
