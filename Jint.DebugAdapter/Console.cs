@@ -7,7 +7,6 @@ using Jither.DebugAdapter.Protocol.Types;
 
 namespace Jint.DebugAdapter
 {
-    // TODO: Determine script location of console calls
     internal class Console
     {
         private readonly JintAdapter adapter;

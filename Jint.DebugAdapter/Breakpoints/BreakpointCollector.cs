@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-using Esprima;
+﻿using Esprima;
 using Esprima.Ast;
 using Esprima.Utils;
 
@@ -12,9 +6,9 @@ namespace Jint.DebugAdapter.Breakpoints
 {
     public class BreakpointCollector : AstVisitor
     {
-        private readonly List<BreakpointPosition> positions = new();
+        private readonly List<Position> positions = new();
 
-        public List<BreakpointPosition> Positions => positions;
+        public List<Position> Positions => positions;
 
         public BreakpointCollector()
         {
@@ -24,7 +18,7 @@ namespace Jint.DebugAdapter.Breakpoints
         {
             if (node is Statement && node is not BlockStatement)
             {
-                AddLocation(BreakpointPositionType.Statement, node.Location.Start);
+                positions.Add(node.Location.Start);
             }
             base.Visit(node);
         }
@@ -33,21 +27,21 @@ namespace Jint.DebugAdapter.Breakpoints
         {
             base.VisitDoWhileStatement(doWhileStatement);
 
-            AddLocation(BreakpointPositionType.Expression, doWhileStatement.Test.Location.Start);
+            positions.Add(doWhileStatement.Test.Location.Start);
         }
 
         protected override void VisitForInStatement(ForInStatement forInStatement)
         {
             base.VisitForInStatement(forInStatement);
 
-            AddLocation(BreakpointPositionType.Expression, forInStatement.Left.Location.Start);
+            positions.Add(forInStatement.Left.Location.Start);
         }
 
         protected override void VisitForOfStatement(ForOfStatement forOfStatement)
         {
             base.VisitForOfStatement(forOfStatement);
 
-            AddLocation(BreakpointPositionType.Expression, forOfStatement.Left.Location.Start);
+            positions.Add(forOfStatement.Left.Location.Start);
         }
 
         protected override void VisitForStatement(ForStatement forStatement)
@@ -56,11 +50,11 @@ namespace Jint.DebugAdapter.Breakpoints
 
             if (forStatement.Test != null)
             {
-                AddLocation(BreakpointPositionType.Expression, forStatement.Test.Location.Start);
+                positions.Add(forStatement.Test.Location.Start);
             }
             if (forStatement.Update != null)
             {
-                AddLocation(BreakpointPositionType.Expression, forStatement.Test.Location.Start);
+                positions.Add(forStatement.Update.Location.Start);
             }
         }
 
@@ -68,27 +62,21 @@ namespace Jint.DebugAdapter.Breakpoints
         {
             base.VisitArrowFunctionExpression(arrowFunctionExpression);
 
-            AddLocation(BreakpointPositionType.Return, arrowFunctionExpression.Body.Location.End);
+            positions.Add(arrowFunctionExpression.Body.Location.End);
         }
 
         protected override void VisitFunctionDeclaration(FunctionDeclaration functionDeclaration)
         {
             base.VisitFunctionDeclaration(functionDeclaration);
 
-            AddLocation(BreakpointPositionType.Return, functionDeclaration.Body.Location.End);
+            positions.Add(functionDeclaration.Body.Location.End);
         }
 
         protected override void VisitFunctionExpression(IFunction function)
         {
             base.VisitFunctionExpression(function);
 
-            AddLocation(BreakpointPositionType.Return, function.Body.Location.End);
-        }
-
-        private void AddLocation(BreakpointPositionType type, Position position)
-        {
-            var location = new BreakpointPosition(type, position);
-            positions.Add(location);
+            positions.Add(function.Body.Location.End);
         }
     }
 }
