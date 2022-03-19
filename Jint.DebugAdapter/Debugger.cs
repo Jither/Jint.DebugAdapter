@@ -9,6 +9,7 @@ namespace Jint.DebugAdapter
     public delegate void DebugLogMessageEventHandler(string message, DebugInformation info);
     public delegate void DebugPauseEventHandler(PauseReason reason, DebugInformation info);
     public delegate void DebugEventHandler();
+    public delegate void DebugExceptionEventHandler(Exception ex);
 
     public class Debugger
     {
@@ -40,6 +41,7 @@ namespace Jint.DebugAdapter
         public event DebugEventHandler Continued;
         public event DebugEventHandler Cancelled;
         public event DebugEventHandler Done;
+        public event DebugExceptionEventHandler Error;
 
         public Debugger(Engine engine)
         {
@@ -80,7 +82,7 @@ namespace Jint.DebugAdapter
                 if (t.IsFaulted)
                 {
                     // TODO: Better handling
-                    throw t.Exception.InnerExceptions[0];
+                    Error?.Invoke(t.Exception.InnerExceptions[0]);
                 }
             });
         }

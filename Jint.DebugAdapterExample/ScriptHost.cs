@@ -21,7 +21,8 @@ namespace Jint.DebugAdapterExample
                     // In order to stop on entry, we need to be stepping from the start
                     // The Debugger will change to StepMode.None if not stopping on entry.
                     .InitialStepMode(StepMode.Into)
-                    .DebuggerStatementHandling(DebuggerStatementHandling.Script);
+                    .DebuggerStatementHandling(DebuggerStatementHandling.Script)
+                    .EnableModules(@"D:\Web\test");
             });
 
             Debugger = new Debugger(engine);

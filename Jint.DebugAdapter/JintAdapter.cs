@@ -61,8 +61,21 @@ namespace Jint.DebugAdapter
             debugger.Cancelled += Debugger_Cancelled;
             debugger.Done += Debugger_Done;
             debugger.LogPoint += Debugger_LogPoint;
+            debugger.Error += Debugger_Error;
 
             variableStore = new VariableStore();
+        }
+
+        private void Debugger_Error(Exception ex)
+        {
+            SendEvent(new StoppedEvent(StopReason.Exception)
+            {
+                Description = "Fatal error",
+                Text = ex.Message
+            });
+            // TODO: We cannot send Terminated event, because the debug session will be stopped without showing
+            // the exception
+            //SendEvent(new TerminatedEvent());
         }
 
         private void Debugger_LogPoint(string message, DebugInformation e)

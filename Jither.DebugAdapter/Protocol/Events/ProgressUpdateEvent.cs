@@ -32,6 +32,10 @@
         /// <summary>
         /// Optional progress percentage to display (value range: 0 to 100). If omitted, no percentage will be shown.
         /// </summary>
-        public double? Percentage { get; set; } // TODO: May be int 0-100 - never clarified in spec
+        /// <remarks>
+        /// Note that the DebugAdapter specification currently does not specify whether this is intended as
+        /// integer values 0 to 100, or floating point.
+        /// </remarks>
+        public double? Percentage { get; set; }
     }
 }

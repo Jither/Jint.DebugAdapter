@@ -6,7 +6,7 @@ namespace Jint.DebugAdapter
 {
     public class EsprimaPositionComparer : IComparer<Position>
     {
-        public static readonly EsprimaPositionComparer Default = new EsprimaPositionComparer();
+        public static readonly EsprimaPositionComparer Default = new();
 
         public int Compare(Position x, Position y)
         {
