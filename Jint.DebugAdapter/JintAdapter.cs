@@ -8,7 +8,6 @@ using Thread = Jither.DebugAdapter.Protocol.Types.Thread;
 using Jither.DebugAdapter.Helpers;
 using Esprima;
 using Jint.DebugAdapter.Variables;
-using System.Text.Json;
 
 namespace Jint.DebugAdapter
 {
@@ -31,13 +30,14 @@ namespace Jint.DebugAdapter
         private readonly Logger logger = LogManager.GetLogger();
         private readonly Debugger debugger;
         private readonly IScriptHost host;
-        private readonly Console console;
         private readonly VariableStore variableStore;
 
         private bool clientLinesStartAt1;
         private bool clientColumnsStartAt1;
         private bool shouldTerminateOnDisconnect;
     
+        public Console Console { get; }
+
         public SourceLocation CurrentLocation
         {
             get
@@ -50,16 +50,11 @@ namespace Jint.DebugAdapter
             }
         }
 
-        public JintAdapter(Debugger debugger, IScriptHost host, bool registerConsole = false)
+        public JintAdapter(IScriptHost host)
         {
-            this.debugger = debugger;
             this.host = host;
-            this.console = new Console(this);
-
-            if (registerConsole)
-            {
-                debugger.Engine.SetValue("console", console);
-            }
+            this.debugger = host.Debugger;
+            Console = new Console(this);
 
             debugger.Continued += Debugger_Continued;
             debugger.Stopped += Debugger_Stopped;
@@ -74,7 +69,7 @@ namespace Jint.DebugAdapter
         {
             // TODO: Something is messing with the stack frames (and probably other things).
             // Thread desynchronization due to outputting while running?
-            console.Send(OutputCategory.Stdout, message);
+            Console.Send(OutputCategory.Stdout, message);
         }
 
         private void Debugger_Done()

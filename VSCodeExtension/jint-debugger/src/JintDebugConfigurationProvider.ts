@@ -17,9 +17,9 @@ class JintDebugConfigurationProvider implements vscode.DebugConfigurationProvide
             }
         }
 
-        if (!config.program)
+        if (config.request !== "attach" && !config.program)
         {
-            return vscode.window.showInformationMessage("Could not find a program to debug.").then(_ =>
+            return vscode.window.showInformationMessage("Could not find a program to launch.").then(_ =>
                 {
                     return undefined;
                 });

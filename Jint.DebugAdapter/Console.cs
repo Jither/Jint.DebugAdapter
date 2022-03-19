@@ -7,7 +7,7 @@ using Jither.DebugAdapter.Protocol.Types;
 
 namespace Jint.DebugAdapter
 {
-    internal class Console
+    public class Console
     {
         private readonly JintAdapter adapter;
         private readonly Dictionary<string, long> timers = new();

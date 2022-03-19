@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
+﻿using System.Text.Json;
 using Jint.DebugAdapter;
 using Jint.Runtime.Debugger;
 
@@ -30,6 +25,11 @@ namespace Jint.DebugAdapterExample
             });
 
             Debugger = new Debugger(engine);
+        }
+
+        public void RegisterConsole(DebugAdapter.Console console)
+        {
+            engine.SetValue("console", console);
         }
 
         public void Launch(string program, bool debug, IReadOnlyDictionary<string, JsonElement> arguments)

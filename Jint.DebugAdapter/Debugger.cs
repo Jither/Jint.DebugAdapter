@@ -34,7 +34,6 @@ namespace Jint.DebugAdapter
         public bool IsAttached { get; private set; }
         public Location? CurrentLocation => engine?.DebugHandler.CurrentLocation;
         public DebugInformation CurrentDebugInformation { get; private set; }
-        public Engine Engine => engine;
 
         public event DebugLogMessageEventHandler LogPoint;
         public event DebugPauseEventHandler Stopped;

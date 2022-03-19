@@ -89,6 +89,20 @@
 								"default": true
 							}
 						}
+					},
+					"attach": {
+						"properties": {
+							"program": {
+								"type": "string",
+								"description": "Application-specific URL for a Javascript file that should be launched after attaching.",
+								"default": null
+							},
+							"stop": {
+								"type": "boolean",
+								"description": "Automatically stop running script at first opportunity.",
+								"default": false
+							}
+						}
 					}
 				},
 				"initialConfigurations": [
@@ -112,8 +126,8 @@
 						"type": "jint",
 						"request": "attach",
 						"name": "Debug in Jint (attach)",
-						"program": "${file}",
-						"stopOnEntry": true,
+						"program": null,
+						"stop": false,
 						"port": 4711
 					}
 				],

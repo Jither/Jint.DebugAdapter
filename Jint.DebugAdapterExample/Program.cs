@@ -16,7 +16,7 @@ namespace Jint.DebugAdapterExample
             logger.Info("Started");
             Endpoint endpoint;
             var host = new ScriptHost();
-            var adapter = new JintAdapter(host.Debugger, host, registerConsole: true);
+            var adapter = new JintAdapter(host);
 
             if (args.Length > 0)
             {
