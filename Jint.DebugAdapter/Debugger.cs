@@ -1,4 +1,4 @@
-﻿using Esprima;
+using Esprima;
 using Esprima.Ast;
 using Jint.DebugAdapter.Breakpoints;
 using Jint.Native;
@@ -26,7 +26,6 @@ namespace Jint.DebugAdapter
 
         private readonly Dictionary<string, ScriptInfo> scriptInfoBySourceId = new();
         private readonly Engine engine;
-        private readonly ManualResetEvent waitForContinue = new(false);
         private CancellationTokenSource cts;
         private StepMode nextStep;
         private DebuggerState state;
@@ -42,6 +41,8 @@ namespace Jint.DebugAdapter
         public event DebugEventHandler Cancelled;
         public event DebugEventHandler Done;
         public event DebugExceptionEventHandler Error;
+
+        public IPauseHandler PauseHandler { get; set; } = new ResetEventPauseHandler();
 
         public Debugger(Engine engine)
         {
@@ -62,7 +63,7 @@ namespace Jint.DebugAdapter
                 {
                     // Pause the engine thread, to wait for the debugger UI
                     state = DebuggerState.WaitingForUI;
-                    PauseThread();
+                    PauseHandler.Pause();
 
                     engine.Execute(ast);
                     Done?.Invoke();
@@ -113,32 +114,32 @@ namespace Jint.DebugAdapter
         {
             cts.Cancel();
             state = DebuggerState.Terminating;
-            waitForContinue.Set();
+            PauseHandler.Resume();
         }
 
         public void StepOver()
         {
             nextStep = StepMode.Over;
-            waitForContinue.Set();
+            PauseHandler.Resume();
         }
 
         public void StepInto()
         {
             nextStep = StepMode.Into;
-            waitForContinue.Set();
+            PauseHandler.Resume();
         }
 
         public void StepOut()
         {
             nextStep = StepMode.Out;
-            waitForContinue.Set();
+            PauseHandler.Resume();
         }
 
         public void Run()
         {
             state = DebuggerState.Running;
             nextStep = StepMode.None;
-            waitForContinue.Set();
+            PauseHandler.Resume();
         }
 
         public void Pause()
@@ -150,7 +151,7 @@ namespace Jint.DebugAdapter
         {
             Detach();
             // Make sure we're not paused
-            waitForContinue.Set();
+            PauseHandler.Resume();
         }
 
         public void ClearBreakpoints()
@@ -171,7 +172,7 @@ namespace Jint.DebugAdapter
         public void NotifyUIReady()
         {
             state = DebuggerState.Entering;
-            waitForContinue.Set();
+            PauseHandler.Resume();
         }
 
         private void Attach()
@@ -321,18 +322,11 @@ namespace Jint.DebugAdapter
             CurrentDebugInformation = e;
             Stopped?.Invoke(reason, e);
 
-            PauseThread();
-            
+            PauseHandler.Pause();
+
             Continued?.Invoke();
 
             return nextStep;
-        }
-
-        private void PauseThread()
-        {
-            // Pause the thread until waitForContinue is set
-            waitForContinue.WaitOne();
-            waitForContinue.Reset();
         }
     }
 }

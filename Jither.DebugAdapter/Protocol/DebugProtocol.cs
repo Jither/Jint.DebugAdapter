@@ -169,7 +169,7 @@ namespace Jither.DebugAdapter.Protocol
                         {
                             break;
                         }
-                        ProcessBody(body);
+                        await ProcessBody(body);
                         nextMessageBodyLength = -1;
                     }
                 }
@@ -247,7 +247,7 @@ namespace Jither.DebugAdapter.Protocol
             return Convert.ToInt32(match.Groups["length"].Value, CultureInfo.InvariantCulture);
         }
 
-        private bool ProcessBody(ReadOnlySequence<byte> buffer)
+        private async Task<bool> ProcessBody(ReadOnlySequence<byte> buffer)
         {
             string json = Encoding.UTF8.GetString(buffer);
             try
@@ -255,7 +255,7 @@ namespace Jither.DebugAdapter.Protocol
                 // Don't send events until message handling is done
                 IsQueueingEvents = true;
 
-                HandleMessage(json);
+                await HandleMessage(json);
                 return true;
             }
             finally
@@ -278,25 +278,25 @@ namespace Jither.DebugAdapter.Protocol
             Stop();
         }
 
-        private void HandleMessage(string json)
+        private async Task HandleMessage(string json)
         {
             ProtocolMessage message = JsonHelper.Deserialize<ProtocolMessage>(json);
             
             switch (message)
             {
                 case BaseProtocolRequest request:
-                    HandleRequest(request);
+                    await HandleRequest(request);
                     break;
                 case BaseProtocolResponse response:
-                    HandleResponse(response);
+                    await HandleResponse(response);
                     break;
                 case BaseProtocolEvent evt:
-                    HandleEvent(evt);
+                    await HandleEvent(evt);
                     break;
             }
         }
 
-        private void HandleRequest(BaseProtocolRequest request)
+        private async Task HandleRequest(BaseProtocolRequest request)
         {
             try
             {
@@ -307,7 +307,7 @@ namespace Jither.DebugAdapter.Protocol
                 {
                     IsQueueingEvents = false;
                 }
-                var responseBody = adapter.HandleRequest(request);
+                var responseBody = await adapter.InternalHandleRequest(request);
 
                 BuildAndSendResponse(request, responseBody, true);
 
@@ -333,16 +333,18 @@ namespace Jither.DebugAdapter.Protocol
             SendMessage(response);
         }
 
-        private void HandleResponse(BaseProtocolResponse response)
+        private Task HandleResponse(BaseProtocolResponse response)
         {
             // Interpolation for lazy serialization
             logger.Log(LogLevel.Verbose, $"{JsonHelper.SerializeForOutput(response)}");
+            return Task.CompletedTask;
         }
 
-        private void HandleEvent(BaseProtocolEvent evt)
+        private Task HandleEvent(BaseProtocolEvent evt)
         {
             // Interpolation for lazy serialization
             logger.Log(LogLevel.Verbose, $"{JsonHelper.SerializeForOutput(evt)}");
+            return Task.CompletedTask;
         }
 
         public void Stop(int timeout = 2000)

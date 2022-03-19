@@ -35,6 +35,8 @@ namespace Jint.DebugAdapter
         private bool clientLinesStartAt1;
         private bool clientColumnsStartAt1;
         private bool shouldTerminateOnDisconnect;
+
+        private bool restarting;
     
         public Console Console { get; }
 
@@ -100,7 +102,10 @@ namespace Jint.DebugAdapter
         {
             // TODO: We can't stop protocol here, because Cancelled also happens when handling Restart.
             // Check if we *ever* need to stop the protocol
-            //Protocol.Stop();
+            if (!restarting)
+            {
+                Protocol.Stop();
+            }
         }
 
         private void Debugger_Stopped(PauseReason reason, DebugInformation info)
@@ -178,6 +183,7 @@ namespace Jint.DebugAdapter
                 (arguments.TerminateDebuggee == null && shouldTerminateOnDisconnect)
             )
             {
+                restarting = false;
                 debugger.Terminate();
             }
             else if (arguments.SuspendDebuggee != true)
@@ -271,6 +277,7 @@ namespace Jint.DebugAdapter
         protected override void RestartRequest(RestartArguments arguments)
         {
             // TODO: Restart is still totally broken - threading issues.
+            restarting = true;
             debugger.Terminate();
             Launch(arguments.Arguments);
         }
@@ -381,6 +388,7 @@ namespace Jint.DebugAdapter
 
         protected override void TerminateRequest(TerminateArguments arguments)
         {
+            restarting = false;
             debugger.Terminate();
         }
 

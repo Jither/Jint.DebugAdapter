@@ -15,7 +15,12 @@ namespace Jither.DebugAdapter
     {
         public DebugProtocol Protocol { get; set; }
 
-        public ProtocolResponseBody HandleRequest(BaseProtocolRequest request)
+        internal Task<ProtocolResponseBody> InternalHandleRequest(BaseProtocolRequest request)
+        {
+            return Task.FromResult(HandleRequest(request));
+        }
+
+        private ProtocolResponseBody HandleRequest(BaseProtocolRequest request)
         {
             switch (request.UntypedArguments)
             {
