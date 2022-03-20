@@ -15,61 +15,56 @@ namespace Jither.DebugAdapter
     {
         public DebugProtocol Protocol { get; set; }
 
-        internal Task<ProtocolResponseBody> InternalHandleRequest(BaseProtocolRequest request)
-        {
-            return Task.FromResult(HandleRequest(request));
-        }
-
-        private ProtocolResponseBody HandleRequest(BaseProtocolRequest request)
+        internal async Task<ProtocolResponseBody> HandleRequest(BaseProtocolRequest request)
         {
             switch (request.UntypedArguments)
             {
-                case AttachArguments args: AttachRequest(args); return null;
-                case CancelArguments args: CancelRequest(args); return null;
-                case ConfigurationDoneArguments: ConfigurationDoneRequest(); return null;
-                case DisconnectArguments args: DisconnectRequest(args); return null;
-                case GotoArguments args: GotoRequest(args); return null;
-                case LaunchArguments args: LaunchRequest(args); return null;
-                case NextArguments args: NextRequest(args); return null;
-                case PauseArguments args: PauseRequest(args); return null;
-                case RestartArguments args: RestartRequest(args); return null;
-                case RestartFrameArguments args: RestartFrameRequest(args); return null;
-                case ReverseContinueArguments args: ReverseContinueRequest(args); return null;
-                case StepBackArguments args: StepBackRequest(args); return null;
-                case StepInArguments args: StepInRequest(args); return null;
-                case StepOutArguments args: StepOutRequest(args); return null;
-                case TerminateArguments args: TerminateRequest(args); return null;
+                case AttachArguments args: await AttachRequest(args); return null;
+                case CancelArguments args: await CancelRequest(args); return null;
+                case ConfigurationDoneArguments: await ConfigurationDoneRequest(); return null;
+                case DisconnectArguments args: await DisconnectRequest(args); return null;
+                case GotoArguments args: await GotoRequest(args); return null;
+                case LaunchArguments args: await LaunchRequest(args); return null;
+                case NextArguments args: await NextRequest(args); return null;
+                case PauseArguments args: await PauseRequest(args); return null;
+                case RestartArguments args: await RestartRequest(args); return null;
+                case RestartFrameArguments args: await RestartFrameRequest(args); return null;
+                case ReverseContinueArguments args: await ReverseContinueRequest(args); return null;
+                case StepBackArguments args: await StepBackRequest(args); return null;
+                case StepInArguments args: await StepInRequest(args); return null;
+                case StepOutArguments args: await StepOutRequest(args); return null;
+                case TerminateArguments args: await TerminateRequest(args); return null;
             }
 
             return request.UntypedArguments switch
             {
-                BreakpointLocationsArguments args => BreakpointLocationsRequest(args),
-                CompletionsArguments args => CompletionsRequest(args),
-                ContinueArguments args => ContinueRequest(args),
-                DataBreakpointInfoArguments args => DataBreakpointInfoRequest(args),
-                DisassembleArguments args => DisassembleRequest(args),
-                EvaluateArguments args => EvaluateRequest(args),
-                ExceptionInfoArguments args => ExceptionInfoRequest(args),
-                GotoTargetsArguments args => GotoTargetsRequest(args),
-                InitializeArguments args => InitializeRequest(args),
-                LoadedSourcesArguments => LoadedSourcesRequest(),
-                ModulesArguments args => ModulesRequest(args),
-                ReadMemoryArguments args => ReadMemoryRequest(args),
+                BreakpointLocationsArguments args => await BreakpointLocationsRequest(args),
+                CompletionsArguments args => await CompletionsRequest(args),
+                ContinueArguments args => await ContinueRequest(args),
+                DataBreakpointInfoArguments args => await DataBreakpointInfoRequest(args),
+                DisassembleArguments args => await DisassembleRequest(args),
+                EvaluateArguments args => await EvaluateRequest(args),
+                ExceptionInfoArguments args => await ExceptionInfoRequest(args),
+                GotoTargetsArguments args => await GotoTargetsRequest(args),
+                InitializeArguments args => await InitializeRequest(args),
+                LoadedSourcesArguments => await LoadedSourcesRequest(),
+                ModulesArguments args => await ModulesRequest(args),
+                ReadMemoryArguments args => await ReadMemoryRequest(args),
                 //RunInTerminalArguments args => RunInTerminalRequest(args), // Note: Reverse Request (DebugAdapter to host)
-                ScopesArguments args => ScopesRequest(args),
-                SetBreakpointsArguments args => SetBreakpointsRequest(args),
-                SetDataBreakpointsArguments args => SetDataBreakpointsRequest(args),
-                SetExceptionBreakpointsArguments args => SetExceptionBreakpointsRequest(args),
-                SetExpressionArguments args => SetExpressionRequest(args),
-                SetFunctionBreakpointsArguments args => SetFunctionBreakpointsRequest(args),
-                SetInstructionBreakpointsArguments args => SetInstructionBreakpointsRequest(args),
-                SetVariableArguments args => SetVariableRequest(args),
-                SourceArguments args => SourceRequest(args),
-                StackTraceArguments args => StackTraceRequest(args),
-                StepInTargetsArguments args => StepInTargetsRequest(args),
-                ThreadsArguments => ThreadsRequest(),
-                VariablesArguments args => VariablesRequest(args),
-                WriteMemoryArguments args => WriteMemoryRequest(args),
+                ScopesArguments args => await ScopesRequest(args),
+                SetBreakpointsArguments args => await SetBreakpointsRequest(args),
+                SetDataBreakpointsArguments args => await SetDataBreakpointsRequest(args),
+                SetExceptionBreakpointsArguments args => await SetExceptionBreakpointsRequest(args),
+                SetExpressionArguments args => await SetExpressionRequest(args),
+                SetFunctionBreakpointsArguments args => await SetFunctionBreakpointsRequest(args),
+                SetInstructionBreakpointsArguments args => await SetInstructionBreakpointsRequest(args),
+                SetVariableArguments args => await SetVariableRequest(args),
+                SourceArguments args => await SourceRequest(args),
+                StackTraceArguments args => await StackTraceRequest(args),
+                StepInTargetsArguments args => await StepInTargetsRequest(args),
+                ThreadsArguments => await ThreadsRequest(),
+                VariablesArguments args => await VariablesRequest(args),
+                WriteMemoryArguments args => await WriteMemoryRequest(args),
 
                 _ => throw new NotImplementedException($"Request command '{request.Command}' not implemented.")
             };
@@ -86,47 +81,47 @@ namespace Jither.DebugAdapter
             Protocol.SendEvent(evt);
         }
 
-        protected virtual void AttachRequest(AttachArguments arguments) => throw new NotImplementedException();
-        protected virtual BreakpointLocationsResponse BreakpointLocationsRequest(BreakpointLocationsArguments arguments) => throw new NotImplementedException();
-        protected virtual void CancelRequest(CancelArguments arguments) => throw new NotImplementedException();
-        protected virtual CompletionsResponse CompletionsRequest(CompletionsArguments arguments) => throw new NotImplementedException();
-        protected virtual void ConfigurationDoneRequest() => throw new NotImplementedException();
-        protected virtual ContinueResponse ContinueRequest(ContinueArguments arguments) => throw new NotImplementedException();
-        protected virtual DataBreakpointInfoResponse DataBreakpointInfoRequest(DataBreakpointInfoArguments arguments) => throw new NotImplementedException();
-        protected virtual DisassembleResponse DisassembleRequest(DisassembleArguments arguments) => throw new NotImplementedException();
-        protected virtual void DisconnectRequest(DisconnectArguments arguments) => throw new NotImplementedException();
-        protected virtual EvaluateResponse EvaluateRequest(EvaluateArguments arguments) => throw new NotImplementedException();
-        protected virtual ExceptionInfoResponse ExceptionInfoRequest(ExceptionInfoArguments arguments) => throw new NotImplementedException();
-        protected virtual void GotoRequest(GotoArguments arguments) => throw new NotImplementedException();
-        protected virtual GotoTargetsResponse GotoTargetsRequest(GotoTargetsArguments arguments) => throw new NotImplementedException();
-        protected virtual InitializeResponse InitializeRequest(InitializeArguments arguments) => throw new NotImplementedException();
-        protected virtual void LaunchRequest(LaunchArguments arguments) => throw new NotImplementedException();
-        protected virtual LoadedSourcesResponse LoadedSourcesRequest() => throw new NotImplementedException();
-        protected virtual ModulesResponse ModulesRequest(ModulesArguments arguments) => throw new NotImplementedException();
-        protected virtual void NextRequest(NextArguments arguments) => throw new NotImplementedException();
-        protected virtual void PauseRequest(PauseArguments arguments) => throw new NotImplementedException();
-        protected virtual ReadMemoryResponse ReadMemoryRequest(ReadMemoryArguments arguments) => throw new NotImplementedException();
-        protected virtual void RestartRequest(RestartArguments arguments) => throw new NotImplementedException();
-        protected virtual void RestartFrameRequest(RestartFrameArguments arguments) => throw new NotImplementedException();
-        protected virtual void ReverseContinueRequest(ReverseContinueArguments arguments) => throw new NotImplementedException();
-        protected virtual ScopesResponse ScopesRequest(ScopesArguments arguments) => throw new NotImplementedException();
-        protected virtual SetBreakpointsResponse SetBreakpointsRequest(SetBreakpointsArguments arguments) => throw new NotImplementedException();
-        protected virtual SetDataBreakpointsResponse SetDataBreakpointsRequest(SetDataBreakpointsArguments arguments) => throw new NotImplementedException();
-        protected virtual SetExceptionBreakpointsResponse SetExceptionBreakpointsRequest(SetExceptionBreakpointsArguments arguments) => throw new NotImplementedException();
-        protected virtual SetExpressionResponse SetExpressionRequest(SetExpressionArguments arguments) => throw new NotImplementedException();
-        protected virtual SetFunctionBreakpointsResponse SetFunctionBreakpointsRequest(SetFunctionBreakpointsArguments arguments) => throw new NotImplementedException();
-        protected virtual SetInstructionBreakpointsResponse SetInstructionBreakpointsRequest(SetInstructionBreakpointsArguments arguments) => throw new NotImplementedException();
-        protected virtual SetVariableResponse SetVariableRequest(SetVariableArguments arguments) => throw new NotImplementedException();
-        protected virtual SourceResponse SourceRequest(SourceArguments arguments) => throw new NotImplementedException();
-        protected virtual StackTraceResponse StackTraceRequest(StackTraceArguments arguments) => throw new NotImplementedException();
-        protected virtual void StepBackRequest(StepBackArguments arguments) => throw new NotImplementedException();
-        protected virtual void StepInRequest(StepInArguments arguments) => throw new NotImplementedException();
-        protected virtual StepInTargetsResponse StepInTargetsRequest(StepInTargetsArguments arguments) => throw new NotImplementedException();
-        protected virtual void StepOutRequest(StepOutArguments arguments) => throw new NotImplementedException();
-        protected virtual void TerminateRequest(TerminateArguments arguments) => throw new NotImplementedException();
-        protected virtual void TerminateThreadsRequest(TerminateThreadsArguments arguments) => throw new NotImplementedException();
-        protected virtual ThreadsResponse ThreadsRequest() => throw new NotImplementedException();
-        protected virtual VariablesResponse VariablesRequest(VariablesArguments arguments) => throw new NotImplementedException();
-        protected virtual WriteMemoryResponse WriteMemoryRequest(WriteMemoryArguments arguments) => throw new NotImplementedException();
+        protected virtual Task AttachRequest(AttachArguments arguments) => throw new NotImplementedException();
+        protected virtual Task<BreakpointLocationsResponse> BreakpointLocationsRequest(BreakpointLocationsArguments arguments) => throw new NotImplementedException();
+        protected virtual Task CancelRequest(CancelArguments arguments) => throw new NotImplementedException();
+        protected virtual Task<CompletionsResponse> CompletionsRequest(CompletionsArguments arguments) => throw new NotImplementedException();
+        protected virtual Task ConfigurationDoneRequest() => throw new NotImplementedException();
+        protected virtual Task<ContinueResponse> ContinueRequest(ContinueArguments arguments) => throw new NotImplementedException();
+        protected virtual Task<DataBreakpointInfoResponse> DataBreakpointInfoRequest(DataBreakpointInfoArguments arguments) => throw new NotImplementedException();
+        protected virtual Task<DisassembleResponse> DisassembleRequest(DisassembleArguments arguments) => throw new NotImplementedException();
+        protected virtual Task DisconnectRequest(DisconnectArguments arguments) => throw new NotImplementedException();
+        protected virtual Task<EvaluateResponse> EvaluateRequest(EvaluateArguments arguments) => throw new NotImplementedException();
+        protected virtual Task<ExceptionInfoResponse> ExceptionInfoRequest(ExceptionInfoArguments arguments) => throw new NotImplementedException();
+        protected virtual Task GotoRequest(GotoArguments arguments) => throw new NotImplementedException();
+        protected virtual Task<GotoTargetsResponse> GotoTargetsRequest(GotoTargetsArguments arguments) => throw new NotImplementedException();
+        protected virtual Task<InitializeResponse> InitializeRequest(InitializeArguments arguments) => throw new NotImplementedException();
+        protected virtual Task LaunchRequest(LaunchArguments arguments) => throw new NotImplementedException();
+        protected virtual Task<LoadedSourcesResponse> LoadedSourcesRequest() => throw new NotImplementedException();
+        protected virtual Task<ModulesResponse> ModulesRequest(ModulesArguments arguments) => throw new NotImplementedException();
+        protected virtual Task NextRequest(NextArguments arguments) => throw new NotImplementedException();
+        protected virtual Task PauseRequest(PauseArguments arguments) => throw new NotImplementedException();
+        protected virtual Task<ReadMemoryResponse> ReadMemoryRequest(ReadMemoryArguments arguments) => throw new NotImplementedException();
+        protected virtual Task RestartRequest(RestartArguments arguments) => throw new NotImplementedException();
+        protected virtual Task RestartFrameRequest(RestartFrameArguments arguments) => throw new NotImplementedException();
+        protected virtual Task ReverseContinueRequest(ReverseContinueArguments arguments) => throw new NotImplementedException();
+        protected virtual Task<ScopesResponse> ScopesRequest(ScopesArguments arguments) => throw new NotImplementedException();
+        protected virtual Task<SetBreakpointsResponse> SetBreakpointsRequest(SetBreakpointsArguments arguments) => throw new NotImplementedException();
+        protected virtual Task<SetDataBreakpointsResponse> SetDataBreakpointsRequest(SetDataBreakpointsArguments arguments) => throw new NotImplementedException();
+        protected virtual Task<SetExceptionBreakpointsResponse> SetExceptionBreakpointsRequest(SetExceptionBreakpointsArguments arguments) => throw new NotImplementedException();
+        protected virtual Task<SetExpressionResponse> SetExpressionRequest(SetExpressionArguments arguments) => throw new NotImplementedException();
+        protected virtual Task<SetFunctionBreakpointsResponse> SetFunctionBreakpointsRequest(SetFunctionBreakpointsArguments arguments) => throw new NotImplementedException();
+        protected virtual Task<SetInstructionBreakpointsResponse> SetInstructionBreakpointsRequest(SetInstructionBreakpointsArguments arguments) => throw new NotImplementedException();
+        protected virtual Task<SetVariableResponse> SetVariableRequest(SetVariableArguments arguments) => throw new NotImplementedException();
+        protected virtual Task<SourceResponse> SourceRequest(SourceArguments arguments) => throw new NotImplementedException();
+        protected virtual Task<StackTraceResponse> StackTraceRequest(StackTraceArguments arguments) => throw new NotImplementedException();
+        protected virtual Task StepBackRequest(StepBackArguments arguments) => throw new NotImplementedException();
+        protected virtual Task StepInRequest(StepInArguments arguments) => throw new NotImplementedException();
+        protected virtual Task<StepInTargetsResponse> StepInTargetsRequest(StepInTargetsArguments arguments) => throw new NotImplementedException();
+        protected virtual Task StepOutRequest(StepOutArguments arguments) => throw new NotImplementedException();
+        protected virtual Task TerminateRequest(TerminateArguments arguments) => throw new NotImplementedException();
+        protected virtual Task TerminateThreadsRequest(TerminateThreadsArguments arguments) => throw new NotImplementedException();
+        protected virtual Task<ThreadsResponse> ThreadsRequest() => throw new NotImplementedException();
+        protected virtual Task<VariablesResponse> VariablesRequest(VariablesArguments arguments) => throw new NotImplementedException();
+        protected virtual Task<WriteMemoryResponse> WriteMemoryRequest(WriteMemoryArguments arguments) => throw new NotImplementedException();
     }
 }

@@ -307,7 +307,7 @@ namespace Jither.DebugAdapter.Protocol
                 {
                     IsQueueingEvents = false;
                 }
-                var responseBody = await adapter.InternalHandleRequest(request);
+                var responseBody = await adapter.HandleRequest(request);
 
                 BuildAndSendResponse(request, responseBody, true);
 

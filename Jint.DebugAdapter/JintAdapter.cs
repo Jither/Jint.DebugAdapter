@@ -25,11 +25,11 @@ namespace Jint.DebugAdapter
         }
     }
 
-    public partial class JintAdapter : Adapter
+    public class JintAdapter : Adapter
     {
         private readonly Logger logger = LogManager.GetLogger();
-        private readonly Debugger debugger;
         private readonly IScriptHost host;
+        private readonly Debugger debugger;
         private readonly VariableStore variableStore;
 
         private bool clientLinesStartAt1;
@@ -37,6 +37,7 @@ namespace Jint.DebugAdapter
         private bool shouldTerminateOnDisconnect;
 
         private bool restarting;
+        private DebugInformation currentDebugInformation;
     
         public Console Console { get; }
 
@@ -44,28 +45,28 @@ namespace Jint.DebugAdapter
         {
             get
             {
-                if (debugger?.CurrentLocation == null)
+                var location = debugger?.CurrentLocation;
+                if (location == null)
                 {
                     return null;
                 }
-                return ToClientSourceLocation(debugger.CurrentLocation.Value);
+                return ToClientSourceLocation(location.Value);
             }
         }
 
         public JintAdapter(IScriptHost host)
         {
             this.host = host;
-            this.debugger = host.Debugger;
+            debugger = host.Debugger;
             Console = new Console(this);
+            variableStore = new VariableStore();
 
-            debugger.Continued += Debugger_Continued;
-            debugger.Stopped += Debugger_Stopped;
+            debugger.Resumed += Debugger_Resumed;
+            debugger.Paused += Debugger_Paused;
             debugger.Cancelled += Debugger_Cancelled;
             debugger.Done += Debugger_Done;
             debugger.LogPoint += Debugger_LogPoint;
             debugger.Error += Debugger_Error;
-
-            variableStore = new VariableStore();
         }
 
         private void Debugger_Error(Exception ex)
@@ -108,8 +109,9 @@ namespace Jint.DebugAdapter
             }
         }
 
-        private void Debugger_Stopped(PauseReason reason, DebugInformation info)
+        private void Debugger_Paused(PauseReason reason, DebugInformation info)
         {
+            currentDebugInformation = info;
             variableStore.Clear();
 
             SendEvent(reason switch
@@ -124,21 +126,21 @@ namespace Jint.DebugAdapter
             });
         }
 
-        private void Debugger_Continued()
+        private void Debugger_Resumed()
         {
             // TODO: a debug adapter is not expected to send this event in response to a request
             // that implies that execution continues, e.g. ‘launch’ or ‘continue’.
             //SendEvent(new ContinuedEvent());
         }
 
-        protected override void AttachRequest(AttachArguments arguments)
+        protected override async Task AttachRequest(AttachArguments arguments)
         {
             // "If the ‘attach’ request was used to connect to the debuggee, ‘disconnect’ does not terminate
             // the debuggee."
             shouldTerminateOnDisconnect = false;
         }
 
-        protected override BreakpointLocationsResponse BreakpointLocationsRequest(BreakpointLocationsArguments arguments)
+        protected override async Task<BreakpointLocationsResponse> BreakpointLocationsRequest(BreakpointLocationsArguments arguments)
         {
             string id = host.SourceProvider.GetSourceId(arguments.Source.Path);
             
@@ -155,22 +157,22 @@ namespace Jint.DebugAdapter
             return new BreakpointLocationsResponse(locations);
         }
 
-        protected override void CancelRequest(CancelArguments arguments)
+        protected override async Task CancelRequest(CancelArguments arguments)
         {
         }
 
-        protected override void ConfigurationDoneRequest()
+        protected override async Task ConfigurationDoneRequest()
         {
             debugger.NotifyUIReady();
         }
 
-        protected override ContinueResponse ContinueRequest(ContinueArguments arguments)
+        protected override async Task<ContinueResponse> ContinueRequest(ContinueArguments arguments)
         {
             debugger.Run();
             return new ContinueResponse();
         }
 
-        protected override void DisconnectRequest(DisconnectArguments arguments)
+        protected override async Task DisconnectRequest(DisconnectArguments arguments)
         {
             // Terminate if:
             // - We're restarting (debug client will launch the adapter again)
@@ -192,7 +194,7 @@ namespace Jint.DebugAdapter
             }
         }
 
-        protected override EvaluateResponse EvaluateRequest(EvaluateArguments arguments)
+        protected override async Task<EvaluateResponse> EvaluateRequest(EvaluateArguments arguments)
         {
             var result = debugger.Evaluate(arguments.Expression);
 
@@ -208,12 +210,12 @@ namespace Jint.DebugAdapter
             };
         }
 
-        protected override ExceptionInfoResponse ExceptionInfoRequest(ExceptionInfoArguments arguments)
+        protected override async Task<ExceptionInfoResponse> ExceptionInfoRequest(ExceptionInfoArguments arguments)
         {
             throw new NotImplementedException();
         }
 
-        protected override InitializeResponse InitializeRequest(InitializeArguments arguments)
+        protected override async Task<InitializeResponse> InitializeRequest(InitializeArguments arguments)
         {
             logger.Info($"Connection established from: {arguments.ClientName} ({arguments.ClientId})");
             clientLinesStartAt1 = arguments.LinesStartAt1 ?? false;
@@ -235,18 +237,18 @@ namespace Jint.DebugAdapter
             };
         }
 
-        protected override void LaunchRequest(LaunchArguments arguments)
+        protected override async Task LaunchRequest(LaunchArguments arguments)
         {
             // "If the debuggee has been started with the ‘launch’ request,
             // the ‘disconnect’ request terminates the debuggee."
             shouldTerminateOnDisconnect = true;
 
-            Launch(arguments);
+            await Launch(arguments);
 
             SendEvent(new InitializedEvent());
         }
 
-        private void Launch(ConfigurationArguments arguments)
+        private async Task Launch(ConfigurationArguments arguments)
         {
             string program = arguments.AdditionalProperties["program"].GetString();
             bool pauseOnEntry = arguments.AdditionalProperties["stopOnEntry"].GetBoolean();
@@ -259,22 +261,22 @@ namespace Jint.DebugAdapter
             host.Launch(program, debug, arguments.AdditionalProperties);
         }
 
-        protected override LoadedSourcesResponse LoadedSourcesRequest()
+        protected override async Task<LoadedSourcesResponse> LoadedSourcesRequest()
         {
             return new LoadedSourcesResponse(new List<Source>());
         }
 
-        protected override void NextRequest(NextArguments arguments)
+        protected override async Task NextRequest(NextArguments arguments)
         {
             debugger.StepOver();
         }
 
-        protected override void PauseRequest(PauseArguments arguments)
+        protected override async Task PauseRequest(PauseArguments arguments)
         {
             debugger.Pause();
         }
 
-        protected override void RestartRequest(RestartArguments arguments)
+        protected override async Task RestartRequest(RestartArguments arguments)
         {
             // TODO: Restart is still totally broken - threading issues.
             restarting = true;
@@ -282,9 +284,9 @@ namespace Jint.DebugAdapter
             Launch(arguments.Arguments);
         }
 
-        protected override ScopesResponse ScopesRequest(ScopesArguments arguments)
+        protected override async Task<ScopesResponse> ScopesRequest(ScopesArguments arguments)
         {
-            var frame = debugger.CurrentDebugInformation.CallStack[arguments.FrameId];
+            var frame = currentDebugInformation.CallStack[arguments.FrameId];
             return new ScopesResponse(frame.ScopeChain.Select(s =>
                 new Scope(s.ScopeType.ToString(),
                 s.ScopeType == DebugScopeType.Local ?
@@ -293,7 +295,7 @@ namespace Jint.DebugAdapter
             ));
         }
 
-        protected override SetBreakpointsResponse SetBreakpointsRequest(SetBreakpointsArguments arguments)
+        protected override async Task<SetBreakpointsResponse> SetBreakpointsRequest(SetBreakpointsArguments arguments)
         {
             // TODO: What should be done if client sends breakpoints for unknown source?
             // (Happens e.g. when launching a file in VSCode while other files are open).
@@ -323,7 +325,7 @@ namespace Jint.DebugAdapter
             return new SetBreakpointsResponse(results);
         }
 
-        protected override SetVariableResponse SetVariableRequest(SetVariableArguments arguments)
+        protected override async Task<SetVariableResponse> SetVariableRequest(SetVariableArguments arguments)
         {
             var value = debugger.Evaluate(arguments.Value);
 
@@ -346,10 +348,10 @@ namespace Jint.DebugAdapter
             }
         }
 
-        protected override StackTraceResponse StackTraceRequest(StackTraceArguments arguments)
+        protected override async Task<StackTraceResponse> StackTraceRequest(StackTraceArguments arguments)
         {
             // TODO: StackFrameFormat handling?
-            var frames = debugger.CurrentDebugInformation.CallStack.AsEnumerable();
+            var frames = currentDebugInformation.CallStack.AsEnumerable();
 
             // Return subset
             if (arguments.Levels > 0)
@@ -357,48 +359,53 @@ namespace Jint.DebugAdapter
                 frames = frames.Skip(arguments.StartFrame ?? 0).Take(arguments.Levels.Value);
             }
 
-            return new StackTraceResponse(frames.Select((frame, index) =>
+            var result = new List<StackFrame>();
+            int index = 0;
+            foreach (var frame in frames)
             {
                 var location = ToClientSourceLocation(frame.Location);
-
-                return new StackFrame(index, frame.FunctionName)
+                result.Add(new StackFrame(index, frame.FunctionName)
                 {
                     Source = location.Source,
                     Line = location.Start.Line,
                     Column = location.Start.Column,
                     EndLine = location.End.Line,
                     EndColumn = location.End.Column
-                };
-            }))
+                });
+
+                index++;
+            }
+
+            return new StackTraceResponse(result)
             {
-                TotalFrames = debugger.CurrentDebugInformation.CallStack.Count
+                TotalFrames = currentDebugInformation.CallStack.Count
             };
         }
 
-        protected override void StepInRequest(StepInArguments arguments)
+        protected override async Task StepInRequest(StepInArguments arguments)
         {
             // TODO: StepInTargets support
             debugger.StepInto();
         }
 
-        protected override void StepOutRequest(StepOutArguments arguments)
+        protected override async Task StepOutRequest(StepOutArguments arguments)
         {
             debugger.StepOut();
         }
 
-        protected override void TerminateRequest(TerminateArguments arguments)
+        protected override async Task TerminateRequest(TerminateArguments arguments)
         {
             restarting = false;
             debugger.Terminate();
         }
 
-        protected override ThreadsResponse ThreadsRequest()
+        protected override async Task<ThreadsResponse> ThreadsRequest()
         {
             // "Even if a debug adapter does not support multiple threads, it must implement the threads request and return a single (dummy) thread."
             return new ThreadsResponse(new List<Thread> { new Thread(1, "Main Thread") });
         }
 
-        protected override VariablesResponse VariablesRequest(VariablesArguments arguments)
+        protected override async Task<VariablesResponse> VariablesRequest(VariablesArguments arguments)
         {
             var container = variableStore.GetContainer(arguments.VariablesReference);
             var variables = container.GetVariables(arguments.Filter, arguments.Start, arguments.Count);

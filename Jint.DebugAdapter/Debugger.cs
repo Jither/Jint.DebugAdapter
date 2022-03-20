@@ -6,13 +6,13 @@ using Jint.Runtime.Debugger;
 
 namespace Jint.DebugAdapter
 {
-    public delegate void DebugLogMessageEventHandler(string message, DebugInformation info);
-    public delegate void DebugPauseEventHandler(PauseReason reason, DebugInformation info);
-    public delegate void DebugEventHandler();
-    public delegate void DebugExceptionEventHandler(Exception ex);
-
     public class Debugger
     {
+        public delegate void DebugLogMessageEventHandler(string message, DebugInformation info);
+        public delegate void DebugPauseEventHandler(PauseReason reason, DebugInformation info);
+        public delegate void DebugEventHandler();
+        public delegate void DebugExceptionEventHandler(Exception ex);
+
         private enum DebuggerState
         {
             WaitingForUI,
@@ -33,16 +33,15 @@ namespace Jint.DebugAdapter
         public bool PauseOnEntry { get; set; }
         public bool IsAttached { get; private set; }
         public Location? CurrentLocation => engine?.DebugHandler.CurrentLocation;
-        public DebugInformation CurrentDebugInformation { get; private set; }
+
+        public IPauseHandler PauseHandler { get; set; } = new ResetEventPauseHandler();
 
         public event DebugLogMessageEventHandler LogPoint;
-        public event DebugPauseEventHandler Stopped;
-        public event DebugEventHandler Continued;
+        public event DebugPauseEventHandler Paused;
+        public event DebugEventHandler Resumed;
         public event DebugEventHandler Cancelled;
         public event DebugEventHandler Done;
         public event DebugExceptionEventHandler Error;
-
-        public IPauseHandler PauseHandler { get; set; } = new ResetEventPauseHandler();
 
         public Debugger(Engine engine)
         {
@@ -66,7 +65,7 @@ namespace Jint.DebugAdapter
                     PauseHandler.Pause();
 
                     engine.Execute(ast);
-                    Done?.Invoke();
+                    OnDone();
                 }
                 finally
                 {
@@ -78,12 +77,12 @@ namespace Jint.DebugAdapter
             {
                 if (t.IsCanceled)
                 {
-                    Cancelled?.Invoke();
+                    OnCancelled();
                 }
                 if (t.IsFaulted)
                 {
                     // TODO: Better handling
-                    Error?.Invoke(t.Exception.InnerExceptions[0]);
+                    OnError(t.Exception.InnerExceptions[0]);
                 }
             });
         }
@@ -173,6 +172,36 @@ namespace Jint.DebugAdapter
         {
             state = DebuggerState.Entering;
             PauseHandler.Resume();
+        }
+
+        protected virtual void OnDone()
+        {
+            Done?.Invoke();
+        }
+
+        protected virtual void OnCancelled()
+        {
+            Cancelled?.Invoke();
+        }
+
+        protected virtual void OnError(Exception ex)
+        {
+            Error?.Invoke(ex);
+        }
+
+        protected virtual void OnLogPoint(string message, DebugInformation info)
+        {
+            LogPoint?.Invoke(message, info);
+        }
+
+        protected virtual void OnPaused(PauseReason reason, DebugInformation info)
+        {
+            Paused?.Invoke(reason, info);
+        }
+
+        protected virtual void OnResumed()
+        {
+            Resumed?.Invoke();
         }
 
         private void Attach()
@@ -308,7 +337,7 @@ namespace Jint.DebugAdapter
                 if (breakpoint.LogMessage != null)
                 {
                     var message = Evaluate(breakpoint.LogMessage);
-                    LogPoint?.Invoke(message.AsString(), info);
+                    OnLogPoint(message.AsString(), info);
                     return false;
                 }
             }
@@ -319,12 +348,11 @@ namespace Jint.DebugAdapter
 
         private StepMode OnPause(PauseReason reason, DebugInformation e)
         {
-            CurrentDebugInformation = e;
-            Stopped?.Invoke(reason, e);
+            OnPaused(reason, e);
 
             PauseHandler.Pause();
 
-            Continued?.Invoke();
+            OnResumed();
 
             return nextStep;
         }
