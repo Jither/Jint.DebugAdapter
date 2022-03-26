@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
+using Esprima;
 using Jint.Native;
 using Jint.Runtime;
 using Jither.DebugAdapter.Protocol.Events;
@@ -9,13 +10,17 @@ namespace Jint.DebugAdapter
 {
     public class Console
     {
+        private readonly int engineThreadId;
         private readonly JintAdapter adapter;
+        private readonly Engine engine;
         private readonly Dictionary<string, long> timers = new();
         private readonly Dictionary<string, uint> counters = new();
 
-        public Console(JintAdapter adapter)
+        public Console(JintAdapter adapter, Engine engine)
         {
             this.adapter = adapter;
+            this.engine = engine;
+            this.engineThreadId = Environment.CurrentManagedThreadId;
         }
 
         public void Assert(JsValue assertion, params JsValue[] values)
@@ -159,7 +164,17 @@ namespace Jint.DebugAdapter
 
         private void InternalSend(OutputCategory category, string message, OutputGroup group = null)
         {
-            var location = adapter.CurrentLocation;
+            EnsureOnEngineThread();
+            
+            SourceLocation location = null;
+            
+            // We're on the engine thread, so we're free to call it directly
+            var engineLocation = engine.DebugHandler.CurrentLocation;
+            if (engineLocation != null)
+            {
+                location = adapter.ToClientSourceLocation(engineLocation.Value);
+            }
+            
             adapter.SendEvent(new OutputEvent(message)
             {
                 Category = category,
@@ -168,6 +183,12 @@ namespace Jint.DebugAdapter
                 Source = location?.Source,
                 Group = group
             });
+        }
+
+        private void EnsureOnEngineThread()
+        {
+            System.Diagnostics.Debug.Assert(Environment.CurrentManagedThreadId == engineThreadId,
+                "Console methods should only be called on engine thread");
         }
     }
 }

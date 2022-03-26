@@ -41,24 +41,11 @@ namespace Jint.DebugAdapter
     
         public Console Console { get; }
 
-        public SourceLocation CurrentLocation
-        {
-            get
-            {
-                var location = debugger?.CurrentLocation;
-                if (location == null)
-                {
-                    return null;
-                }
-                return ToClientSourceLocation(location.Value);
-            }
-        }
-
         public JintAdapter(IScriptHost host, Engine engine, Endpoint endpoint) : base(endpoint)
         {
             this.host = host;
             debugger = new SynchronizingDebugger(engine);
-            Console = new Console(this);
+            Console = new Console(this, engine);
             variableStore = new VariableStore();
 
             debugger.Resumed += Debugger_Resumed;
@@ -200,18 +187,26 @@ namespace Jint.DebugAdapter
 
         protected override async Task<EvaluateResponse> EvaluateRequest(EvaluateArguments arguments)
         {
-            var result = await debugger.EvaluateAsync(arguments.Expression);
-
-            var valueInfo = variableStore.CreateValue("", result);
-            return new EvaluateResponse(valueInfo.Value)
+            try
             {
-                Type = valueInfo.Type,
-                VariablesReference = valueInfo.VariablesReference,
-                PresentationHint = valueInfo.PresentationHint,
-                NamedVariables = valueInfo.NamedVariables,
-                IndexedVariables = valueInfo.IndexedVariables,
-                MemoryReference = valueInfo.MemoryReference
-            };
+                var result = await debugger.EvaluateAsync(arguments.Expression);
+
+                var valueInfo = variableStore.CreateValue("", result);
+                return new EvaluateResponse(valueInfo.Value)
+                {
+                    Type = valueInfo.Type,
+                    VariablesReference = valueInfo.VariablesReference,
+                    PresentationHint = valueInfo.PresentationHint,
+                    NamedVariables = valueInfo.NamedVariables,
+                    IndexedVariables = valueInfo.IndexedVariables,
+                    MemoryReference = valueInfo.MemoryReference
+                };
+            }
+            catch (DebugEvaluationException ex) when (ex.InnerException != null)
+            {
+                // We want the error to reflect the inner exception, if there is one
+                throw ex.InnerException;
+            }
         }
 
         protected override async Task<ExceptionInfoResponse> ExceptionInfoRequest(ExceptionInfoArguments arguments)
@@ -445,7 +440,7 @@ namespace Jint.DebugAdapter
             return new VariablesResponse(variables);
         }
 
-        private SourceLocation ToClientSourceLocation(Location location)
+        internal SourceLocation ToClientSourceLocation(Location location)
         {
             return new SourceLocation(
                 source: new Source { Path = host.SourceProvider.GetSourcePath(location.Source) },
