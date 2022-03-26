@@ -144,7 +144,7 @@ namespace Jint.DebugAdapter
             return info;
         }
 
-        public async Task LaunchAsync(Action action)
+        public async Task LaunchAsync(Action action, bool debug)
         {
             var launchCompleted = new TaskCompletionSource();
             void HandleScriptReady(object sender, ScriptInformation info)
@@ -160,8 +160,31 @@ namespace Jint.DebugAdapter
 
             Post(() =>
             {
-                engine.DebugHandler.ScriptReady += HandleScriptReady;
-                action();
+                if (debug)
+                {
+                    Attach();
+                }
+                try
+                {
+                    engine.DebugHandler.ScriptReady += HandleScriptReady;
+                    action();
+                    OnDone();
+                }
+                catch (Exception ex)
+                {
+                    if (ex is OperationCanceledException)
+                    {
+                        OnCancelled();
+                    }
+                    else
+                    {
+                        OnError(ex);
+                    }
+                }
+                finally
+                {
+                    Detach();
+                }
             });
 
             await launchCompleted.Task;

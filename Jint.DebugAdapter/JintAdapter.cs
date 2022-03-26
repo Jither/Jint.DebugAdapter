@@ -48,13 +48,16 @@ namespace Jint.DebugAdapter
             Console = new Console(this, engine);
             variableStore = new VariableStore();
 
+            debugger.Cancelled += Debugger_Cancelled;
+            debugger.Done += Debugger_Done;
+            debugger.Error += Debugger_Error;
             debugger.Resumed += Debugger_Resumed;
             debugger.Paused += Debugger_Paused;
             debugger.LogPoint += Debugger_LogPoint;
         }
 
 
-        private void OnDone()
+        private void Debugger_Done()
         {
             // "In all situations where a debug adapter wants to end the debug session,
             // a terminated event must be fired."
@@ -65,7 +68,7 @@ namespace Jint.DebugAdapter
             // Do we have any need for an exit code?
         }
 
-        private void OnError(Exception ex)
+        private void Debugger_Error(Exception ex)
         {
             SendEvent(new StoppedEvent(StopReason.Exception)
             {
@@ -77,7 +80,7 @@ namespace Jint.DebugAdapter
             //SendEvent(new TerminatedEvent());
         }
 
-        private void OnCancelled()
+        private void Debugger_Cancelled()
         {
             // TODO: We can't stop protocol here, because Cancelled also happens when handling Restart.
             // Check if we *ever* need to stop the protocol
@@ -133,7 +136,7 @@ namespace Jint.DebugAdapter
 
         protected override async Task<BreakpointLocationsResponse> BreakpointLocationsRequest(BreakpointLocationsArguments arguments)
         {
-            string id = host.SourceProvider.GetSourceId(arguments.Source.Path);
+            string id = host.SourceProvider.GetSourceId(arguments.Source);
             
             var (start, end) = ToJintRange(arguments.Line, arguments.Column, arguments.EndLine, arguments.EndColumn);
 
@@ -256,36 +259,7 @@ namespace Jint.DebugAdapter
 
             debugger.PauseOnEntry = pauseOnEntry;
 
-            if (debug)
-            {
-                debugger.Attach();
-            }
-
-            await debugger.LaunchAsync(() => Launch(() => host.Launch(program, arguments.AdditionalProperties)));
-        }
-
-        private void Launch(Action launchAction)
-        {
-            try
-            {
-                launchAction();
-                OnDone();
-            }
-            catch (Exception ex)
-            {
-                if (ex is OperationCanceledException)
-                {
-                    OnCancelled();
-                }
-                else
-                {
-                    OnError(ex);
-                }
-            }
-            finally
-            {
-                debugger.Detach();
-            }
+            await debugger.LaunchAsync(() => host.Launch(program, arguments.AdditionalProperties), debug);
         }
 
         protected override async Task<LoadedSourcesResponse> LoadedSourcesRequest()
@@ -326,7 +300,7 @@ namespace Jint.DebugAdapter
         {
             // TODO: What should be done if client sends breakpoints for unknown source?
             // (Happens e.g. when launching a file in VSCode while other files are open).
-            string id = host.SourceProvider.GetSourceId(arguments.Source.Path);
+            string id = host.SourceProvider.GetSourceId(arguments.Source);
 
             // SetBreakpoints expects us to clear all current breakpoints
             await debugger.ClearBreakPointsAsync();
@@ -443,7 +417,7 @@ namespace Jint.DebugAdapter
         internal SourceLocation ToClientSourceLocation(Location location)
         {
             return new SourceLocation(
-                source: new Source { Path = host.SourceProvider.GetSourcePath(location.Source) },
+                source: host.SourceProvider.GetSource(location.Source),
                 start: ToClientPosition(location.Start),
                 end: ToClientPosition(location.End)
             );

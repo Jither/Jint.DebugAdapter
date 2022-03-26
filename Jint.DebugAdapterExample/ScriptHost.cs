@@ -7,11 +7,11 @@ namespace Jint.DebugAdapterExample
     public class ScriptHost : IScriptHost
     {
         public Engine Engine { get; }
-        public SourceProvider SourceProvider { get; }
+        public ISourceProvider SourceProvider { get; }
 
         public ScriptHost()
         {
-            SourceProvider = new SourceProvider();
+            SourceProvider = new FileSystemSourceProvider();
 
             Engine = new Engine(options =>
             {
@@ -28,9 +28,7 @@ namespace Jint.DebugAdapterExample
 
         public void Launch(string program, IReadOnlyDictionary<string, JsonElement> arguments)
         {
-            string source = File.ReadAllText(program);
-            string sourceId = SourceProvider.Register(program);
-            Engine.Execute(source, new Esprima.ParserOptions(sourceId));
+            Engine.ImportModule(program);
         }
     }
 }

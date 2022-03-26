@@ -19,7 +19,7 @@ Planned (❌) and currently working (✔) - but not necessarily fully completed 
 - ❌ Attach to debuggee process and launch script
 - ✔ Debug scripts accessible to client and debuggee via file system path (debugger client loads source from disk)
 - ❌ Debug scripts only accessible to debuggee (debuggee provides source to debugger client; client may request script to launch via debuggee-defined URL scheme)
-- ❌ Dynamic loading of scripts (imported modules)
+- ✔ Dynamic loading of scripts (imported modules)
 
 ### Breakpoints
 - ✔ Column breakpoints

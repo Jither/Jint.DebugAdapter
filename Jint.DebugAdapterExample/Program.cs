@@ -21,9 +21,6 @@ namespace Jint.DebugAdapterExample
             host.RegisterConsole(adapter.Console);
 
             adapter.StartListening();
-
-            // TODO: This is for testing script execution after disconnect. Remove when working.
-            System.Console.ReadKey();
         }
 
         private static Endpoint CreateEndpoint(string[] args)

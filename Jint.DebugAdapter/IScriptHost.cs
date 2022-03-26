@@ -4,7 +4,7 @@ namespace Jint.DebugAdapter
 {
     public interface IScriptHost
     {
-        SourceProvider SourceProvider { get; }
+        ISourceProvider SourceProvider { get; }
 
         void Launch(string program, IReadOnlyDictionary<string, JsonElement> arguments);
     }
