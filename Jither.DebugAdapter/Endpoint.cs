@@ -17,24 +17,17 @@ namespace Jither.DebugAdapter
         protected ManualResetEvent waitForExit = new(false);
 
         private DebugProtocol protocol;
-        private readonly Adapter adapter;
 
         public CultureInfo Locale { get; private set; } = CultureInfo.GetCultureInfo("en-US");
         public bool LinesStartAt1 { get; private set; } = true;
         public bool ColumnsStartAt1 { get; private set; } = true;
         public string PathFormat { get; private set; }
 
-        protected Endpoint(Adapter adapter)
+        protected Endpoint()
         {
-            this.adapter = adapter;
         }
 
-        public void Initialize()
-        {
-            StartListening();
-        }
-
-        protected void InitializeStreams(Stream inputStream, Stream outputStream)
+        protected void InitializeStreams(Adapter adapter, Stream inputStream, Stream outputStream)
         {
             protocol = new DebugProtocol(adapter, inputStream, outputStream);
             adapter.Protocol = protocol;
@@ -52,7 +45,13 @@ namespace Jither.DebugAdapter
             }
         }
 
-        protected abstract void StartListening();
+        internal void Initialize(Adapter adapter)
+        {
+            StartListening(adapter);
+        }
+
+        protected abstract void StartListening(Adapter adapter);
+
         protected void Terminate()
         {
             logger.Info("Terminating...");

@@ -2,7 +2,7 @@ Jint.DebugAdapter
 =================
 (Eventually) an implementation of the [DebugAdapter protocol](https://microsoft.github.io/debug-adapter-protocol/) (used by e.g. Visual Studio Code) for [Jint](https://github.com/sebastienros/jint) debugging.
 
-Currently a hot mess. Not ready for production use (also may, at any time, start depending on code not merged into Jint yet).
+Currently a hot mess. Not ready for production use (also uses [functionality not yet merged into Jint](https://github.com/Jither/jint/tree/debugger-improvements-5)).
 
 * __Jither.DebugAdapter__ is a general purpose implementation of the DebugAdapter protocol.
 * __Jint.DebugAdapter__ implements the DebugAdapter for Jint.
@@ -67,5 +67,5 @@ Planned (❌) and currently working (✔) - but not necessarily fully completed 
 
 Outstanding general issues
 --------------------------
-- ❌ Threading and thread safety - particularly when using console output/logpoints
+- ❌ Probably still a few issues with threading and thread safety
 - ❌ Proper client error handling

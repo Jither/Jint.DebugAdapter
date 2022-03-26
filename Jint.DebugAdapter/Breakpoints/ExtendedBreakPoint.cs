@@ -4,7 +4,7 @@ using Esprima;
 using Esprima.Ast;
 using Jint.Runtime.Debugger;
 
-namespace Jint.DebugAdapter.Breakpoints
+namespace Jint.DebugAdapter.BreakPoints
 {
     /// <summary>
     /// Custom breakpoint extensions for this debugger implementation. Adds hit conditions and log points.

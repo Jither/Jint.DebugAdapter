@@ -2,15 +2,15 @@
 {
     public class StdInOutEndpoint : Endpoint
     {
-        public StdInOutEndpoint(Adapter adapter) : base(adapter)
+        public StdInOutEndpoint()
         {
         }
 
-        protected override void StartListening()
+        protected override void StartListening(Adapter adapter)
         {
             var input = Console.OpenStandardInput();
             var output = Console.OpenStandardOutput();
-            InitializeStreams(input, output);
+            InitializeStreams(adapter, input, output);
         }
     }
 }

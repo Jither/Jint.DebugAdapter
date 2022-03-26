@@ -6,7 +6,7 @@ namespace Jint.DebugAdapterExample
 {
     public class Program
     {
-        public static async Task Main(string[] args)
+        public static void Main(string[] args)
         {
             LogManager.Level = LogLevel.Verbose;
             LogManager.Provider = new ConsoleLogProvider();
@@ -14,30 +14,31 @@ namespace Jint.DebugAdapterExample
             var logger = LogManager.GetLogger();
 
             logger.Info("Started");
-            Endpoint endpoint;
-            var host = new ScriptHost();
-            var adapter = new JintAdapter(host);
+            var endpoint = CreateEndpoint(args);
 
+            var host = new ScriptHost();
+            var adapter = new JintAdapter(host, host.Engine, endpoint);
+            host.RegisterConsole(adapter.Console);
+
+            adapter.StartListening();
+
+            // TODO: This is for testing script execution after disconnect. Remove when working.
+            System.Console.ReadKey();
+        }
+
+        private static Endpoint CreateEndpoint(string[] args)
+        {
             if (args.Length > 0)
             {
                 if (Int32.TryParse(args[0], out int port))
                 {
-                    endpoint = new TcpEndpoint(adapter, port);
+                    return new TcpEndpoint(port);
                 }
-                else
-                {
-                    endpoint = new NamedPipeEndpoint(adapter, args[0]);
-                }
+                
+                return new NamedPipeEndpoint(args[0]);
             }
-            else
-            {
-                endpoint = new StdInOutEndpoint(adapter);
-            }
-
-            endpoint.Initialize();
-            await endpoint.StartAsync();
-            // TODO: This is for testing script execution after disconnect. Remove when working.
-            System.Console.ReadKey();
+            
+            return new StdInOutEndpoint();
         }
     }
 }

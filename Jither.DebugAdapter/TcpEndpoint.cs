@@ -7,19 +7,19 @@ namespace Jither.DebugAdapter
     {
         private readonly int port;
 
-        public TcpEndpoint(Adapter adapter, int port = 4711) : base(adapter)
+        public TcpEndpoint(int port = 4711)
         {
             this.port = port;
         }
 
-        protected override void StartListening()
+        protected override void StartListening(Adapter adapter)
         {
             var listener = new TcpListener(IPAddress.Loopback, port);
             listener.Start();
             logger.Info($"Listening on {listener.LocalEndpoint}");
             var client = listener.AcceptTcpClient();
             var stream = client.GetStream();
-            InitializeStreams(stream, stream);
+            InitializeStreams(adapter, stream, stream);
         }
     }
 }

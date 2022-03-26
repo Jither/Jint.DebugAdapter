@@ -13,7 +13,29 @@ namespace Jither.DebugAdapter
 {
     public abstract class Adapter
     {
+        private readonly Endpoint endpoint;
+
         public DebugProtocol Protocol { get; set; }
+
+        protected Adapter(Endpoint endpoint)
+        {
+            this.endpoint = endpoint;
+        }
+
+        public void StartListening()
+        {
+            endpoint.Initialize(this);
+            Task.Run(() => endpoint.StartAsync());
+            OnListening();
+        }
+
+        protected abstract void OnListening();
+
+        public void SendEvent(ProtocolEventBody body)
+        {
+            var evt = new ProtocolEvent(body.EventName, body);
+            Protocol.SendEvent(evt);
+        }
 
         internal async Task<ProtocolResponseBody> HandleRequest(BaseProtocolRequest request)
         {
@@ -73,12 +95,6 @@ namespace Jither.DebugAdapter
         protected void Stop()
         {
             Protocol.Stop();
-        }
-
-        public void SendEvent(ProtocolEventBody body)
-        {
-            var evt = new ProtocolEvent(body.EventName, body);
-            Protocol.SendEvent(evt);
         }
 
         protected virtual Task AttachRequest(AttachArguments arguments) => throw new NotImplementedException();

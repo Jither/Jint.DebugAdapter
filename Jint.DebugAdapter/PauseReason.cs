@@ -3,7 +3,7 @@
     public enum PauseReason
     {
         Step,
-        Breakpoint,
+        BreakPoint,
         DebuggerStatement,
         Exception,
         Pause,

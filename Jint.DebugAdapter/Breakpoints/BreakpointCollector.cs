@@ -2,15 +2,15 @@
 using Esprima.Ast;
 using Esprima.Utils;
 
-namespace Jint.DebugAdapter.Breakpoints
+namespace Jint.DebugAdapter.BreakPoints
 {
-    public class BreakpointCollector : AstVisitor
+    public class BreakPointCollector : AstVisitor
     {
         private readonly List<Position> positions = new();
 
         public List<Position> Positions => positions;
 
-        public BreakpointCollector()
+        public BreakPointCollector()
         {
         }
 

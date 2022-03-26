@@ -1,6 +1,6 @@
 ﻿using Esprima;
 using Esprima.Ast;
-using Jint.DebugAdapter.Breakpoints;
+using Jint.DebugAdapter.BreakPoints;
 
 namespace Jint.DebugAdapter
 {
@@ -20,19 +20,19 @@ namespace Jint.DebugAdapter
 
     public class ScriptInfo
     {
-        private List<Position> breakpointPositions;
+        private List<Position> breakPointPositions;
 
-        public Script Ast { get; }
-        public List<Position> BreakpointPositions => breakpointPositions ??= CollectBreakpointPositions();
+        public Program Ast { get; }
+        public List<Position> BreakPointPositions => breakPointPositions ??= CollectBreakPointPositions();
 
-        public ScriptInfo(Script ast)
+        public ScriptInfo(Program ast)
         {
             Ast = ast;
         }
 
-        public IEnumerable<Position> FindBreakpointPositionsInRange(Position start, Position end)
+        public IEnumerable<Position> FindBreakPointPositionsInRange(Position start, Position end)
         {
-            var positions = BreakpointPositions;
+            var positions = BreakPointPositions;
 
             int index = positions.BinarySearch(start, EsprimaPositionComparer.Default);
 
@@ -55,9 +55,9 @@ namespace Jint.DebugAdapter
             }
         }
 
-        public Position FindNearestBreakpointPosition(Position position)
+        public Position FindNearestBreakPointPosition(Position position)
         {
-            var positions = BreakpointPositions;
+            var positions = BreakPointPositions;
             int index = positions.BinarySearch(position, EsprimaPositionComparer.Default);
             if (index < 0)
             {
@@ -67,9 +67,9 @@ namespace Jint.DebugAdapter
             return positions[index];
         }
 
-        private List<Position> CollectBreakpointPositions()
+        private List<Position> CollectBreakPointPositions()
         {
-            var collector = new BreakpointCollector();
+            var collector = new BreakPointCollector();
             collector.Visit(Ast);
             // Some statements may be at the same location
             var list = collector.Positions.Distinct().ToList();

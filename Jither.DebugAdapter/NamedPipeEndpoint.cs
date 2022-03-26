@@ -6,17 +6,17 @@ namespace Jither.DebugAdapter
     {
         private readonly string name;
 
-        public NamedPipeEndpoint(Adapter adapter, string name) : base(adapter)
+        public NamedPipeEndpoint(string name)
         {
             this.name = name;
         }
 
-        protected override void StartListening()
+        protected override void StartListening(Adapter adapter)
         {
             using (var namedPipe = new NamedPipeServerStream(name, PipeDirection.InOut))
             {
                 namedPipe.WaitForConnection();
-                InitializeStreams(namedPipe, namedPipe);
+                InitializeStreams(adapter, namedPipe, namedPipe);
             }
         }
     }

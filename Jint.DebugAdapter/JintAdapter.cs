@@ -29,7 +29,7 @@ namespace Jint.DebugAdapter
     {
         private readonly Logger logger = LogManager.GetLogger();
         private readonly IScriptHost host;
-        private readonly Debugger debugger;
+        private readonly SynchronizingDebugger debugger;
         private readonly VariableStore variableStore;
 
         private bool clientLinesStartAt1;
@@ -54,22 +54,31 @@ namespace Jint.DebugAdapter
             }
         }
 
-        public JintAdapter(IScriptHost host)
+        public JintAdapter(IScriptHost host, Engine engine, Endpoint endpoint) : base(endpoint)
         {
             this.host = host;
-            debugger = host.Debugger;
+            debugger = new SynchronizingDebugger(engine);
             Console = new Console(this);
             variableStore = new VariableStore();
 
             debugger.Resumed += Debugger_Resumed;
             debugger.Paused += Debugger_Paused;
-            debugger.Cancelled += Debugger_Cancelled;
-            debugger.Done += Debugger_Done;
             debugger.LogPoint += Debugger_LogPoint;
-            debugger.Error += Debugger_Error;
         }
 
-        private void Debugger_Error(Exception ex)
+
+        private void OnDone()
+        {
+            // "In all situations where a debug adapter wants to end the debug session,
+            // a terminated event must be fired."
+            SendEvent(new TerminatedEvent());
+
+            // "If the debuggee has ended (and the debug adapter is able to detect this), an optional exited
+            // event can be issued to return the exit code to the development tool."
+            // Do we have any need for an exit code?
+        }
+
+        private void OnError(Exception ex)
         {
             SendEvent(new StoppedEvent(StopReason.Exception)
             {
@@ -81,25 +90,7 @@ namespace Jint.DebugAdapter
             //SendEvent(new TerminatedEvent());
         }
 
-        private void Debugger_LogPoint(string message, DebugInformation e)
-        {
-            // TODO: Something is messing with the stack frames (and probably other things).
-            // Thread desynchronization due to outputting while running?
-            Console.Send(OutputCategory.Stdout, message);
-        }
-
-        private void Debugger_Done()
-        {
-            // "In all situations where a debug adapter wants to end the debug session,
-            // a terminated event must be fired."
-            SendEvent(new TerminatedEvent());
-            
-            // "If the debuggee has ended (and the debug adapter is able to detect this), an optional exited
-            // event can be issued to return the exit code to the development tool."
-            // Do we have any need for an exit code?
-        }
-
-        private void Debugger_Cancelled()
+        private void OnCancelled()
         {
             // TODO: We can't stop protocol here, because Cancelled also happens when handling Restart.
             // Check if we *ever* need to stop the protocol
@@ -109,6 +100,14 @@ namespace Jint.DebugAdapter
             }
         }
 
+
+        private void Debugger_LogPoint(string message, DebugInformation e)
+        {
+            // TODO: Something is messing with the stack frames (and probably other things).
+            // Thread desynchronization due to outputting while running?
+            Console.Send(OutputCategory.Stdout, message);
+        }
+
         private void Debugger_Paused(PauseReason reason, DebugInformation info)
         {
             currentDebugInformation = info;
@@ -116,7 +115,7 @@ namespace Jint.DebugAdapter
 
             SendEvent(reason switch
             {
-                PauseReason.Breakpoint => new StoppedEvent(StopReason.Breakpoint) { Description = "Hit breakpoint" },
+                PauseReason.BreakPoint => new StoppedEvent(StopReason.Breakpoint) { Description = "Hit breakpoint" },
                 PauseReason.Entry => new StoppedEvent(StopReason.Entry) { Description = "Paused on entry" },
                 PauseReason.Exception => new StoppedEvent(StopReason.Exception) { Description = "An error occurred" },
                 PauseReason.Pause => new StoppedEvent(StopReason.Pause) { Description = "Paused by user" },
@@ -124,6 +123,11 @@ namespace Jint.DebugAdapter
                 PauseReason.DebuggerStatement => new StoppedEvent(StopReason.Breakpoint) { Description = "Hit debugger statement" },
                 _ => throw new NotImplementedException($"DebugAdapter reason not implemented for {reason}")
             });
+        }
+
+        protected override void OnListening()
+        {
+            debugger.WaitForUI();
         }
 
         private void Debugger_Resumed()
@@ -147,7 +151,7 @@ namespace Jint.DebugAdapter
             var (start, end) = ToJintRange(arguments.Line, arguments.Column, arguments.EndLine, arguments.EndColumn);
 
             var info = debugger.GetScriptInfo(id);
-            var positions = info.FindBreakpointPositionsInRange(start, end);
+            var positions = info.FindBreakPointPositionsInRange(start, end);
 
             var locations = positions.Select(p => {
                 var pos = ToClientPosition(p);
@@ -196,7 +200,7 @@ namespace Jint.DebugAdapter
 
         protected override async Task<EvaluateResponse> EvaluateRequest(EvaluateArguments arguments)
         {
-            var result = debugger.Evaluate(arguments.Expression);
+            var result = await debugger.EvaluateAsync(arguments.Expression);
 
             var valueInfo = variableStore.CreateValue("", result);
             return new EvaluateResponse(valueInfo.Value)
@@ -243,12 +247,12 @@ namespace Jint.DebugAdapter
             // the ‘disconnect’ request terminates the debuggee."
             shouldTerminateOnDisconnect = true;
 
-            await Launch(arguments);
+            await LaunchAsync(arguments);
 
             SendEvent(new InitializedEvent());
         }
 
-        private async Task Launch(ConfigurationArguments arguments)
+        private async Task LaunchAsync(ConfigurationArguments arguments)
         {
             string program = arguments.AdditionalProperties["program"].GetString();
             bool pauseOnEntry = arguments.AdditionalProperties["stopOnEntry"].GetBoolean();
@@ -256,9 +260,37 @@ namespace Jint.DebugAdapter
             bool debug = !(arguments.NoDebug ?? false);
 
             debugger.PauseOnEntry = pauseOnEntry;
-            
-            // TODO: Need to figure out threading here...
-            host.Launch(program, debug, arguments.AdditionalProperties);
+
+            if (debug)
+            {
+                debugger.Attach();
+            }
+
+            await debugger.LaunchAsync(() => Launch(() => host.Launch(program, arguments.AdditionalProperties)));
+        }
+
+        private void Launch(Action launchAction)
+        {
+            try
+            {
+                launchAction();
+                OnDone();
+            }
+            catch (Exception ex)
+            {
+                if (ex is OperationCanceledException)
+                {
+                    OnCancelled();
+                }
+                else
+                {
+                    OnError(ex);
+                }
+            }
+            finally
+            {
+                debugger.Detach();
+            }
         }
 
         protected override async Task<LoadedSourcesResponse> LoadedSourcesRequest()
@@ -281,7 +313,7 @@ namespace Jint.DebugAdapter
             // TODO: Restart is still totally broken - threading issues.
             restarting = true;
             debugger.Terminate();
-            Launch(arguments.Arguments);
+            await LaunchAsync(arguments.Arguments);
         }
 
         protected override async Task<ScopesResponse> ScopesRequest(ScopesArguments arguments)
@@ -302,13 +334,13 @@ namespace Jint.DebugAdapter
             string id = host.SourceProvider.GetSourceId(arguments.Source.Path);
 
             // SetBreakpoints expects us to clear all current breakpoints
-            debugger.ClearBreakpoints();
+            await debugger.ClearBreakPointsAsync();
 
             List<Breakpoint> results = new();
             foreach (var breakpoint in arguments.Breakpoints)
             {
                 var jintPosition = ToJintPosition(breakpoint.Line, breakpoint.Column);
-                var actualJintPosition = debugger.SetBreakpoint(id, jintPosition, breakpoint.Condition, breakpoint.HitCondition, breakpoint.LogMessage);
+                var actualJintPosition = await debugger.SetBreakPointAsync(id, jintPosition, breakpoint.Condition, breakpoint.HitCondition, breakpoint.LogMessage);
                 var actualBreakpoint = new Breakpoint
                 {
                     Verified = true
@@ -327,7 +359,7 @@ namespace Jint.DebugAdapter
 
         protected override async Task<SetVariableResponse> SetVariableRequest(SetVariableArguments arguments)
         {
-            var value = debugger.Evaluate(arguments.Value);
+            var value = await debugger.EvaluateAsync(arguments.Value);
 
             try
             {
