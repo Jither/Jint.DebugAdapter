@@ -239,6 +239,7 @@ namespace Jint.DebugAdapter
         public void Pause()
         {
             state = DebuggerState.Pausing;
+            nextStep = StepMode.Into;
         }
 
         public void Disconnect()
@@ -276,6 +277,7 @@ namespace Jint.DebugAdapter
             engine.DebugHandler.ScriptReady += DebugHandler_ScriptReady;
             engine.DebugHandler.Break += DebugHandler_Break;
             engine.DebugHandler.Step += DebugHandler_Step;
+            engine.DebugHandler.Skip += DebugHandler_Skip;
         }
 
         public void Detach()
@@ -287,6 +289,7 @@ namespace Jint.DebugAdapter
             engine.DebugHandler.ScriptReady -= DebugHandler_ScriptReady;
             engine.DebugHandler.Break -= DebugHandler_Break;
             engine.DebugHandler.Step -= DebugHandler_Step;
+            engine.DebugHandler.Skip -= DebugHandler_Skip;
             IsAttached = false;
         }
 
@@ -421,6 +424,20 @@ namespace Jint.DebugAdapter
 
             // Break is only called when we're not stepping - so since we didn't pause, keep running:
             return StepMode.None;
+        }
+
+
+        private StepMode DebugHandler_Skip(object sender, DebugInformation e)
+        {
+            cts.Token.ThrowIfCancellationRequested();
+
+            if (!IsAttached)
+            {
+                return StepMode.None;
+            }
+
+            // Skip allows us to change the stepmode (i.e. pause) when we're in StepMode.None (i.e. running)
+            return nextStep;
         }
 
         private bool HandleBreakPoint(DebugInformation info)
