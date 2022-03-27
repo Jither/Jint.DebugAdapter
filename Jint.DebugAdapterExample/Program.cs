@@ -6,36 +6,75 @@ namespace Jint.DebugAdapterExample
 {
     public class Program
     {
+        private static Dictionary<string, Action<Options>> DemosById = new()
+        {
+            ["files"] = DemoFiles,
+            ["internal"] = DemoInternal
+        };
+
+        private class Options
+        {
+            public string DemoId { get; } = "files";
+            public string? Endpoint { get; }
+
+            public Options(string[] args)
+            {
+                foreach (var arg in args)
+                {
+                    if (DemosById.ContainsKey(arg))
+                    {
+                        DemoId = arg;
+                        continue;
+                    }
+                    Endpoint = arg;
+                }
+            }
+        }
+
         public static void Main(string[] args)
         {
             LogManager.Level = LogLevel.Verbose;
             LogManager.Provider = new ConsoleLogProvider();
 
-            var logger = LogManager.GetLogger();
+            var options = new Options(args);
+            var demo = DemosById[options.DemoId];
 
-            logger.Info("Started");
-            var endpoint = CreateEndpoint(args);
+            demo(options);
+        }
 
-            var host = new ScriptHost();
+        private static Endpoint CreateEndpoint(string? endpoint)
+        {
+            if (endpoint == null)
+            {
+                return new StdInOutEndpoint();
+            }
+            if (Int32.TryParse(endpoint, out int port))
+            {
+                return new TcpEndpoint(port);
+            }
+            return new NamedPipeEndpoint(endpoint);
+        }
+
+        private static void DemoFiles(Options options)
+        {
+            var endpoint = CreateEndpoint(options.Endpoint);
+
+            var host = new FilesScriptHost();
             var adapter = new JintAdapter(host, host.Engine, endpoint);
             host.RegisterConsole(adapter.Console);
 
             adapter.StartListening();
         }
 
-        private static Endpoint CreateEndpoint(string[] args)
+        private static void DemoInternal(Options options)
         {
-            if (args.Length > 0)
-            {
-                if (Int32.TryParse(args[0], out int port))
-                {
-                    return new TcpEndpoint(port);
-                }
-                
-                return new NamedPipeEndpoint(args[0]);
-            }
-            
-            return new StdInOutEndpoint();
+            var endpoint = CreateEndpoint(options.Endpoint);
+
+            var host = new InternalScriptHost();
+            var adapter = new JintAdapter(host, host.Engine, endpoint);
+            host.RegisterConsole(adapter.Console);
+
+            adapter.StartListening();
         }
     }
 }

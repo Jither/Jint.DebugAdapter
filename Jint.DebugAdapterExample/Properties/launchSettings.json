@@ -1,8 +1,12 @@
 {
   "profiles": {
-    "Jint.DebugAdapterExample": {
+    "Example Debug Filesystem": {
       "commandName": "Project",
       "commandLineArgs": "4711"
+    },
+    "Example Debug Internal": {
+      "commandName": "Project",
+      "commandLineArgs": "4711 internal"
     }
   }
 }

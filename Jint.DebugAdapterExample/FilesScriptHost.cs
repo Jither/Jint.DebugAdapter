@@ -4,12 +4,12 @@ using Jint.Runtime.Debugger;
 
 namespace Jint.DebugAdapterExample
 {
-    public class ScriptHost : IScriptHost
+    public class FilesScriptHost : IScriptHost
     {
         public Engine Engine { get; }
         public ISourceProvider SourceProvider { get; }
 
-        public ScriptHost()
+        public FilesScriptHost()
         {
             SourceProvider = new FileSystemSourceProvider();
 

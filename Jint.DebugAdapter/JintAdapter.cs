@@ -349,6 +349,12 @@ namespace Jint.DebugAdapter
             }
         }
 
+        protected override async Task<SourceResponse> SourceRequest(SourceArguments arguments)
+        {
+            var script = host.SourceProvider.GetContent(arguments.Source);
+            return new SourceResponse(script) { MimeType = "text/javascript" };
+        }
+
         protected override async Task<StackTraceResponse> StackTraceRequest(StackTraceArguments arguments)
         {
             // TODO: StackFrameFormat handling?

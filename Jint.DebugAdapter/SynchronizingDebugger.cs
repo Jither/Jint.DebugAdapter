@@ -179,6 +179,7 @@ namespace Jint.DebugAdapter
                     else
                     {
                         OnError(ex);
+                        launchCompleted.SetException(ex);
                     }
                 }
                 finally
@@ -477,6 +478,7 @@ namespace Jint.DebugAdapter
             EnsureOnEngineThread();
             while (true)
             {
+                // TODO: Find a way to consume in single thread without constant looping
                 if (channel.Reader.TryRead(out var message))
                 {
                     if (message.ShouldContinue)

@@ -13,5 +13,11 @@ namespace Jint.DebugAdapter
         /// Returns DAP Source for a given source ID
         /// </summary>
         Source GetSource(string sourceId);
+
+        /// <summary>
+        /// Returns script content for a given DAP source. This may throw if provider doesn't use
+        /// DAP script references (integer IDs) - e.g. a file system-based provider returning paths
+        /// </summary>
+        string GetContent(Source source);
     }
 }

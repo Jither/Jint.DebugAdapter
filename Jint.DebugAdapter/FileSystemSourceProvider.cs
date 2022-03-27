@@ -4,6 +4,12 @@ namespace Jint.DebugAdapter
 {
     public class FileSystemSourceProvider : ISourceProvider
     {
+        public string GetContent(Source source)
+        {
+            // We don't provide the content - the file system does.
+            throw new NotImplementedException();
+        }
+
         public Source GetSource(string sourceId)
         {
             return new Source
