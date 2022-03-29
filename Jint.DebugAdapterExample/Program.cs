@@ -9,7 +9,8 @@ namespace Jint.DebugAdapterExample
         private static Dictionary<string, Action<Options>> DemosById = new()
         {
             ["files"] = DemoFiles,
-            ["internal"] = DemoInternal
+            ["internal"] = DemoInternal,
+            ["running"] = DemoRunning
         };
 
         private class Options
@@ -75,6 +76,17 @@ namespace Jint.DebugAdapterExample
             host.RegisterConsole(adapter.Console);
 
             adapter.StartListening();
+        }
+
+        private static void DemoRunning(Options options)
+        {
+            var endpoint = CreateEndpoint(options.Endpoint);
+
+            var host = new RunningScriptHost();
+            var adapter = new JintAdapter(host, host.Engine, endpoint);
+            host.RegisterConsole(adapter.Console);
+
+            adapter.Launch("scripts/index.js");
         }
     }
 }

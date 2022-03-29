@@ -8,6 +8,7 @@ using Thread = Jither.DebugAdapter.Protocol.Types.Thread;
 using Jither.DebugAdapter.Helpers;
 using Esprima;
 using Jint.DebugAdapter.Variables;
+using System.Text.Json;
 
 namespace Jint.DebugAdapter
 {
@@ -27,6 +28,13 @@ namespace Jint.DebugAdapter
 
     public class JintAdapter : Adapter
     {
+        private enum AdapterMode
+        {
+            Unknown,
+            Attach,
+            Launch
+        }
+
         private readonly Logger logger = LogManager.GetLogger();
         private readonly IScriptHost host;
         private readonly SynchronizingDebugger debugger;
@@ -34,7 +42,7 @@ namespace Jint.DebugAdapter
 
         private bool clientLinesStartAt1;
         private bool clientColumnsStartAt1;
-        private bool shouldTerminateOnDisconnect;
+        private AdapterMode mode;
 
         private bool restarting;
         private DebugInformation currentDebugInformation;
@@ -56,11 +64,25 @@ namespace Jint.DebugAdapter
             debugger.LogPoint += Debugger_LogPoint;
         }
 
+        public void Launch(string program)
+        {
+            var task = debugger.LaunchAsync(
+                () => host.Launch(program, new Dictionary<string, JsonElement>()),
+                debug: true,
+                pauseOnEntry: false,
+                attach: false,
+                waitForUI: false);
+
+            StartListening();
+            task.Wait();
+        }
 
         private void Debugger_Done()
         {
             // "In all situations where a debug adapter wants to end the debug session,
             // a terminated event must be fired."
+            // In other words, this should NOT be sent if the client asked to terminate.
+            // TODO: This should probably be handled through guarding against events etc. after termination/disconnect
             SendEvent(new TerminatedEvent());
 
             // "If the debuggee has ended (and the debug adapter is able to detect this), an optional exited
@@ -117,7 +139,7 @@ namespace Jint.DebugAdapter
 
         protected override void OnListening()
         {
-            debugger.WaitForUI();
+            debugger.WaitForClient();
         }
 
         private void Debugger_Resumed()
@@ -129,9 +151,15 @@ namespace Jint.DebugAdapter
 
         protected override async Task AttachRequest(AttachArguments arguments)
         {
-            // "If the ‘attach’ request was used to connect to the debuggee, ‘disconnect’ does not terminate
-            // the debuggee."
-            shouldTerminateOnDisconnect = false;
+            mode = AdapterMode.Attach;
+
+            bool pauseOnAttach = arguments.AdditionalProperties["stop"].GetBoolean();
+            // Not a fan of double negatives (i.e. testing for !noDebug), so let's convert it to debug
+            bool debug = !(arguments.NoDebug ?? false);
+
+            await debugger.AttachAsync(pauseOnAttach);
+
+            SendEvent(new InitializedEvent());
         }
 
         protected override async Task<BreakpointLocationsResponse> BreakpointLocationsRequest(BreakpointLocationsArguments arguments)
@@ -157,7 +185,11 @@ namespace Jint.DebugAdapter
 
         protected override async Task ConfigurationDoneRequest()
         {
-            debugger.NotifyUIReady();
+            if (mode == AdapterMode.Launch)
+            {
+                // When launching, this continues the script after it's waited for the UI
+                debugger.NotifyUIReady();
+            }
         }
 
         protected override async Task<ContinueResponse> ContinueRequest(ContinueArguments arguments)
@@ -176,7 +208,7 @@ namespace Jint.DebugAdapter
             if (
                 arguments.Restart == true ||
                 arguments.TerminateDebuggee == true ||
-                (arguments.TerminateDebuggee == null && shouldTerminateOnDisconnect)
+                (arguments.TerminateDebuggee == null && mode == AdapterMode.Launch)
             )
             {
                 restarting = false;
@@ -243,7 +275,7 @@ namespace Jint.DebugAdapter
         {
             // "If the debuggee has been started with the ‘launch’ request,
             // the ‘disconnect’ request terminates the debuggee."
-            shouldTerminateOnDisconnect = true;
+            mode = AdapterMode.Launch;
 
             await LaunchAsync(arguments);
 
@@ -257,9 +289,12 @@ namespace Jint.DebugAdapter
             // Not a fan of double negatives (i.e. testing for !noDebug), so let's convert it to debug
             bool debug = !(arguments.NoDebug ?? false);
 
-            debugger.PauseOnEntry = pauseOnEntry;
-
-            await debugger.LaunchAsync(() => host.Launch(program, arguments.AdditionalProperties), debug);
+            await debugger.LaunchAsync(
+                () => host.Launch(program, arguments.AdditionalProperties), 
+                debug: debug,
+                pauseOnEntry: pauseOnEntry,
+                attach: true,
+                waitForUI: true);
         }
 
         protected override async Task<LoadedSourcesResponse> LoadedSourcesRequest()

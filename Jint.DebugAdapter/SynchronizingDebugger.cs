@@ -113,8 +113,8 @@ namespace Jint.DebugAdapter
         private readonly int engineThreadId;
         private StepMode nextStep;
         private DebuggerState state;
+        private bool pauseOnEntry;
 
-        public bool PauseOnEntry { get; set; }
         public bool IsAttached { get; private set; }
 
         public event DebugLogMessageEventHandler LogPoint;
@@ -144,8 +144,22 @@ namespace Jint.DebugAdapter
             return info;
         }
 
-        public async Task LaunchAsync(Action action, bool debug)
+        public async Task AttachAsync(bool pause)
         {
+            Post(() =>
+            {
+                Attach();
+                if (pause)
+                {
+                    Pause();
+                }
+            });
+        }
+
+        public async Task LaunchAsync(Action action, bool debug, bool pauseOnEntry, bool attach, bool waitForUI)
+        {
+            this.pauseOnEntry = pauseOnEntry;
+
             var launchCompleted = new TaskCompletionSource();
             void HandleScriptReady(object sender, ScriptInformation info)
             {
@@ -153,16 +167,23 @@ namespace Jint.DebugAdapter
                 engine.DebugHandler.ScriptReady -= HandleScriptReady;
                 launchCompleted.SetResult();
 
-                // This will be called on the engine thread, hence we can pause it and the Launch method
-                // will still return
-                WaitForUI();
+                // This will be called on the engine thread, hence we can pause it and the LaunchAsync method
+                // (which is not on the engine thread) will still return
+                if (waitForUI)
+                {
+                    WaitForUI();
+                }
             }
 
             Post(() =>
             {
                 if (debug)
                 {
-                    Attach();
+                    AddEventHandlers();
+                    if (attach)
+                    {
+                        Attach();
+                    }
                 }
                 try
                 {
@@ -184,6 +205,9 @@ namespace Jint.DebugAdapter
                 }
                 finally
                 {
+                    RemoveEventHandlers();
+                    // We detach regardless of whether we attached earlier - might have attached during script
+                    // execution.
                     Detach();
                 }
             });
@@ -274,10 +298,6 @@ namespace Jint.DebugAdapter
                 throw new InvalidOperationException($"Attempt to attach debugger when already attached.");
             }
             IsAttached = true;
-            engine.DebugHandler.ScriptReady += DebugHandler_ScriptReady;
-            engine.DebugHandler.Break += DebugHandler_Break;
-            engine.DebugHandler.Step += DebugHandler_Step;
-            engine.DebugHandler.Skip += DebugHandler_Skip;
         }
 
         public void Detach()
@@ -286,10 +306,6 @@ namespace Jint.DebugAdapter
             {
                 return;
             }
-            engine.DebugHandler.ScriptReady -= DebugHandler_ScriptReady;
-            engine.DebugHandler.Break -= DebugHandler_Break;
-            engine.DebugHandler.Step -= DebugHandler_Step;
-            engine.DebugHandler.Skip -= DebugHandler_Skip;
             IsAttached = false;
         }
 
@@ -341,6 +357,22 @@ namespace Jint.DebugAdapter
             Resumed?.Invoke();
         }
 
+        private void AddEventHandlers()
+        {
+            engine.DebugHandler.ScriptReady += DebugHandler_ScriptReady;
+            engine.DebugHandler.Break += DebugHandler_Break;
+            engine.DebugHandler.Step += DebugHandler_Step;
+            engine.DebugHandler.Skip += DebugHandler_Skip;
+        }
+
+        private void RemoveEventHandlers()
+        {
+            engine.DebugHandler.ScriptReady -= DebugHandler_ScriptReady;
+            engine.DebugHandler.Break -= DebugHandler_Break;
+            engine.DebugHandler.Step -= DebugHandler_Step;
+            engine.DebugHandler.Skip -= DebugHandler_Skip;
+        }
+
         private void Resume()
         {
             channel.Writer.TryWrite(new ContinueMessage());
@@ -355,6 +387,10 @@ namespace Jint.DebugAdapter
         {
             cts.Token.ThrowIfCancellationRequested();
 
+            // This (and the same call in Break and Step) is purely to handle attach request messages (which would be
+            // ignored, because no messages are handled when not attached). Consider making IsAttached shared between
+            // threads so it can simply be set directly.
+            HandleMessages();
             if (!IsAttached)
             {
                 return StepMode.None;
@@ -369,7 +405,7 @@ namespace Jint.DebugAdapter
                     throw new InvalidOperationException("Debugger should not be stepping while waiting for client or UI");
 
                 case DebuggerState.Entering:
-                    if (!PauseOnEntry)
+                    if (!pauseOnEntry)
                     {
                         state = DebuggerState.Running;
                         return StepMode.None;
@@ -400,6 +436,7 @@ namespace Jint.DebugAdapter
         {
             cts.Token.ThrowIfCancellationRequested();
 
+            HandleMessages();
             if (!IsAttached)
             {
                 return StepMode.None;
@@ -431,6 +468,7 @@ namespace Jint.DebugAdapter
         {
             cts.Token.ThrowIfCancellationRequested();
 
+            HandleMessages();
             if (!IsAttached)
             {
                 return StepMode.None;
@@ -496,15 +534,31 @@ namespace Jint.DebugAdapter
             while (true)
             {
                 // TODO: Find a way to consume in single thread without constant looping
-                if (channel.Reader.TryRead(out var message))
+                if (_ConsumeMessages())
                 {
-                    if (message.ShouldContinue)
-                    {
-                        break;
-                    }
-                    message.Invoke();
+                    break;
                 }
             }
+        }
+
+        private void HandleMessages()
+        {
+            EnsureOnEngineThread();
+            _ConsumeMessages();
+        }
+
+        private bool _ConsumeMessages()
+        {
+            // TODO: Find a way to consume in single thread without constant looping
+            while (channel.Reader.TryRead(out var message))
+            {
+                if (message.ShouldContinue)
+                {
+                    return true;
+                }
+                message.Invoke();
+            }
+            return false;
         }
 
         private void EnsureOnEngineThread()

@@ -15,7 +15,7 @@ Planned (❌) and currently working (✔) - but not necessarily fully completed 
 
 ### Execution and script access
 - ✔ Launch (run script in current tab of client)
-- ❌ Attach to running script
+- ✔ Attach to running script
 - ❌ Attach to debuggee process and launch script
 - ✔ Debug scripts accessible to client and debuggee via file system path (debugger client loads source from disk)
 - ✔ Debug scripts only accessible to debuggee (debuggee provides source to debugger client)
@@ -69,3 +69,5 @@ Outstanding general issues
 --------------------------
 - ❌ Probably still a few issues with threading and thread safety
 - ❌ Proper client error handling
+- ❌ Still some major issues with terminate/disconnect/restart
+- ❌ Code in need of cleanup

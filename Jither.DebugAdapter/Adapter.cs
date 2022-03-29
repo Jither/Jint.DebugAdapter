@@ -24,8 +24,11 @@ namespace Jither.DebugAdapter
 
         public void StartListening()
         {
-            endpoint.Initialize(this);
-            Task.Run(() => endpoint.StartAsync());
+            Task.Run(() =>
+            {
+                endpoint.Initialize(this);
+                endpoint.StartAsync();
+            });
             OnListening();
         }
 

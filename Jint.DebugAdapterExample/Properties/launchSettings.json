@@ -7,6 +7,10 @@
     "Example Debug Internal": {
       "commandName": "Project",
       "commandLineArgs": "4711 internal"
+    },
+    "Example Debug Running": {
+      "commandName": "Project",
+      "commandLineArgs": "4711 running"
     }
   }
 }

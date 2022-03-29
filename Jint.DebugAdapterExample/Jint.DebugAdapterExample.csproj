@@ -12,4 +12,14 @@
     <ProjectReference Include="..\Jint.DebugAdapter\Jint.DebugAdapter.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="scripts\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="scripts\index.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
