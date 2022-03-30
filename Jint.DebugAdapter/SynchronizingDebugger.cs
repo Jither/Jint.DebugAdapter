@@ -114,8 +114,16 @@ namespace Jint.DebugAdapter
         private StepMode nextStep;
         private DebuggerState state;
         private bool pauseOnEntry;
+        private long _isAttached;
 
-        public bool IsAttached { get; private set; }
+        public bool IsAttached
+        {
+            get => Interlocked.Read(ref _isAttached) == 1;
+            private set
+            {
+                Interlocked.CompareExchange(ref _isAttached, value ? 1 : 0, value ? 0 : 1);
+            }
+        }
 
         public event DebugLogMessageEventHandler LogPoint;
         public event DebugPauseEventHandler Paused;
@@ -144,16 +152,13 @@ namespace Jint.DebugAdapter
             return info;
         }
 
-        public async Task AttachAsync(bool pause)
+        public void Attach(bool pause)
         {
-            Post(() =>
+            if (pause)
             {
-                Attach();
-                if (pause)
-                {
-                    Pause();
-                }
-            });
+                Post(() => Pause());
+            }
+            InternalAttach();
         }
 
         public async Task LaunchAsync(Action action, bool debug, bool pauseOnEntry, bool attach, bool waitForUI)
@@ -167,8 +172,8 @@ namespace Jint.DebugAdapter
                 engine.DebugHandler.ScriptReady -= HandleScriptReady;
                 launchCompleted.SetResult();
 
-                // This will be called on the engine thread, hence we can pause it and the LaunchAsync method
-                // (which is not on the engine thread) will still return
+                // This will be called on the engine thread, hence we can pause, and the LaunchAsync method
+                // (which is *not* on the engine thread) will still return
                 if (waitForUI)
                 {
                     WaitForUI();
@@ -182,7 +187,7 @@ namespace Jint.DebugAdapter
                     AddEventHandlers();
                     if (attach)
                     {
-                        Attach();
+                        InternalAttach();
                     }
                 }
                 try
@@ -208,7 +213,7 @@ namespace Jint.DebugAdapter
                     RemoveEventHandlers();
                     // We detach regardless of whether we attached earlier - might have attached during script
                     // execution.
-                    Detach();
+                    InternalDetach();
                 }
             });
 
@@ -268,8 +273,8 @@ namespace Jint.DebugAdapter
 
         public void Disconnect()
         {
-            Detach();
-            // Make sure we're not paused
+            InternalDetach();
+            // Make sure we're not paused - disconnection means execution should continue without the debugger.
             Resume();
         }
 
@@ -291,7 +296,10 @@ namespace Jint.DebugAdapter
             return position;
         }
 
-        public void Attach()
+        // Note: InternalAttach may (will) be called from multiple threads. Since synchronized messages aren't consumed
+        // when the debugger isn't attached, we can't attach through a message. Hence, IsAttached is set up for thread
+        // safe access.
+        private void InternalAttach()
         {
             if (IsAttached)
             {
@@ -300,7 +308,7 @@ namespace Jint.DebugAdapter
             IsAttached = true;
         }
 
-        public void Detach()
+        private void InternalDetach()
         {
             if (!IsAttached)
             {
@@ -317,6 +325,7 @@ namespace Jint.DebugAdapter
 
         public void WaitForUI()
         {
+            // Wait until UI calls NotifyUIReady to indicate that it's ready for the script to execute.
             state = DebuggerState.WaitingForUI;
             Wait();
         }
@@ -387,15 +396,15 @@ namespace Jint.DebugAdapter
         {
             cts.Token.ThrowIfCancellationRequested();
 
-            // This (and the same call in Break and Step) is purely to handle attach request messages (which would be
-            // ignored, because no messages are handled when not attached). Consider making IsAttached shared between
-            // threads so it can simply be set directly.
-            HandleMessages();
             if (!IsAttached)
             {
                 return StepMode.None;
             }
 
+            // The Step handler may encounter breakpoints. Normal breakpoints don't need any handling while stepping
+            // (that's the reason Break isn't called in the first place). However, we're dealing with hit count
+            // conditions, which still need to increment the number of times the breakpoint has been passed. And
+            // logpoints, which still need to log, even when stepping through the logpoint.
             HandleBreakPoint(e);
 
             switch (state)
@@ -436,7 +445,6 @@ namespace Jint.DebugAdapter
         {
             cts.Token.ThrowIfCancellationRequested();
 
-            HandleMessages();
             if (!IsAttached)
             {
                 return StepMode.None;
@@ -468,7 +476,6 @@ namespace Jint.DebugAdapter
         {
             cts.Token.ThrowIfCancellationRequested();
 
-            HandleMessages();
             if (!IsAttached)
             {
                 return StepMode.None;
@@ -480,6 +487,7 @@ namespace Jint.DebugAdapter
 
         private bool HandleBreakPoint(DebugInformation info)
         {
+            // Custom "extensions" to Jint's breakpoint functionality - hit (count) conditions and logpoints.
             if (info.BreakPoint == null)
             {
                 return false;
@@ -528,44 +536,57 @@ namespace Jint.DebugAdapter
             scriptInfoBySourceId[id] = new ScriptInfo(ast);
         }
 
+        /// <summary>
+        /// Pauses execution, while still processing messages
+        /// </summary>
         private void Wait()
         {
-            EnsureOnEngineThread();
             while (true)
             {
-                // TODO: Find a way to consume in single thread without constant looping
-                if (_ConsumeMessages())
+                // We want to block here - that's how we pause script execution: by blocking the engine thread.
+                channel.Reader.WaitToReadAsync(cts.Token).AsTask().Wait();
+
+                if (ProcessMessages() == ProcessMessagesResult.ExecutionShouldContinue)
                 {
+                    // A message included a request to resume execution (e.g. continue/step)
                     break;
                 }
             }
         }
 
-        private void HandleMessages()
+        private enum ProcessMessagesResult
         {
-            EnsureOnEngineThread();
-            _ConsumeMessages();
+            KeepWaiting,
+            ExecutionShouldContinue
         }
 
-        private bool _ConsumeMessages()
+        /// <summary>
+        /// Processes all messages currently queued
+        /// </summary>
+        /// <returns>True if </returns>
+        private ProcessMessagesResult ProcessMessages()
         {
-            // TODO: Find a way to consume in single thread without constant looping
             while (channel.Reader.TryRead(out var message))
             {
                 if (message.ShouldContinue)
                 {
-                    return true;
+                    return ProcessMessagesResult.ExecutionShouldContinue;
                 }
+                EnsureOnEngineThread();
                 message.Invoke();
             }
-            return false;
+            return ProcessMessagesResult.KeepWaiting;
         }
 
+        [Conditional("DEBUG")]
         private void EnsureOnEngineThread()
         {
             Debug.Assert(Environment.CurrentManagedThreadId == engineThreadId, "Not on engine thread");
         }
 
+        /// <summary>
+        /// Sends an action (function, i.e. with result) to the message queue and awaits the result.
+        /// </summary>
         private async Task<T> InvokeAsync<T>(Func<T> action)
         {
             var message = new Message<T>(action);
@@ -573,6 +594,9 @@ namespace Jint.DebugAdapter
             return await message.Result;
         }
 
+        /// <summary>
+        /// Sends an action to the message queue and awaits its completion.
+        /// </summary>
         private async Task InvokeAsync(Action action)
         {
             var message = new Message(action);
@@ -580,6 +604,9 @@ namespace Jint.DebugAdapter
             await message.Result;
         }
 
+        /// <summary>
+        /// Posts an action to the message queue without waiting for it to be invoked.
+        /// </summary>
         private void Post(Action action)
         {
             var message = new Message(action);
