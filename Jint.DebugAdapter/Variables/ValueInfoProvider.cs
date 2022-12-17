@@ -111,6 +111,7 @@ namespace Jint.DebugAdapter.Variables
                 JsNumber or
                 JsBigInt or
                 JsBoolean or
+                JsDate or
                 JsUndefined or
                 JsSymbol => value.ToString(),
                 // For DAP, strings need to be returned with surrounding quotes - and with control characters
@@ -123,7 +124,6 @@ namespace Jint.DebugAdapter.Variables
 
                 FunctionInstance func => $"ƒ {GetFunctionName(func) ?? name}",
 
-                DateInstance or
                 RegExpInstance => value.ToString(),
                 ObjectInstance obj => RenderObjectPreview(obj),
 

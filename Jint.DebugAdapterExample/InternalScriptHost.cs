@@ -45,7 +45,7 @@ main()"
             {
                 throw new Exception($"Unknown script: {program}");
             }
-            Engine.Execute(script, new Esprima.ParserOptions(program));
+            Engine.Execute(script, program);
         }
     }
 }

@@ -166,10 +166,10 @@ namespace Jint.DebugAdapter
             this.pauseOnEntry = pauseOnEntry;
 
             var launchCompleted = new TaskCompletionSource();
-            void HandleScriptReady(object sender, ScriptInformation info)
+            void HandleParsed(object sender, string source, Script ast)
             {
                 EnsureOnEngineThread();
-                engine.DebugHandler.ScriptReady -= HandleScriptReady;
+                engine.Parsed -= HandleParsed;
                 launchCompleted.SetResult();
 
                 // This will be called on the engine thread, hence we can pause, and the LaunchAsync method
@@ -192,7 +192,7 @@ namespace Jint.DebugAdapter
                 }
                 try
                 {
-                    engine.DebugHandler.ScriptReady += HandleScriptReady;
+                    engine.Parsed += HandleParsed;
                     action();
                     OnDone();
                 }
@@ -368,7 +368,7 @@ namespace Jint.DebugAdapter
 
         private void AddEventHandlers()
         {
-            engine.DebugHandler.ScriptReady += DebugHandler_ScriptReady;
+            engine.Parsed += Engine_Parsed;
             engine.DebugHandler.Break += DebugHandler_Break;
             engine.DebugHandler.Step += DebugHandler_Step;
             engine.DebugHandler.Skip += DebugHandler_Skip;
@@ -376,7 +376,7 @@ namespace Jint.DebugAdapter
 
         private void RemoveEventHandlers()
         {
-            engine.DebugHandler.ScriptReady -= DebugHandler_ScriptReady;
+            engine.Parsed -= Engine_Parsed;
             engine.DebugHandler.Break -= DebugHandler_Break;
             engine.DebugHandler.Step -= DebugHandler_Step;
             engine.DebugHandler.Skip -= DebugHandler_Skip;
@@ -387,9 +387,9 @@ namespace Jint.DebugAdapter
             channel.Writer.TryWrite(new ContinueMessage());
         }
 
-        private void DebugHandler_ScriptReady(object sender, ScriptInformation e)
+        private void Engine_Parsed(object sender, string source, Script ast)
         {
-            RegisterScriptInfo(e.Ast.Location.Source, e.Ast);
+            RegisterScriptInfo(source, ast);
         }
 
         private StepMode DebugHandler_Step(object sender, DebugInformation e)

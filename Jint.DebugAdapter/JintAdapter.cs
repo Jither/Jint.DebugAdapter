@@ -157,7 +157,7 @@ namespace Jint.DebugAdapter
             // Not a fan of double negatives (i.e. testing for !noDebug), so let's convert it to debug
             bool debug = !(arguments.NoDebug ?? false);
 
-            await debugger.AttachAsync(pauseOnAttach);
+            debugger.Attach(pauseOnAttach);
 
             SendEvent(new InitializedEvent());
         }
@@ -473,7 +473,7 @@ namespace Jint.DebugAdapter
         /// </remarks>
         private Position ToClientPosition(Position position)
         {
-            return new Position(
+            return Position.From(
                 clientLinesStartAt1 ? position.Line : position.Line - 1,
                 clientColumnsStartAt1 ? position.Column + 1 : position.Column
                 );
@@ -489,7 +489,7 @@ namespace Jint.DebugAdapter
         private Position ToJintPosition(int line, int? column)
         {
             column ??= (clientColumnsStartAt1 ? 1 : 0);
-            return new Position(
+            return Position.From(
                 clientLinesStartAt1 ? line : line + 1,
                 clientColumnsStartAt1 ? column.Value - 1 : column.Value
                 );
@@ -497,23 +497,14 @@ namespace Jint.DebugAdapter
 
         private (Position Start, Position End) ToJintRange(int line, int? column, int? endLine, int? endColumn)
         {
-            if (column == null)
-            {
-                // "If no start column is given, the first column in the start line is assumed."
-                column = 1;
-            }
-            if (endLine == null)
-            {
-                // "If no end line is given, then the end line is assumed to be the start line."
-                endLine = line;
-            }
-            if (endColumn == null)
-            {
-                // "If no end column is given, then it is assumed to be in the last column of the end line."
-                endColumn = Int32.MaxValue;
-            }
+            // "If no start column is given, the first column in the start line is assumed."
+            column ??= 1;
+            // "If no end line is given, then the end line is assumed to be the start line."
+            endLine ??= line;
+            // "If no end column is given, then it is assumed to be in the last column of the end line."
+            endColumn ??= Int32.MaxValue;
 
-            return (new Position(line, column.Value), new Position(endLine.Value, endColumn.Value));
+            return (Position.From(line, column.Value), Position.From(endLine.Value, endColumn.Value));
         }
     }
 }

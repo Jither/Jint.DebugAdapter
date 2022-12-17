@@ -83,11 +83,11 @@ namespace Jint.DebugAdapter.BreakPoints
                 }
                 AddLiteral(message[end..start]);
 
-                var parser = new JavaScriptParser(message[start..]);
+                var parser = new JavaScriptParser();
                 Script partAst;
                 try
                 {
-                    partAst = parser.ParseScript();
+                    partAst = parser.ParseScript(message[start..]);
                 }
                 catch (ParserException ex)
                 {

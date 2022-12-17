@@ -31,7 +31,7 @@ namespace Jint.DebugAdapterExample
             // In this case, Launch is called immediately on program start
             var fullPath = Path.GetFullPath(program);
             var script = File.ReadAllText(fullPath);
-            Engine.Execute(script, new Esprima.ParserOptions(fullPath));
+            Engine.Execute(script, fullPath);
         }
     }
 }
