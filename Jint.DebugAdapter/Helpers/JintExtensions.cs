@@ -1,5 +1,6 @@
 ﻿using Jint.Native;
 using Jint.Native.Object;
+using Jint.Runtime;
 
 namespace Jint.DebugAdapter.Helpers;
 
@@ -11,15 +12,10 @@ public static class JintExtensions
     private static readonly JsString lengthPropertyName = new("length");
 
     /// <summary>
-    /// Returns "length" property of an object instance as an integer - 0 if object has no length property or it isn't a number.
+    /// Returns "length" property of an object instance as an integer (assuming it's an array-like). 0 if property doesn't exist or not a valid length.
     /// </summary>
-    public static int GetLengthValue(this ObjectInstance obj)
+    public static uint GetLengthValue(this ObjectInstance obj)
     {
-        var lengthProp = obj.Get(lengthPropertyName);
-        if (!lengthProp.IsNumber())
-        {
-            return 0;
-        }
-        return (int)lengthProp.AsNumber();
+        return (uint)TypeConverter.ToLength(obj.Get(lengthPropertyName));
     }
 }

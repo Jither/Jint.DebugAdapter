@@ -58,7 +58,8 @@ public class ArrayLikeVariableContainer : ObjectVariableContainer
 
     private IEnumerable<KeyValuePair<string, JsValue>> GetArrayIndexValues(int? start, int? count)
     {
-        int length = instance.GetLengthValue();
+        // Yes, JS supports array length up to 2^32-1, but DAP only supports up to 2^31-1
+        int length = (int)instance.GetLengthValue();
         if (count > 0)
         {
             length = Math.Min(length, count.Value);
@@ -106,11 +107,12 @@ public class ArrayLikeVariableContainer : ObjectVariableContainer
 
     private IEnumerable<KeyValuePair<JsValue, PropertyDescriptor>> GetArrayProperties()
     {
-        var length = instance.GetLengthValue();
+        // Yes, JS supports array length up to 2^32-1, but DAP only supports up to 2^31-1
+        int length = (int)instance.GetLengthValue();
 
         // We can assume that array indices are the first Length properties returned by GetOwnProperties
         // https://tc39.es/ecma262/#sec-ordinaryownpropertykeys
-        return instance.GetOwnProperties().Skip((int)length);
+        return instance.GetOwnProperties().Skip(length);
     }
 
     private IEnumerable<KeyValuePair<JsValue, PropertyDescriptor>> GetTypedArrayProperties()

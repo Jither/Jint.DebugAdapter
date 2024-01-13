@@ -55,7 +55,7 @@ public class ValueInfoProvider
             case JsTypedArray:
                 obj = value as ObjectInstance;
                 // Yes, JS supports array length up to 2^32-1, but DAP only supports up to 2^31-1
-                int length = obj.GetLengthValue();
+                int length = (int)obj.GetLengthValue();
 
                 if (length > 100)
                 {
@@ -187,7 +187,8 @@ public class ValueInfoProvider
 
     protected string RenderArrayPreview(ObjectInstance obj, string prefix)
     {
-        var length = obj.GetLengthValue();
+        // Yes, JS supports array length up to 2^32-1, but DAP only supports up to 2^31-1
+        int length = (int)obj.GetLengthValue();
         var builder = new BudgetStringBuilder(objectPreviewBudget);
         builder.Append($"{prefix}({length})".CropEnd(builder.Budget));
         builder.Append(" ");
