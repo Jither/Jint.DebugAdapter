@@ -1,34 +1,32 @@
 ﻿using System.Text.Json;
 using Jint.DebugAdapter;
-using Jint.Runtime.Debugger;
 
-namespace Jint.DebugAdapterExample
+namespace Jint.DebugAdapterExample;
+
+public class FilesScriptHost : IScriptHost
 {
-    public class FilesScriptHost : IScriptHost
+    public Engine Engine { get; }
+    public ISourceProvider SourceProvider { get; }
+
+    public FilesScriptHost()
     {
-        public Engine Engine { get; }
-        public ISourceProvider SourceProvider { get; }
+        SourceProvider = new FileSystemSourceProvider();
 
-        public FilesScriptHost()
+        Engine = new Engine(options =>
         {
-            SourceProvider = new FileSystemSourceProvider();
+            options.DebugMode(true)
+                .SetupDebugger()
+                .EnableModules(@"D:\Web\test");
+        });
+    }
 
-            Engine = new Engine(options =>
-            {
-                options.DebugMode(true)
-                    .SetupDebugger()
-                    .EnableModules(@"D:\Web\test");
-            });
-        }
+    public void RegisterConsole(DebugAdapter.Console console)
+    {
+        Engine.SetValue("console", console);
+    }
 
-        public void RegisterConsole(DebugAdapter.Console console)
-        {
-            Engine.SetValue("console", console);
-        }
-
-        public void Launch(string program, IReadOnlyDictionary<string, JsonElement> arguments)
-        {
-            Engine.ImportModule(program);
-        }
+    public void Launch(string program, IReadOnlyDictionary<string, JsonElement> arguments)
+    {
+        Engine.Modules.Import(program);
     }
 }
